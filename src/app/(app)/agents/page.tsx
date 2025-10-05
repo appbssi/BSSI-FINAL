@@ -41,6 +41,14 @@ export default function AgentsPage() {
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
 
+  const sortedAgents = agents?.sort((a, b) => {
+    const lastNameComparison = a.lastName.localeCompare(b.lastName);
+    if (lastNameComparison !== 0) {
+      return lastNameComparison;
+    }
+    return a.firstName.localeCompare(b.firstName);
+  });
+
   const getAgentAvailability = (
     agent: Agent
   ): 'Disponible' | 'En mission' | 'En congé' => {
@@ -113,7 +121,7 @@ export default function AgentsPage() {
                   <TableCell colSpan={4} className="text-center">Chargement des agents...</TableCell>
                 </TableRow>
             ) : (
-            agents?.map((agent) => {
+            sortedAgents?.map((agent) => {
               const availability = getAgentAvailability(agent);
               const fullName = `${agent.firstName} ${agent.lastName}`;
               return (
