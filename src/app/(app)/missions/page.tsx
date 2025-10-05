@@ -66,7 +66,9 @@ const AssignedAgentsDialog = ({ agents }: { agents: Agent[] }) => {
 
     const handleExportPDF = () => {
         const doc = new jsPDF();
-        doc.text('Liste des Agents Assignés', 14, 16);
+        const tableTitle = "Liste des Agents Assignés";
+        
+        doc.text(tableTitle, 14, 15);
         autoTable(doc, {
             head: [['Prénom', 'Nom', 'Grade', 'Contact']],
             body: filteredAgents.map(agent => [
@@ -76,6 +78,13 @@ const AssignedAgentsDialog = ({ agents }: { agents: Agent[] }) => {
                 agent.contact,
             ]),
             startY: 20,
+            theme: 'striped',
+            headStyles: {
+                fillColor: '#3F51B5' // Deep Blue
+            },
+            alternateRowStyles: {
+                fillColor: '#F0F2F5' // Light Gray
+            },
         });
         doc.save('agents_assignes.pdf');
     };
@@ -392,3 +401,5 @@ export default function MissionsPage() {
     </div>
   );
 }
+
+    

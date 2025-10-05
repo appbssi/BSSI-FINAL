@@ -157,7 +157,10 @@ export default function AgentsPage() {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    doc.text('Liste des Agents', 14, 16);
+    const tableTitle = "Liste des Agents";
+    
+    doc.text(tableTitle, 14, 15);
+
     autoTable(doc, {
         head: [['Prénom', 'Nom', 'Matricule', 'Grade', 'Contact', 'Disponibilité']],
         body: filteredAgents.map(agent => [
@@ -169,6 +172,13 @@ export default function AgentsPage() {
             agent.availability,
         ]),
         startY: 20,
+        theme: 'striped',
+        headStyles: {
+            fillColor: '#3F51B5' // Deep Blue
+        },
+        alternateRowStyles: {
+            fillColor: '#F0F2F5' // Light Gray
+        },
     });
     doc.save('liste_agents.pdf');
   };
@@ -393,5 +403,7 @@ export default function AgentsPage() {
       )}
     </div>
   );
+
+    
 
     
