@@ -75,7 +75,7 @@ export function SidebarNav() {
       <SidebarFooter>
         <SidebarSeparator />
         <div className="group-data-[collapsible=icon]:hidden">
-          <UserNav />
+          
         </div>
       </SidebarFooter>
     </>
