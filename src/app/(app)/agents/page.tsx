@@ -70,11 +70,11 @@ export default function AgentsPage() {
 
   const sortedAgents = agents
     ? [...agents].sort((a, b) => {
-        const lastNameComparison = a.lastName.localeCompare(b.lastName);
-        if (lastNameComparison !== 0) {
-          return lastNameComparison;
+        const firstNameComparison = a.firstName.localeCompare(b.firstName);
+        if (firstNameComparison !== 0) {
+          return firstNameComparison;
         }
-        return a.firstName.localeCompare(b.firstName);
+        return a.lastName.localeCompare(b.lastName);
       })
     : [];
 
