@@ -100,6 +100,17 @@ export default function AgentsPage() {
 
   const handleDeleteAgent = async () => {
     if (!firestore || !agentToDelete) return;
+
+    if (agentToDelete.availability === 'En mission') {
+        toast({
+            variant: 'destructive',
+            title: 'Action non autorisée',
+            description: "Vous ne pouvez pas supprimer un agent qui est actuellement en mission.",
+        });
+        setAgentToDelete(null);
+        return;
+    }
+
     setIsDeleting(true);
 
     deleteAgent(firestore, agentToDelete);
@@ -316,6 +327,8 @@ export default function AgentsPage() {
             ) : (
               filteredAgents.map((agent) => {
                 const fullName = `${agent.lastName} ${agent.firstName}`;
+                const isAgentOnMission = agent.availability === 'En mission';
+
                 return (
                   <TableRow key={agent.id} onClick={() => setSelectedAgent(agent)} className="cursor-pointer">
                     <TableCell>
@@ -355,7 +368,12 @@ export default function AgentsPage() {
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onSelect={() => setEditingAgent(agent)}>Modifier</DropdownMenuItem>
                             <DropdownMenuItem 
-                              onSelect={() => setAgentToDelete(agent)}
+                              onSelect={() => {
+                                if (!isAgentOnMission) {
+                                  setAgentToDelete(agent)
+                                }
+                              }}
+                              disabled={isAgentOnMission}
                               className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                             >
                               Supprimer
