@@ -160,7 +160,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
 
   const nextStep = async () => {
     const isStep1Valid = await form.trigger(['name', 'location', 'startDate', 'endDate']);
-    if (step === 1 && isStep1Valid) {
+    if (isStep1Valid) {
       setStep(2);
       await handleSuggestAgents();
     }
@@ -348,30 +348,29 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                 <Checkbox 
                                   id={`sugg-${agent.id}`}
                                   onCheckedChange={(checked) => {
-                                    const agentId = agent.id;
-                                    const fieldIndex = form.getValues('assignedAgentIds').findIndex(id => id === agentId);
+                                    const currentIds = form.getValues('assignedAgentIds');
                                     if (checked) {
-                                      if (fieldIndex === -1) form.setValue('assignedAgentIds', [...form.getValues('assignedAgentIds'), agentId]);
+                                      form.setValue('assignedAgentIds', [...currentIds, agent.id]);
                                     } else {
-                                      if (fieldIndex !== -1) form.setValue('assignedAgentIds', form.getValues('assignedAgentIds').filter(id => id !== agentId));
+                                      form.setValue('assignedAgentIds', currentIds.filter(id => id !== agent.id));
                                     }
                                   }}
                                   checked={form.getValues('assignedAgentIds').includes(agent.id)}
                                 />
-                                <div className="grid gap-1.5 w-full">
-                                  <Label htmlFor={`sugg-${agent.id}`} className="flex items-center justify-between w-full cursor-pointer">
-                                    <div className="flex items-center gap-3">
-                                        <Avatar className="h-9 w-9">
-                                            <AvatarFallback>{(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}</AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                            <div className="font-semibold">{fullName}</div>
-                                            <div className="text-xs text-muted-foreground">{agent.rank} | {agent.contact}</div>
+                                <Label htmlFor={`sugg-${agent.id}`} className="grid gap-1.5 w-full cursor-pointer">
+                                    <div className="flex items-center justify-between w-full">
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-9 w-9">
+                                                <AvatarFallback>{(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <div className="font-semibold">{fullName}</div>
+                                                <div className="text-xs text-muted-foreground">{agent.rank} | {agent.contact}</div>
+                                            </div>
                                         </div>
                                     </div>
-                                  </Label>
                                   <p className="text-sm text-muted-foreground pl-12"><span className="font-semibold">Missions terminées:</span> {completedMissions}</p>
-                                </div>
+                                </Label>
                               </div>
                             );
                           })}
@@ -390,12 +389,11 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                 <Checkbox 
                                   id={`avail-${agent.id}`}
                                   onCheckedChange={(checked) => {
-                                    const agentId = agent.id;
-                                    const fieldIndex = form.getValues('assignedAgentIds').findIndex(id => id === agentId);
+                                    const currentIds = form.getValues('assignedAgentIds');
                                     if (checked) {
-                                       if (fieldIndex === -1) form.setValue('assignedAgentIds', [...form.getValues('assignedAgentIds'), agentId]);
+                                      form.setValue('assignedAgentIds', [...currentIds, agent.id]);
                                     } else {
-                                      if (fieldIndex !== -1) form.setValue('assignedAgentIds', form.getValues('assignedAgentIds').filter(id => id !== agentId));
+                                      form.setValue('assignedAgentIds', currentIds.filter(id => id !== agent.id));
                                     }
                                   }}
                                   checked={form.getValues('assignedAgentIds').includes(agent.id)}
@@ -430,8 +428,8 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
               ) : <div />}
                <div className="flex-1" />
               {step === 1 ? (
-                <Button type="button" onClick={nextStep} disabled={isSuggesting || !allAgents || !allMissions}>
-                  {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Suivant'}
+                <Button type="button" onClick={nextStep}>
+                  Suivant
                 </Button>
               ) : (
                 <Button type="submit">Créer la mission</Button>
@@ -443,5 +441,3 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     </Card>
   );
 }
-
-    
