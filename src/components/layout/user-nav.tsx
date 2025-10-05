@@ -14,24 +14,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { User } from 'lucide-react';
 import { SettingsSheet } from '@/components/settings/settings-sheet';
-import { useLogo } from '@/context/logo-context';
-import Image from 'next/image';
 
 export function UserNav() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { logo } = useLogo();
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-            <div className="relative h-10 w-10 rounded-full flex items-center justify-center bg-muted">
-              {logo ? (
-                 <Image src={logo} alt="User Logo" fill className="rounded-full object-cover" />
-              ) : (
+            <div className="h-10 w-10 rounded-full flex items-center justify-center bg-muted">
                 <User className="h-5 w-5" />
-              )}
             </div>
           </Button>
         </DropdownMenuTrigger>
