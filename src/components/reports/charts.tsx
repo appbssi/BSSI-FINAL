@@ -19,13 +19,13 @@ import {
 import { agents, missions } from '@/lib/data';
 
 const missionStatusData = missions.reduce((acc, mission) => {
-    const month = mission.startDate.toLocaleString('default', { month: 'short' });
+    const month = mission.startDate.toLocaleString('fr-FR', { month: 'short' });
     if (!acc[month]) {
         acc[month] = { month, completed: 0, ongoing: 0, planning: 0 };
     }
-    if (mission.status === 'Completed') acc[month].completed++;
-    if (mission.status === 'Ongoing') acc[month].ongoing++;
-    if (mission.status === 'Planning') acc[month].planning++;
+    if (mission.status === 'Terminée') acc[month].completed++;
+    if (mission.status === 'En cours') acc[month].ongoing++;
+    if (mission.status === 'Planification') acc[month].planning++;
     return acc;
 }, {} as Record<string, { month: string, completed: number, ongoing: number, planning: number }>);
 
@@ -34,8 +34,8 @@ export function MissionOutcomesChart() {
   return (
     <ChartContainer
       config={{
-        completed: { label: 'Completed', color: 'hsl(var(--chart-2))' },
-        ongoing: { label: 'Ongoing', color: 'hsl(var(--chart-1))' },
+        completed: { label: 'Terminées', color: 'hsl(var(--chart-2))' },
+        ongoing: { label: 'En cours', color: 'hsl(var(--chart-1))' },
       }}
       className="h-[300px] w-full"
     >

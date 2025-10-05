@@ -26,11 +26,11 @@ import { RegisterAgentSheet } from '@/components/agents/register-agent-sheet';
 export default function AgentsPage() {
   const getBadgeVariant = (availability: string) => {
     switch (availability) {
-      case 'Available':
+      case 'Disponible':
         return 'outline';
-      case 'On Mission':
+      case 'En mission':
         return 'default';
-      case 'On Leave':
+      case 'En congé':
         return 'secondary';
       default:
         return 'secondary';
@@ -43,7 +43,7 @@ export default function AgentsPage() {
         <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
         <RegisterAgentSheet>
           <Button>
-            <PlusCircle className="mr-2 h-4 w-4" /> Register Agent
+            <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer un agent
           </Button>
         </RegisterAgentSheet>
       </div>
@@ -53,8 +53,8 @@ export default function AgentsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Agent</TableHead>
-              <TableHead>Skills</TableHead>
-              <TableHead>Availability</TableHead>
+              <TableHead>Compétences</TableHead>
+              <TableHead>Disponibilité</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -103,10 +103,10 @@ export default function AgentsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>View Missions</DropdownMenuItem>
+                      <DropdownMenuItem>Modifier</DropdownMenuItem>
+                      <DropdownMenuItem>Voir les missions</DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                        Delete
+                        Supprimer
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

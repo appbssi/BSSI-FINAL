@@ -3,7 +3,7 @@ export type Agent = {
   name: string;
   email: string;
   skills: string[];
-  availability: 'Available' | 'On Mission' | 'On Leave';
+  availability: 'Disponible' | 'En mission' | 'En congé';
   avatarUrl: string;
 };
 
@@ -15,5 +15,5 @@ export type Mission = {
   endDate: Date;
   requiredSkills: string[];
   assignedAgents: Agent[];
-  status: 'Planning' | 'Ongoing' | 'Completed' | 'Cancelled';
+  status: 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
 };

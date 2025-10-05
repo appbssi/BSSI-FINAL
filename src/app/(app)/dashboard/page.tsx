@@ -29,27 +29,27 @@ import Link from 'next/link';
 export default function DashboardPage() {
   const totalAgents = agents.length;
   const activeMissions = missions.filter(
-    (m) => m.status === 'Ongoing'
+    (m) => m.status === 'En cours'
   ).length;
   const completedMissions = missions.filter(
-    (m) => m.status === 'Completed'
+    (m) => m.status === 'Terminée'
   ).length;
   const agentsOnMission = agents.filter(
-    (a) => a.availability === 'On Mission'
+    (a) => a.availability === 'En mission'
   ).length;
 
   const upcomingMissions = missions
-    .filter((m) => m.status === 'Planning' || m.status === 'Ongoing')
+    .filter((m) => m.status === 'Planification' || m.status === 'En cours')
     .slice(0, 5);
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Tableau de bord</h1>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Agents</CardTitle>
+            <CardTitle className="text-sm font-medium">Agents au total</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -58,7 +58,7 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Missions</CardTitle>
+            <CardTitle className="text-sm font-medium">Missions actives</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -68,7 +68,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Completed Missions
+              Missions terminées
             </CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -79,7 +79,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Agents on Mission
+              Agents en mission
             </CardTitle>
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -91,16 +91,16 @@ export default function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Missions Overview</CardTitle>
+          <CardTitle>Aperçu des missions</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Mission</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Statut</TableHead>
                 <TableHead>Agents</TableHead>
-                <TableHead>Start Date</TableHead>
+                <TableHead>Date de début</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -110,12 +110,12 @@ export default function DashboardPage() {
                   <TableCell>
                     <Badge
                       variant={
-                        mission.status === 'Ongoing'
+                        mission.status === 'En cours'
                           ? 'default'
                           : 'secondary'
                       }
                       className={
-                        mission.status === 'Ongoing'
+                        mission.status === 'En cours'
                           ? 'bg-green-500/20 text-green-700 border-green-500/30 hover:bg-green-500/30'
                           : ''
                       }
@@ -138,13 +138,13 @@ export default function DashboardPage() {
                       ))}
                       {mission.assignedAgents.length === 0 && (
                         <span className="text-sm text-muted-foreground">
-                          Unassigned
+                          Non assigné
                         </span>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    {mission.startDate.toLocaleDateString()}
+                    {mission.startDate.toLocaleDateString('fr-FR')}
                   </TableCell>
                 </TableRow>
               ))}

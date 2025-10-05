@@ -29,10 +29,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 
 const missionSchema = z.object({
-  name: z.string().min(3, 'Mission name is required'),
-  location: z.string().min(3, 'Location is required'),
-  details: z.string().min(10, 'Details are required'),
-  requiredSkills: z.string().min(3, 'At least one skill is required'),
+  name: z.string().min(3, 'Le nom de la mission est requis'),
+  location: z.string().min(3, 'Le lieu est requis'),
+  details: z.string().min(10, 'Les détails sont requis'),
+  requiredSkills: z.string().min(3, 'Au moins une compétence est requise'),
   assignedAgents: z.array(z.string()),
 });
 
@@ -66,9 +66,9 @@ export function CreateMissionForm() {
   const handleSuggestAgents = async () => {
     setIsSuggesting(true);
     try {
-      const missionDetails = `Name: ${formData.name}\nLocation: ${formData.location}\nDetails: ${formData.details}\nRequired Skills: ${formData.requiredSkills}`;
+      const missionDetails = `Nom: ${formData.name}\nLieu: ${formData.location}\nDétails: ${formData.details}\nCompétences requises: ${formData.requiredSkills}`;
       const availableAgents = allAgents
-        .filter((a) => a.availability === 'Available')
+        .filter((a) => a.availability === 'Disponible')
         .map((a) => ({
           name: a.name,
           skills: a.skills,
@@ -81,15 +81,15 @@ export function CreateMissionForm() {
       });
       setSuggestedAgents(result);
       toast({
-        title: 'Suggestions Ready',
-        description: 'We have suggested the best agents for this mission.',
+        title: 'Suggestions prêtes',
+        description: 'Nous avons suggéré les meilleurs agents pour cette mission.',
       });
     } catch (error) {
       console.error(error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Could not get agent suggestions.',
+        title: 'Erreur',
+        description: "Impossible d'obtenir des suggestions d'agents.",
       });
     } finally {
       setIsSuggesting(false);
@@ -111,8 +111,8 @@ export function CreateMissionForm() {
   const onSubmit = (data: MissionFormValues) => {
     console.log(data);
     toast({
-        title: "Mission Created!",
-        description: `Mission "${data.name}" has been successfully created.`,
+        title: "Mission créée !",
+        description: `La mission "${data.name}" a été créée avec succès.`,
     });
   };
   
@@ -125,15 +125,15 @@ export function CreateMissionForm() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {step === 1 && (
               <div className="space-y-4">
-                <h3 className="text-xl font-semibold">1. Mission Details</h3>
+                <h3 className="text-xl font-semibold">1. Détails de la mission</h3>
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Mission Name</FormLabel>
+                      <FormLabel>Nom de la mission</FormLabel>
                       <FormControl>
-                        <Input placeholder="Operation Nightfall" {...field} />
+                        <Input placeholder="Opération Crépuscule" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -144,9 +144,9 @@ export function CreateMissionForm() {
                   name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Location</FormLabel>
+                      <FormLabel>Lieu</FormLabel>
                       <FormControl>
-                        <Input placeholder="Geneva, Switzerland" {...field} />
+                        <Input placeholder="Genève, Suisse" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -157,10 +157,10 @@ export function CreateMissionForm() {
                   name="details"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Mission Details</FormLabel>
+                      <FormLabel>Détails de la mission</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Provide a detailed description of the mission objectives."
+                          placeholder="Fournissez une description détaillée des objectifs de la mission."
                           {...field}
                         />
                       </FormControl>
@@ -173,10 +173,10 @@ export function CreateMissionForm() {
                   name="requiredSkills"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Required Skills</FormLabel>
+                      <FormLabel>Compétences requises</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Hacking, Surveillance, Combat (comma-separated)"
+                          placeholder="Piratage, Surveillance, Combat (séparées par des virgules)"
                           {...field}
                         />
                       </FormControl>
@@ -189,11 +189,11 @@ export function CreateMissionForm() {
 
             {step === 2 && (
               <div className="space-y-6">
-                <h3 className="text-xl font-semibold">2. Assign Agents</h3>
+                <h3 className="text-xl font-semibold">2. Assigner des agents</h3>
                 {isSuggesting && (
                   <div className="flex items-center justify-center rounded-lg border border-dashed p-8">
                     <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                    <p>Analyzing agents...</p>
+                    <p>Analyse des agents...</p>
                   </div>
                 )}
                 {!isSuggesting && (
@@ -202,7 +202,7 @@ export function CreateMissionForm() {
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-lg">
                           <Sparkles className="h-5 w-5 text-primary" />
-                          AI Suggested Agents
+                          Agents suggérés par l'IA
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
@@ -231,17 +231,17 @@ export function CreateMissionForm() {
                                       </div>
                                   </div>
                                 </Label>
-                                <p className="text-sm text-muted-foreground pl-12"><span className="font-semibold">Reason:</span> {agentSugg.reason}</p>
+                                <p className="text-sm text-muted-foreground pl-12"><span className="font-semibold">Raison:</span> {agentSugg.reason}</p>
                               </div>
                             </div>
                           );
                         })}
                       </CardContent>
                     </Card>
-                    <h4 className="font-semibold">Other Available Agents</h4>
+                    <h4 className="font-semibold">Autres agents disponibles</h4>
                     <div className="space-y-2">
                         {allAgents
-                          .filter(a => a.availability === 'Available' && !suggestedAgents.some(sa => sa.name === a.name))
+                          .filter(a => a.availability === 'Disponible' && !suggestedAgents.some(sa => sa.name === a.name))
                           .map(agent => (
                             <div key={agent.id} className="flex items-center space-x-3 p-3 rounded-md border">
                                 <Checkbox 
@@ -271,17 +271,17 @@ export function CreateMissionForm() {
 
             {step === 3 && (
               <div className="space-y-6">
-                <h3 className="text-xl font-semibold">3. Review and Confirm</h3>
+                <h3 className="text-xl font-semibold">3. Vérifier et confirmer</h3>
                 <Card>
                   <CardHeader>
                     <CardTitle>{formData.name}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p><span className="font-semibold">Location:</span> {formData.location}</p>
-                    <p><span className="font-semibold">Details:</span> {formData.details}</p>
-                    <p><span className="font-semibold">Required Skills:</span> {formData.requiredSkills}</p>
+                    <p><span className="font-semibold">Lieu:</span> {formData.location}</p>
+                    <p><span className="font-semibold">Détails:</span> {formData.details}</p>
+                    <p><span className="font-semibold">Compétences requises:</span> {formData.requiredSkills}</p>
                     <div>
-                      <h4 className="font-semibold">Assigned Agents:</h4>
+                      <h4 className="font-semibold">Agents assignés:</h4>
                       <div className="mt-2 flex flex-wrap gap-2">
                       {formData.assignedAgents.map(agentId => {
                         const agent = allAgents.find(a => a.id === agentId);
@@ -306,17 +306,17 @@ export function CreateMissionForm() {
             <div className="flex justify-between">
               {step > 1 && (
                 <Button type="button" variant="outline" onClick={prevStep}>
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Previous
+                  <ArrowLeft className="mr-2 h-4 w-4" /> Précédent
                 </Button>
               )}
                <div className="flex-1" />
               {step < 3 && (
                 <Button type="button" onClick={nextStep}>
-                  Next <ArrowRight className="ml-2 h-4 w-4" />
+                  Suivant <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
               {step === 3 && (
-                <Button type="submit">Create Mission</Button>
+                <Button type="submit">Créer la mission</Button>
               )}
             </div>
           </form>

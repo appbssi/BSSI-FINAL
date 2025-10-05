@@ -5,13 +5,13 @@ export default function ReportsPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Rapports</h1>
       </div>
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Mission Outcomes</CardTitle>
-            <CardDescription>A breakdown of mission statuses over the last year.</CardDescription>
+            <CardTitle>Résultats des missions</CardTitle>
+            <CardDescription>Répartition des statuts de mission au cours de la dernière année.</CardDescription>
           </CardHeader>
           <CardContent>
             <MissionOutcomesChart />
@@ -19,8 +19,8 @@ export default function ReportsPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Agent Activity</CardTitle>
-            <CardDescription>Current availability status of all agents.</CardDescription>
+            <CardTitle>Activité des agents</CardTitle>
+            <CardDescription>Statut de disponibilité actuel de tous les agents.</CardDescription>
           </CardHeader>
           <CardContent>
             <AgentActivityChart />

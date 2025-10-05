@@ -25,16 +25,16 @@ import Link from 'next/link';
 
 export default function MissionsPage() {
   const getBadgeVariant = (
-    status: 'Planning' | 'Ongoing' | 'Completed' | 'Cancelled'
+    status: 'Planification' | 'En cours' | 'Terminée' | 'Annulée'
   ) => {
     switch (status) {
-      case 'Ongoing':
+      case 'En cours':
         return 'bg-blue-500/20 text-blue-700 border-blue-500/30 hover:bg-blue-500/30';
-      case 'Completed':
+      case 'Terminée':
         return 'bg-green-500/20 text-green-700 border-green-500/30 hover:bg-green-500/30';
-      case 'Cancelled':
+      case 'Annulée':
         return 'bg-red-500/20 text-red-700 border-red-500/30 hover:bg-red-500/30';
-      case 'Planning':
+      case 'Planification':
       default:
         return '';
     }
@@ -46,7 +46,7 @@ export default function MissionsPage() {
         <h1 className="text-3xl font-bold tracking-tight">Missions</h1>
         <Button asChild>
           <Link href="/missions/create">
-            <PlusCircle className="mr-2 h-4 w-4" /> Create Mission
+            <PlusCircle className="mr-2 h-4 w-4" /> Créer une mission
           </Link>
         </Button>
       </div>
@@ -56,9 +56,9 @@ export default function MissionsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Mission</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Assigned Agents</TableHead>
+              <TableHead>Lieu</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead>Agents assignés</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -89,7 +89,7 @@ export default function MissionsPage() {
                     ))}
                      {mission.assignedAgents.length === 0 && (
                         <span className="text-sm text-muted-foreground">
-                          Unassigned
+                          Non assigné
                         </span>
                       )}
                   </div>
@@ -104,10 +104,10 @@ export default function MissionsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
+                      <DropdownMenuItem>Modifier</DropdownMenuItem>
+                      <DropdownMenuItem>Voir les détails</DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                        Cancel Mission
+                        Annuler la mission
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

@@ -23,15 +23,15 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Register New Agent</SheetTitle>
+          <SheetTitle>Enregistrer un nouvel agent</SheetTitle>
           <SheetDescription>
-            Add a new agent to the brigade. Fill in the details below.
+            Ajoutez un nouvel agent à la brigade. Remplissez les détails ci-dessous.
           </SheetDescription>
         </SheetHeader>
         <div className="grid gap-6 py-6">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
-              Name
+              Nom
             </Label>
             <Input id="name" placeholder="Alex Johnson" className="col-span-3" />
           </div>
@@ -48,38 +48,38 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="skills" className="text-right">
-              Skills
+              Compétences
             </Label>
             <Input
               id="skills"
-              placeholder="Combat, Hacking,..."
+              placeholder="Combat, Piratage,..."
               className="col-span-3"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="availability" className="text-right">
-              Availability
+              Disponibilité
             </Label>
             <Select>
               <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Select status" />
+                <SelectValue placeholder="Sélectionnez le statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Available">Available</SelectItem>
-                <SelectItem value="On Mission">On Mission</SelectItem>
-                <SelectItem value="On Leave">On Leave</SelectItem>
+                <SelectItem value="Disponible">Disponible</SelectItem>
+                <SelectItem value="En mission">En mission</SelectItem>
+                <SelectItem value="En congé">En congé</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="avatar" className="text-right">
-              Avatar URL
+              URL de l'avatar
             </Label>
             <Input id="avatar" type="url" className="col-span-3" />
           </div>
         </div>
         <div className="flex justify-end">
-          <Button type="submit">Save Agent</Button>
+          <Button type="submit">Sauvegarder l'agent</Button>
         </div>
       </SheetContent>
     </Sheet>

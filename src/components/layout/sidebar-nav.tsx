@@ -28,10 +28,10 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
   { href: '/agents', label: 'Agents', icon: Users },
   { href: '/missions', label: 'Missions', icon: Rocket },
-  { href: '/reports', label: 'Reports', icon: BarChartBig },
+  { href: '/reports', label: 'Rapports', icon: BarChartBig },
 ];
 
 export function SidebarNav() {
