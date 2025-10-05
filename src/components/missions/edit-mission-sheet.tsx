@@ -30,11 +30,18 @@ import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { collection, Timestamp, doc, updateDoc } from 'firebase/firestore';
+import { collection, Timestamp, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 
 const missionSchema = z.object({
@@ -58,6 +65,14 @@ const isAgentAvailable = (agent: Agent, missions: Mission[], newMissionStart: Da
     if (agent.availability === 'En congé') {
         return false;
     }
+     // If the agent is on the current mission, they are considered "available" for re-assignment.
+    if (agent.availability === 'En mission' && missions.some(m => m.id === currentMissionId && m.assignedAgentIds.includes(agent.id))) {
+      return true;
+    }
+    if (agent.availability === 'En mission') {
+        return false;
+    }
+
     const agentMissions = missions.filter(mission => 
         mission.id !== currentMissionId && 
         mission.assignedAgentIds.includes(agent.id) && 
@@ -114,14 +129,39 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
 
 
   const onSubmit = async (data: MissionFormValues) => {
-    if (!firestore) return;
+    if (!firestore || !allAgents) return;
+
+    const batch = writeBatch(firestore);
+
     try {
         const missionRef = doc(firestore, 'missions', mission.id);
-        await updateDoc(missionRef, {
+        batch.update(missionRef, {
           ...data,
           startDate: Timestamp.fromDate(data.startDate),
           endDate: Timestamp.fromDate(data.endDate),
         });
+
+        const originalAgentIds = new Set(mission.assignedAgentIds || []);
+        const newAgentIds = new Set(data.assignedAgentIds);
+
+        // Agents removed from mission -> set to Disponible
+        for (const agentId of originalAgentIds) {
+            if (!newAgentIds.has(agentId)) {
+                const agentRef = doc(firestore, 'agents', agentId);
+                batch.update(agentRef, { availability: 'Disponible' });
+            }
+        }
+
+        // Agents added to mission -> set to En mission
+        for (const agentId of newAgentIds) {
+            if (!originalAgentIds.has(agentId)) {
+                const agentRef = doc(firestore, 'agents', agentId);
+                batch.update(agentRef, { availability: 'En mission' });
+            }
+        }
+        
+        await batch.commit();
+        
         toast({
             title: "Mission mise à jour !",
             description: `La mission "${data.name}" a été mise à jour.`,
@@ -140,11 +180,11 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
   const startDate = form.watch('startDate');
   const endDate = form.watch('endDate');
 
+  const currentlyAssignedAgents = allAgents?.filter(agent => (mission.assignedAgentIds || []).includes(agent.id)) || [];
+
   const availableAgents = allAgents?.filter(agent => 
       startDate && endDate ? isAgentAvailable(agent, allMissions || [], startDate, endDate, mission.id) : false
   ) || [];
-
-  const currentlyAssignedAgents = allAgents?.filter(agent => (form.watch('assignedAgentIds') || []).includes(agent.id)) || [];
 
   const combinedAgentList = [...new Map([...currentlyAssignedAgents, ...availableAgents].map(agent => [agent.id, agent])).values()].sort((a,b) => a.firstName.localeCompare(b.firstName));
 
@@ -284,8 +324,11 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                             ) : combinedAgentList.length > 0 ? (
                                 combinedAgentList.map((agent) => {
                                     const isChecked = field.value?.includes(agent.id);
-                                    const isAvailable = availableAgents.some(a => a.id === agent.id);
-                                    const isDisabled = !isChecked && !isAvailable;
+                                    const isOriginallyAssigned = (mission.assignedAgentIds || []).includes(agent.id);
+                                    const isAvailableForSelection = availableAgents.some(a => a.id === agent.id);
+                                    
+                                    const isDisabled = !isOriginallyAssigned && !isAvailableForSelection;
+
                                     return (
                                         <div
                                             key={agent.id}
@@ -308,7 +351,13 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                                                    {agent.rank} | {agent.registrationNumber}
                                                 </div>
                                             </div>
-                                            <Badge variant={!isAvailable && !isChecked ? "destructive" : (agent.availability === 'Disponible' ? 'outline' : 'secondary')}>{isDisabled && !isChecked ? 'Indisponible' : agent.availability}</Badge>
+                                             <Badge variant={
+                                                isDisabled ? 'destructive' :
+                                                isOriginallyAssigned && agent.availability === 'En mission' ? 'default' :
+                                                agent.availability === 'Disponible' ? 'outline' : 'secondary'
+                                            }>
+                                                {isDisabled ? 'Indisponible' : agent.availability}
+                                            </Badge>
                                         </div>
                                     );
                                 })

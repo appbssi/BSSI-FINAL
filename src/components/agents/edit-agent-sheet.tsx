@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -39,7 +40,6 @@ const agentSchema = z.object({
   rank: z.string().min(3, 'Le grade est requis'),
   contact: z.string().min(3, 'Le contact est requis'),
   address: z.string().min(3, "L'adresse est requise"),
-  availability: z.enum(['Disponible', 'En mission', 'En congé']),
 });
 
 type AgentFormValues = z.infer<typeof agentSchema>;
@@ -63,7 +63,6 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
       rank: agent.rank,
       contact: agent.contact,
       address: agent.address,
-      availability: agent.availability,
     },
   });
 
@@ -172,28 +171,6 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
                   <FormControl>
                     <Input placeholder="123 Rue de la Mission, Paris" {...field} />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="availability"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Disponibilité</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choisir un statut" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Disponible">Disponible</SelectItem>
-                      <SelectItem value="En mission">En mission</SelectItem>
-                      <SelectItem value="En congé">En congé</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

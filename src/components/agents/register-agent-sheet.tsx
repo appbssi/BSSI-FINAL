@@ -24,13 +24,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
 import { Loader2 } from 'lucide-react';
 
 const agentSchema = z.object({
@@ -40,7 +33,6 @@ const agentSchema = z.object({
   rank: z.string().min(3, 'Le grade est requis'),
   contact: z.string().min(3, 'Le contact est requis'),
   address: z.string().min(3, "L'adresse est requise"),
-  availability: z.enum(['Disponible', 'En mission', 'En congé']),
 });
 
 type AgentFormValues = z.infer<typeof agentSchema>;
@@ -64,7 +56,6 @@ export function RegisterAgentSheet({ isOpen, onOpenChange }: RegisterAgentSheetP
       rank: '',
       contact: '',
       address: '',
-      availability: 'Disponible',
     },
   });
 
@@ -72,7 +63,10 @@ export function RegisterAgentSheet({ isOpen, onOpenChange }: RegisterAgentSheetP
     if (!firestore) return;
     try {
       const agentsCollection = collection(firestore, 'agents');
-      await addDoc(agentsCollection, data);
+      await addDoc(agentsCollection, {
+        ...data,
+        availability: 'Disponible',
+      });
       toast({
         title: 'Agent enregistré !',
         description: `L'agent ${data.firstName} ${data.lastName} a été ajouté avec succès.`,
@@ -176,28 +170,6 @@ export function RegisterAgentSheet({ isOpen, onOpenChange }: RegisterAgentSheetP
                   <FormControl>
                     <Input placeholder="123 Rue de la Mission, Paris" {...field} />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="availability"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Disponibilité</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choisir un statut" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Disponible">Disponible</SelectItem>
-                      <SelectItem value="En mission">En mission</SelectItem>
-                      <SelectItem value="En congé">En congé</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

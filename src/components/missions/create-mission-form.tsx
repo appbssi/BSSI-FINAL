@@ -21,7 +21,7 @@ import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { collection, Timestamp, addDoc } from 'firebase/firestore';
+import { collection, Timestamp, addDoc, writeBatch, doc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import { useState } from 'react';
 import { useCollection } from '@/firebase/firestore/use-collection';
@@ -48,7 +48,7 @@ const missionSchema = z.object({
 type MissionFormValues = z.infer<typeof missionSchema>;
 
 const isAgentAvailable = (agent: Agent, missions: Mission[], newMissionStart: Date, newMissionEnd: Date): boolean => {
-    if (agent.availability === 'En congé') {
+    if (agent.availability === 'En congé' || agent.availability === 'En mission') {
         return false;
     }
     const agentMissions = missions.filter(mission => mission.assignedAgentIds.includes(agent.id) && mission.status !== 'Annulée' && mission.status !== 'Terminée');
@@ -87,13 +87,24 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   const onSubmit = async (data: MissionFormValues) => {
     if (!firestore) return;
     try {
+        const batch = writeBatch(firestore);
+
         const missionsCollection = collection(firestore, 'missions');
-        await addDoc(missionsCollection, {
-        ...data,
-        startDate: Timestamp.fromDate(data.startDate),
-        endDate: Timestamp.fromDate(data.endDate),
-        status: 'Planification',
+        const newMissionRef = doc(missionsCollection);
+        batch.set(newMissionRef, {
+            ...data,
+            startDate: Timestamp.fromDate(data.startDate),
+            endDate: Timestamp.fromDate(data.endDate),
+            status: 'Planification',
         });
+
+        data.assignedAgentIds.forEach(agentId => {
+            const agentRef = doc(firestore, 'agents', agentId);
+            batch.update(agentRef, { availability: 'En mission' });
+        });
+
+        await batch.commit();
+
         toast({
             title: "Mission créée !",
             description: `La mission "${data.name}" a été créée avec succès.`,

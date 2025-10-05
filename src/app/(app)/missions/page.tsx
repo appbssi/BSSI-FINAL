@@ -31,7 +31,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { CreateMissionForm } from '@/components/missions/create-mission-form';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import type { Agent, Mission } from '@/lib/types';
 import { useState, useMemo } from 'react';
@@ -238,7 +238,6 @@ export default function MissionsPage() {
         return orderA - orderB;
       }
       
-      // If statuses are the same, sort by start date (most recent first)
       return b.startDate.toMillis() - a.startDate.toMillis();
     });
   }, [missions]);
@@ -269,9 +268,19 @@ export default function MissionsPage() {
   
   const handleCancelMission = async () => {
     if (!firestore || !missionToCancel) return;
+    const batch = writeBatch(firestore);
     try {
         const missionRef = doc(firestore, 'missions', missionToCancel.id);
-        await updateDoc(missionRef, { status: 'Annulée' });
+        batch.update(missionRef, { status: 'Annulée' });
+        
+        // Make agents available again
+        for (const agentId of missionToCancel.assignedAgentIds) {
+            const agentRef = doc(firestore, 'agents', agentId);
+            batch.update(agentRef, { availability: 'Disponible' });
+        }
+
+        await batch.commit();
+
         toast({
             title: 'Mission annulée',
             description: `La mission "${missionToCancel.name}" a été annulée.`
@@ -289,9 +298,21 @@ export default function MissionsPage() {
 
   const handleDeleteMission = async () => {
     if (!firestore || !missionToDelete) return;
+    const batch = writeBatch(firestore);
     try {
       const missionRef = doc(firestore, 'missions', missionToDelete.id);
-      await deleteDoc(missionRef);
+      batch.delete(missionRef);
+      
+      // Make agents available again if mission was active or planned
+      if (missionToDelete.status === 'En cours' || missionToDelete.status === 'Planification') {
+        for (const agentId of missionToDelete.assignedAgentIds) {
+            const agentRef = doc(firestore, 'agents', agentId);
+            batch.update(agentRef, { availability: 'Disponible' });
+        }
+      }
+
+      await batch.commit();
+
       toast({
         title: 'Mission supprimée',
         description: `La mission "${missionToDelete.name}" a été supprimée.`,
