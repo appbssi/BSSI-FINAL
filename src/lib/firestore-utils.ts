@@ -1,4 +1,5 @@
-import { collection, getDocs, writeBatch, Firestore, query, where, limit, documentId } from "firebase/firestore";
+
+import { collection, getDocs, writeBatch, Firestore, doc } from "firebase/firestore";
 import type { Agent } from "./types";
 
 /**
@@ -32,7 +33,7 @@ export async function deleteDuplicateAgents(firestore: Firestore): Promise<numbe
       // Keep the first one, delete the rest
       const idsToDelete = ids.slice(1);
       for (const id of idsToDelete) {
-        const docRef = collection(firestore, 'agents').doc(id);
+        const docRef = doc(firestore, 'agents', id);
         batch.delete(docRef);
         duplicatesDeleted++;
       }
