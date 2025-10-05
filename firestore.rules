@@ -1,0 +1,77 @@
+/**
+ * @fileoverview Firestore Security Rules for the E-Brigade Dispatch application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces an admin-only access model for agents, missions, and reports.
+ * Only authenticated users (acting as administrators) are allowed to read or write data.
+ *
+ * Data Structure:
+ * The Firestore database consists of three top-level collections:
+ * - /agents/{agentId}: Stores information about agents.
+ * - /missions/{missionId}: Stores details about missions.
+ * - /reports/{reportId}: Stores reports related to agents and missions.
+ *
+ * Key Security Decisions:
+ * - Admin-Only Access: All read and write operations are restricted to authenticated users, effectively acting as administrators.
+ * - No User Listing: Listing agents, missions, or reports is disallowed to prevent unauthorized data discovery.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Controls access to the agents collection. Only authenticated users can read or write agent data.
+     * @path /agents/{agentId}
+     * @allow (get, list) if isSignedIn() - Allows authenticated users to read agents.
+     * @allow (create, update, delete) if isSignedIn() - Allows authenticated users to create, update, and delete agents.
+     * @deny (get, list) if !isSignedIn() - Denies unauthenticated users from reading agents.
+     * @deny (create, update, delete) if !isSignedIn() - Denies unauthenticated users from creating, updating, and deleting agents.
+     * @principle Authenticated users only.
+     */
+    match /agents/{agentId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
+    }
+
+    /**
+     * @description Controls access to the missions collection. Only authenticated users can read or write mission data.
+     * @path /missions/{missionId}
+     * @allow (get, list) if isSignedIn() - Allows authenticated users to read missions.
+     * @allow (create, update, delete) if isSignedIn() - Allows authenticated users to create, update, and delete missions.
+     * @deny (get, list) if !isSignedIn() - Denies unauthenticated users from reading missions.
+     * @deny (create, update, delete) if !isSignedIn() - Denies unauthenticated users from creating, updating, and deleting missions.
+     * @principle Authenticated users only.
+     */
+    match /missions/{missionId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
+    }
+
+    /**
+     * @description Controls access to the reports collection. Only authenticated users can read or write report data.
+     * @path /reports/{reportId}
+     * @allow (get, list) if isSignedIn() - Allows authenticated users to read reports.
+     * @allow (create, update, delete) if isSignedIn() - Allows authenticated users to create, update, and delete reports.
+     * @deny (get, list) if !isSignedIn() - Denies unauthenticated users from reading reports.
+     * @deny (create, update, delete) if !isSignedIn() - Denies unauthenticated users from creating, updating, and deleting reports.
+     * @principle Authenticated users only.
+     */
+    match /reports/{reportId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+  }
+}
