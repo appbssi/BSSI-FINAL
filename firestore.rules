@@ -1,84 +1,70 @@
 /**
- * @fileoverview Firestore Security Rules for Prototyping.
+ * @fileoverview Firestore Security Rules for the Agent-Mission application.
  *
  * Core Philosophy:
- * This ruleset provides highly secure, yet flexible, rules suitable for rapid prototyping.
- * It prioritizes clear authorization boundaries, granting access based on simple ownership.
- * It assumes a flexible data model to allow for schema iteration.
+ * This ruleset employs a strict user-ownership model for agents, allowing only authenticated users to create, read, update, and delete their own agent profiles.
+ * Missions are publicly readable but only authorized users (e.g., admins) can create, update, or delete missions.
  *
  * Data Structure:
- * - `/agents/{agentId}`: Stores agent profiles.
- * - `/missions/{missionId}`: Stores mission details.
+ * - /agents/{agentId}: Stores individual agent profiles. agentId corresponds to the authenticated user's UID.
+ * - /missions/{missionId}: Stores details about individual missions.
  *
  * Key Security Decisions:
- * - Agents and missions are not listable by default except for admins (not yet implemented).
- * - All write operations are explicitly secured with an ownership or existence check.
+ * - Agents can only manage their own profiles, preventing unauthorized access to other agents' data.
+ * - Public read access to missions allows for easy information dissemination, while write access is restricted.
+ * - Data validation is relaxed in this prototyping phase, focusing on ownership and relational integrity rather than full schema enforcement.
  *
  * Denormalization for Authorization:
- *   None implemented, but recommended for performance as the project evolves. For example:
- *     - On `Mission`, store `assignedAgentIds` to avoid needing to query agents.
- *
- * Structural Segregation:
- *   Not applicable in this simple model. Consider using separate collections for public vs. private
- *   data as the application grows (e.g., `/missions_public` vs. `/missions_private/{missionId}`).
+ * - Agents: The agentId in the path should match the authenticated user's UID.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to the /agents collection.
+     * @description Controls access to agent profiles. Only authenticated users can manage their own profiles.
      * @path /agents/{agentId}
-     * @allow (create) - An agent can create their own profile if the agentId matches their UID.
-     * @allow (get) - Any authenticated user can read an agent's profile.
-     * @deny (create) - An unauthenticated user cannot create an agent profile.
-     * @deny (update, delete) - Only the agent themselves can update or delete their profile.
-     * @principle Enforces document ownership for writes, authenticated access for reads.
+     * @allow (create) - An authenticated user with UID 'user123' can create a new agent profile at /agents/user123. The request.resource.data.id field matches the agentId.
+     * @allow (get, list) - Any authenticated user can read their own agent profile at /agents/user123.
+     * @allow (update, delete) - An authenticated user with UID 'user123' can update or delete their own agent profile at /agents/user123.
+     * @deny (create) - An authenticated user with UID 'user123' cannot create an agent profile at /agents/anotherUser.
+     * @deny (update, delete) - An authenticated user with UID 'user123' cannot update or delete another user's agent profile at /agents/anotherUser.
+     * @principle Enforces document ownership for agent profiles.
      */
     match /agents/{agentId} {
-      // Read rules
-      allow get: if isSignedIn();
-      allow list: if false;
+      // isSigned
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      // isOwner
+      function isOwner(agentId) {
+        return request.auth.uid == agentId;
+      }
+      // isExistingOwner
+      function isExistingOwner(agentId) {
+        return isOwner(agentId) && resource != null;
+      }
 
-      // Write rules
+      allow get: if isSignedIn() && isOwner(agentId);
+      allow list: if isSignedIn() && isOwner(agentId);
       allow create: if isSignedIn() && isOwner(agentId);
       allow update: if isSignedIn() && isExistingOwner(agentId);
       allow delete: if isSignedIn() && isExistingOwner(agentId);
     }
 
     /**
-     * @description Controls access to the /missions collection.
+     * @description Controls access to mission details. Missions are publicly readable, but only authorized users can create, update, or delete them.
      * @path /missions/{missionId}
-     * @allow (create) - Any authenticated user can create a mission.
-     * @allow (get) - Any authenticated user can read a mission.
-     * @deny (update, delete) - Only the user who created the mission can update or delete it.
-     * @principle Enforces document ownership for writes, authenticated access for reads.
+     * @allow (get, list) - Any user, authenticated or not, can read mission details.
+     * @deny (create, update, delete) - Only authorized users (e.g., admins) can create, update, or delete missions. This is a placeholder and needs to be implemented.
+     * @principle Provides public read access while restricting write access to authorized users.
      */
     match /missions/{missionId} {
-      // Read rules
-      allow get: if isSignedIn();
-      allow list: if false;
-
-      // Write rules
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
-    }
-
-    // --- Helper functions ---
-    // Check if the user is signed in
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    // Check if the user is the owner of the document based on the provided userId
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-   // Check if the user is the owner of the document and the document exists
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+      allow get: if true;
+      allow list: if true;
+      allow create: if false; // TODO: Implement admin check
+      allow update: if false; // TODO: Implement admin check and existing document validation
+      allow delete: if false; // TODO: Implement admin check and existing document validation
     }
   }
 }
