@@ -437,7 +437,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                     {formData.startDate && <p><span className="font-semibold">Date de début:</span> {format(formData.startDate, "PPP", { locale: fr })}</p>}
                     {formData.endDate && <p><span className="font-semibold">Date de fin:</span> {format(formData.endDate, "PPP", { locale: fr })}</p>}
                     <div>
-                      <h4 className="font-semibold">Agents assignés:</h4>
+                      <h4 className="font-semibold">Agents assignés ({formData.assignedAgentIds.length}):</h4>
                       <div className="mt-2 flex flex-wrap gap-2">
                       {formData.assignedAgentIds.map(agentId => {
                         const agent = allAgents?.find(a => a.id === agentId);
