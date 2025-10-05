@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
+import { useState } from 'react';
 
 const agentSchema = z.object({
   name: z.string().min(3, 'Le nom est requis'),
@@ -36,6 +37,7 @@ const agentSchema = z.object({
 type AgentFormValues = z.infer<typeof agentSchema>;
 
 export function RegisterAgentSheet({ children }: { children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -59,10 +61,12 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
       title: 'Agent enregistré !',
       description: `L'agent ${data.name} a été ajouté avec succès.`,
     });
+    form.reset();
+    setIsOpen(false);
   };
 
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
@@ -138,7 +142,7 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
                 </FormItem>
               )}
             />
-            <div className="flex justify-end">
+            <div className="flex justify-end pt-4">
               <Button type="submit">Sauvegarder l'agent</Button>
             </div>
           </form>

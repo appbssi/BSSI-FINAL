@@ -72,7 +72,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   const { data: allMissions } = useCollection<Mission>(missionsQuery);
 
   const isAgentAvailable = (agent: Agent, newMission: { startDate: Date, endDate: Date }): boolean => {
-    if (!newMission.startDate || !newMission.endDate || !allMissions) return true;
+    if (!newMission.startDate || !newMission.endDate || !allMissions) return agent.availability === 'Disponible';
   
     const agentMissions = allMissions.filter(mission => 
       mission.assignedAgentIds.includes(agent.id) &&
@@ -82,9 +82,11 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     const newMissionStart = Timestamp.fromDate(newMission.startDate).seconds;
     const newMissionEnd = Timestamp.fromDate(newMission.endDate).seconds;
   
-    return !agentMissions.some(mission =>
-      (newMissionStart <= mission.endDate.seconds) && (newMissionEnd >= mission.startDate.seconds)
+    const isOverlapping = agentMissions.some(mission =>
+      (newMissionStart < mission.endDate.seconds) && (newMissionEnd > mission.startDate.seconds)
     );
+
+    return agent.availability === 'Disponible' && !isOverlapping;
   };
 
   const form = useForm<MissionFormValues>({
@@ -107,7 +109,6 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     if (!allAgents) return;
     setIsSuggesting(true);
     setSuggestedAgents([]);
-    setAvailableAgentsForMission([]);
     
     const missionDates = {
       startDate: form.getValues("startDate"),
@@ -121,8 +122,9 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
       
       const agentsForAI = availableAgents.map((a) => ({
           name: a.name,
-          skills: [], // Skills have been removed
-          availability: 'Disponible', // We've already filtered them, so they are available
+          skills: [],
+          availability: 'Disponible',
+          pastPerformance: '',
         }));
 
       if(agentsForAI.length > 0) {
@@ -144,7 +146,6 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
       }
 
     } catch (error) {
-      console.error(error);
       toast({
         variant: 'destructive',
         title: 'Erreur',
@@ -183,6 +184,8 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     });
     form.reset();
     setStep(1);
+    setSuggestedAgents([]);
+    setAvailableAgentsForMission([]);
     if (onMissionCreated) {
       onMissionCreated();
     }
@@ -191,8 +194,8 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   const getAgentByName = (name: string) => allAgents?.find(a => a.name === name);
 
   return (
-    <Card>
-      <CardContent className="p-6">
+    <Card className="border-0 shadow-none">
+      <CardContent className="p-0 sm:p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {step === 1 && (
@@ -321,21 +324,21 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                   </div>
                 )}
                 {!isSuggesting && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
                     {suggestedAgents.length > 0 && (
-                       <Card className="bg-primary/5">
-                        <CardHeader>
+                       <Card className="bg-primary/5 border-primary/20">
+                        <CardHeader className="p-4">
                           <CardTitle className="flex items-center gap-2 text-lg">
                             <Sparkles className="h-5 w-5 text-primary" />
                             Agents suggérés par l'IA
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-3 p-4 pt-0">
                           {suggestedAgents.map((agentSugg) => {
                             const agent = getAgentByName(agentSugg.name);
                             if (!agent) return null;
                             return (
-                              <div key={agent.id} className="flex items-start gap-4 p-3 rounded-md border bg-background">
+                              <div key={`sugg-${agent.id}`} className="flex items-start gap-4 p-3 rounded-md border bg-background">
                                 <Checkbox 
                                   id={`sugg-${agent.id}`}
                                   onCheckedChange={(checked) => {
@@ -370,12 +373,12 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                       </Card>
                     )}
                    
-                    <h4 className="font-semibold">Autres agents disponibles</h4>
+                    <h4 className="font-semibold pt-4">Autres agents disponibles</h4>
                     <div className="space-y-2">
                         {availableAgentsForMission
                           .filter(a => !suggestedAgents.some(sa => sa.name === a.name))
                           .map(agent => (
-                            <div key={agent.id} className="flex items-center space-x-3 p-3 rounded-md border">
+                            <div key={`avail-${agent.id}`} className="flex items-center space-x-3 p-3 rounded-md border">
                                 <Checkbox 
                                   id={`avail-${agent.id}`}
                                   onCheckedChange={(checked) => {
@@ -401,7 +404,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                             </div>
                         ))}
                          {availableAgentsForMission.length === 0 && !isSuggesting && (
-                            <p className="text-sm text-muted-foreground text-center p-4">
+                            <p className="text-sm text-muted-foreground text-center p-4 border rounded-md">
                                 Aucun agent n'est disponible pour ces dates.
                             </p>
                         )}
@@ -448,19 +451,18 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
             )}
 
             <div className="flex justify-between pt-4">
-              {step > 1 && (
+              {step > 1 ? (
                 <Button type="button" variant="outline" onClick={prevStep}>
                   <ArrowLeft className="mr-2 h-4 w-4" /> Précédent
                 </Button>
-              )}
+              ) : <div />}
                <div className="flex-1" />
-              {step < 3 && (
+              {step < 3 ? (
                 <Button type="button" onClick={nextStep} disabled={isSuggesting || !allAgents || !allMissions}>
                   {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Suivant'}
                   {!isSuggesting && <ArrowRight className="ml-2 h-4 w-4" />}
                 </Button>
-              )}
-              {step === 3 && (
+              ) : (
                 <Button type="submit">Créer la mission</Button>
               )}
             </div>

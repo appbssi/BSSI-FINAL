@@ -26,6 +26,8 @@ import type { Agent } from '@/lib/types';
 import { useFirestore } from '@/firebase';
 import { writeBatch, collection, doc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type AgentImportData = Omit<Agent, 'id' | 'availability'>;
 
@@ -51,11 +53,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             header: ["name", "matricule", "grade", "contact", "address"]
         }) as any[];
 
-        // Skip header row if it exists
-        if(
-            json[0].name === "name" &&
-            json[0].matricule === "matricule"
-        ){
+        if(json.length > 0 && json[0].name === "name" && json[0].matricule === "matricule"){
             json.shift();
         }
 
@@ -65,7 +63,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             grade: String(row.grade || ''),
             contact: String(row.contact || ''),
             address: String(row.address || ''),
-        })).filter(agent => agent.name && agent.matricule); // Basic validation
+        })).filter(agent => agent.name && agent.matricule);
 
         if(parsedAgents.length === 0){
             toast({
@@ -78,7 +76,6 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
 
         setAgentsToImport(parsedAgents);
       } catch (error) {
-        console.error("Error parsing Excel file:", error);
         toast({
             variant: 'destructive',
             title: 'Erreur de lecture',
@@ -89,45 +86,47 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
     reader.readAsArrayBuffer(file);
   };
 
-  const handleImport = async () => {
+  const handleImport = () => {
     if (!firestore || agentsToImport.length === 0) return;
     
     setIsImporting(true);
-    try {
-        const batch = writeBatch(firestore);
-        const agentsCollection = collection(firestore, 'agents');
+    const batch = writeBatch(firestore);
+    const agentsCollection = collection(firestore, 'agents');
 
-        agentsToImport.forEach(agentData => {
-            const newAgentRef = doc(agentsCollection);
-            const newAgent: Omit<Agent, 'id'> = {
-                ...agentData,
-                availability: 'Disponible',
-            };
-            batch.set(newAgentRef, newAgent);
-        });
+    agentsToImport.forEach(agentData => {
+        const newAgentRef = doc(agentsCollection);
+        const newAgent: Omit<Agent, 'id'> = {
+            ...agentData,
+            availability: 'Disponible',
+        };
+        batch.set(newAgentRef, newAgent);
+    });
 
-        await batch.commit();
-
+    batch.commit().then(() => {
         toast({
             title: 'Importation réussie !',
             description: `${agentsToImport.length} agents ont été importés avec succès.`,
         });
         setAgentsToImport([]);
         setIsOpen(false);
-    } catch (error) {
-        console.error("Error importing agents:", error);
-        toast({
-            variant: 'destructive',
-            title: 'Erreur d\'importation',
-            description: 'Une erreur s\'est produite lors de l\'ajout des agents à la base de données.',
-        });
-    } finally {
+    }).catch(error => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: agentsCollection.path,
+        operation: 'write',
+        requestResourceData: agentsToImport,
+      }));
+    }).finally(() => {
         setIsImporting(false);
-    }
+    });
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+        setIsOpen(open);
+        if(!open) {
+            setAgentsToImport([]);
+        }
+    }}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
@@ -167,7 +166,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>Annuler</Button>
+          <Button variant="outline" onClick={() => { setIsOpen(false); setAgentsToImport([]); }}>Annuler</Button>
           <Button onClick={handleImport} disabled={agentsToImport.length === 0 || isImporting}>
             {isImporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Importer {agentsToImport.length > 0 ? `(${agentsToImport.length} agents)` : ''}
