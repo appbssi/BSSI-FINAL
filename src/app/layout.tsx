@@ -1,3 +1,4 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -6,7 +7,7 @@ import { FirebaseClientProvider } from '@/firebase';
 import { LogoProvider } from '@/context/logo-context';
 
 export const metadata: Metadata = {
-  title: 'E-Brigade Dépêche',
+  title: 'sBSSI',
   description: 'Système de gestion des agents et des missions.',
 };
 
