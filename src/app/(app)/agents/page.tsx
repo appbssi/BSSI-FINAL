@@ -40,6 +40,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
