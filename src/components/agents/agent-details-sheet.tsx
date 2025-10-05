@@ -59,11 +59,11 @@ export function AgentDetailsSheet({ agent, availability, isOpen, onOpenChange }:
                 </div>
                  <div className="flex flex-col gap-1">
                     <span className="text-muted-foreground">Disponibilité</span>
-                    <p>
+                    <div>
                         <Badge variant={getBadgeVariant(availability)}>
                             {availability}
                         </Badge>
-                    </p>
+                    </div>
                 </div>
                 <div className="flex flex-col gap-1">
                     <span className="text-muted-foreground">Contact</span>
@@ -79,4 +79,3 @@ export function AgentDetailsSheet({ agent, availability, isOpen, onOpenChange }:
     </Sheet>
   );
 }
-
