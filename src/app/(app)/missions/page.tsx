@@ -73,10 +73,10 @@ const AssignedAgentsDialog = ({ agents }: { agents: Agent[] }) => {
         // Official Header
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.text("REPUBLIQUE DE CÔTE D'IVOIRE", pageWidth / 2, 15, { align: 'center' });
+        doc.text("BRIGADE SPECIALE DE SURVEILLANCE ET D'INTERVENTION", pageWidth / 2, 15, { align: 'center' });
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
-        doc.text("Union-Discipline-Travail", pageWidth / 2, 20, { align: 'center' });
+        doc.text("Duralex - Sed Lex", pageWidth / 2, 20, { align: 'center' });
         
         // Report Header
         doc.setFontSize(18);
@@ -426,9 +426,3 @@ export default function MissionsPage() {
     </div>
   );
 }
-
-    
-
-    
-
-    
