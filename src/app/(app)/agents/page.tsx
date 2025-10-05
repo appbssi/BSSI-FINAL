@@ -104,7 +104,6 @@ export default function AgentsPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem>Modifier</DropdownMenuItem>
-                      <DropdownMenuItem>Voir les missions</DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                         Supprimer
                       </DropdownMenuItem>
