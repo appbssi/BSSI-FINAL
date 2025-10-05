@@ -186,7 +186,7 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
       startDate && endDate ? isAgentAvailable(agent, allMissions || [], startDate, endDate, mission.id) : false
   ) || [];
 
-  const combinedAgentList = [...new Map([...currentlyAssignedAgents, ...availableAgents].map(agent => [agent.id, agent])).values()].sort((a,b) => a.firstName.localeCompare(b.firstName));
+  const combinedAgentList = [...new Map([...currentlyAssignedAgents, ...availableAgents].map(agent => [agent.id, agent])).values()].sort((a,b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
 
 
   return (

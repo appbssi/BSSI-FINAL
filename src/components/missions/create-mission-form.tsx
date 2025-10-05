@@ -134,9 +134,11 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   const startDate = form.watch('startDate');
   const endDate = form.watch('endDate');
 
-  const availableAgents = allAgents?.filter(agent => 
-      startDate && endDate ? isAgentAvailable(agent, allMissions || [], startDate, endDate) : false
-  ) || [];
+  const availableAgents = allAgents
+    ? allAgents
+        .filter(agent => startDate && endDate ? isAgentAvailable(agent, allMissions || [], startDate, endDate) : false)
+        .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName))
+    : [];
 
   return (
     <div className="p-0 sm:p-6">
