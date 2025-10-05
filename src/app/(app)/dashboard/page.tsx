@@ -128,7 +128,7 @@ export default function DashboardPage() {
                 <TableHead>Mission</TableHead>
                  <TableHead>Lieu</TableHead>
                 <TableHead>Statut</TableHead>
-                <TableHead>Date de début</TableHead>
+                <TableHead>Date de fin</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -149,7 +149,7 @@ export default function DashboardPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {mission.startDate.toDate().toLocaleDateString('fr-FR')}
+                    {mission.endDate.toDate().toLocaleDateString('fr-FR')}
                   </TableCell>
                 </TableRow>
               ))}
