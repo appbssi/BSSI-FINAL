@@ -46,25 +46,23 @@ export default function AgentsPage() {
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
 
-  const sortedAgents = agents?.sort((a, b) => {
-    const lastNameComparison = a.lastName.localeCompare(b.lastName);
-    if (lastNameComparison !== 0) {
-      return lastNameComparison;
-    }
-    return a.firstName.localeCompare(b.firstName);
-  });
+  const sortedAgents = agents
+    ? [...agents].sort((a, b) => {
+        const lastNameComparison = a.lastName.localeCompare(b.lastName);
+        if (lastNameComparison !== 0) {
+          return lastNameComparison;
+        }
+        return a.firstName.localeCompare(b.firstName);
+      })
+    : [];
   
-  const filteredAgents = sortedAgents?.filter(agent => 
+  const filteredAgents = sortedAgents.filter(agent => 
     `${agent.firstName} ${agent.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getAgentAvailability = (
     agent: Agent
-  ): 'Disponible' | 'En mission' | 'En congé' => {
-    if (agent.availability === 'En congé') {
-      return 'En congé';
-    }
-
+  ): 'Disponible' | 'En mission' => {
     if (!missions) {
       return 'Disponible'; // Default if missions are not loaded yet
     }
@@ -87,8 +85,6 @@ export default function AgentsPage() {
         return 'outline';
       case 'En mission':
         return 'default';
-      case 'En congé':
-        return 'secondary';
       default:
         return 'secondary';
     }
@@ -142,7 +138,7 @@ export default function AgentsPage() {
                   <TableCell colSpan={5} className="text-center">Chargement des agents...</TableCell>
                 </TableRow>
             ) : (
-            filteredAgents?.map((agent) => {
+            filteredAgents.map((agent) => {
               const availability = getAgentAvailability(agent);
               const fullName = `${agent.firstName} ${agent.lastName}`;
               return (
