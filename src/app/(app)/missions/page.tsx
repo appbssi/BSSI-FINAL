@@ -10,13 +10,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Users } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Users, Search, FileDown } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,16 +25,24 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { CreateMissionForm } from '@/components/missions/create-mission-form';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, doc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import type { Agent, Mission } from '@/lib/types';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { EditMissionSheet } from '@/components/missions/edit-mission-sheet';
 import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +53,110 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+
+const AssignedAgentsDialog = ({ agents }: { agents: Agent[] }) => {
+    const [searchQuery, setSearchQuery] = useState('');
+    
+    const filteredAgents = agents.filter(agent => 
+        `${agent.firstName} ${agent.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        doc.text('Liste des Agents Assignés', 14, 16);
+        autoTable(doc, {
+            head: [['Prénom', 'Nom', 'Grade', 'Contact']],
+            body: filteredAgents.map(agent => [
+                agent.firstName,
+                agent.lastName,
+                agent.rank,
+                agent.contact,
+            ]),
+            startY: 20,
+        });
+        doc.save('agents_assignes.pdf');
+    };
+
+    const handleExportXLSX = () => {
+        const dataToExport = filteredAgents.map(agent => ({
+            'Prénom': agent.firstName,
+            'Nom': agent.lastName,
+            'Grade': agent.rank,
+            'Contact': agent.contact,
+        }));
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Agents Assignés');
+        XLSX.writeFile(workbook, 'agents_assignes.xlsx');
+    };
+
+
+    return (
+        <DialogContent className="max-w-3xl">
+            <DialogHeader>
+                <DialogTitle>Agents Assignés</DialogTitle>
+                <DialogDescription>
+                    Liste des agents assignés à cette mission.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="relative w-full max-w-sm">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Rechercher un agent..."
+                            className="pl-10"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                            <FileDown className="mr-2 h-4 w-4" /> Exporter
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuLabel>Choisir un format</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={handleExportPDF}>Exporter en PDF</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={handleExportXLSX}>Exporter en XLSX</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+                <div className="border rounded-lg max-h-96 overflow-y-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Nom Complet</TableHead>
+                                <TableHead>Grade</TableHead>
+                                <TableHead>Contact</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredAgents.length > 0 ? (
+                                filteredAgents.map(agent => (
+                                    <TableRow key={agent.id}>
+                                        <TableCell className="font-medium">{agent.firstName} {agent.lastName}</TableCell>
+                                        <TableCell>{agent.rank}</TableCell>
+                                        <TableCell>{agent.contact}</TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={3} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </div>
+        </DialogContent>
+    )
+}
 
 export default function MissionsPage() {
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -67,7 +180,7 @@ export default function MissionsPage() {
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   
-  const agentsById = useMemoFirebase(() => {
+  const agentsById = useMemo(() => {
     if (!agents) return {};
     return agents.reduce((acc, agent) => {
         acc[agent.id] = agent;
@@ -164,29 +277,15 @@ export default function MissionsPage() {
                 <TableCell>
                    <div className="flex items-center gap-2">
                     {assignedAgents && assignedAgents.length > 0 ? (
-                        <Popover>
-                            <PopoverTrigger asChild>
+                        <Dialog>
+                            <DialogTrigger asChild>
                                 <Button variant="ghost" className="flex items-center gap-2 px-2">
                                     <Users className="h-4 w-4" />
                                     <span className="font-medium">{assignedAgents.length}</span>
                                 </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80">
-                                <div className="space-y-4">
-                                    <h4 className="font-medium leading-none">Agents Assignés</h4>
-                                    <ul className="space-y-2">
-                                        {assignedAgents.map(agent => (
-                                            <li key={agent.id} className="text-sm">
-                                                <div className="font-semibold">{agent.firstName} {agent.lastName}</div>
-                                                <div className="text-muted-foreground">
-                                                    <span>{agent.rank}</span> | <span>{agent.contact}</span>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </PopoverContent>
-                        </Popover>
+                            </DialogTrigger>
+                            <AssignedAgentsDialog agents={assignedAgents} />
+                        </Dialog>
                     ) : (
                       <span className="text-sm text-muted-foreground">Non assigné</span>
                     )}
