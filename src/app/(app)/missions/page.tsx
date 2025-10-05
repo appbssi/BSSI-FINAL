@@ -270,30 +270,24 @@ export default function MissionsPage() {
   
   const handleCancelMission = async () => {
     if (!firestore || !missionToCancel) return;
-    const batch = writeBatch(firestore);
     
     const missionRef = doc(firestore, 'missions', missionToCancel.id);
-    const updateData = { status: 'Annulée' };
-    batch.update(missionRef, updateData);
+    const updateData = { status: 'Annulée' as const };
     
-    for (const agentId of missionToCancel.assignedAgentIds) {
-        const agentRef = doc(firestore, 'agents', agentId);
-        batch.update(agentRef, { availability: 'Disponible' });
-    }
-
-    batch.commit().then(() => {
+    try {
+        await updateDoc(missionRef, updateData);
         toast({
             title: 'Mission annulée',
             description: `La mission "${missionToCancel.name}" a été annulée.`
         });
-    }).catch(async (serverError) => {
+    } catch (serverError) {
         const permissionError = new FirestorePermissionError({
             path: missionRef.path,
             operation: 'update',
             requestResourceData: updateData,
         });
         errorEmitter.emit('permission-error', permissionError);
-    });
+    }
     setMissionToCancel(null);
   }
 
@@ -531,3 +525,5 @@ export default function MissionsPage() {
     </div>
   );
 }
+
+    
