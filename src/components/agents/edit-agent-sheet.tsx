@@ -21,8 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { doc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import type { Agent } from '@/lib/types';
 import {
@@ -68,15 +67,24 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
     },
   });
 
-  const onSubmit = (data: AgentFormValues) => {
+  const onSubmit = async (data: AgentFormValues) => {
     if (!firestore) return;
-    const agentRef = doc(firestore, 'agents', agent.id);
-    updateDocumentNonBlocking(agentRef, data);
-    toast({
-      title: 'Agent mis à jour !',
-      description: `Les informations de l'agent ${data.firstName} ${data.lastName} ont été mises à jour.`,
-    });
-    onOpenChange(false);
+    try {
+      const agentRef = doc(firestore, 'agents', agent.id);
+      await updateDoc(agentRef, data);
+      toast({
+        title: 'Agent mis à jour !',
+        description: `Les informations de l'agent ${data.firstName} ${data.lastName} ont été mises à jour.`,
+      });
+      onOpenChange(false);
+    } catch (error) {
+       console.error("Erreur lors de la mise à jour de l'agent: ", error);
+       toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: "Une erreur est survenue lors de la mise à jour de l'agent.",
+      });
+    }
   };
 
   return (

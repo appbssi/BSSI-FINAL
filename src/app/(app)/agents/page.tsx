@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button';
 import { RegisterAgentSheet } from '@/components/agents/register-agent-sheet';
 import type { Agent } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, doc } from 'firebase/firestore';
+import { collection, deleteDoc, doc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
@@ -42,7 +42,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -97,16 +96,26 @@ export default function AgentsPage() {
     }
   };
 
-  const handleDeleteAgent = () => {
+  const handleDeleteAgent = async () => {
     if (!firestore || !agentToDelete) return;
 
-    const agentRef = doc(firestore, 'agents', agentToDelete.id);
-    deleteDocumentNonBlocking(agentRef);
-    
-    toast({
-      title: 'Agent supprimé',
-      description: `L'agent ${agentToDelete.firstName} ${agentToDelete.lastName} a été supprimé.`,
-    });
+    try {
+      const agentRef = doc(firestore, 'agents', agentToDelete.id);
+      await deleteDoc(agentRef);
+      
+      toast({
+        title: 'Agent supprimé',
+        description: `L'agent ${agentToDelete.firstName} ${agentToDelete.lastName} a été supprimé.`,
+      });
+    } catch (error) {
+       console.error("Erreur lors de la suppression de l'agent: ", error);
+       toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: "Une erreur est survenue lors de la suppression de l'agent.",
+      });
+    }
+
 
     setAgentToDelete(null); // Close the dialog
   };
@@ -402,7 +411,7 @@ export default function AgentsPage() {
         <AlertDialog open={!!agentToDelete} onOpenChange={(open) => !open && setAgentToDelete(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Êtes-vous absolument sûr?</AlertDialogTitle>
+              <AlertDialogTitle>Êtes-vous absolutely sûr?</AlertDialogTitle>
               <AlertDialogDescription>
                 Cette action est irréversible. L'agent{' '}
                 <span className="font-semibold">{`${agentToDelete.firstName} ${agentToDelete.lastName}`}</span> sera définitivement supprimé.

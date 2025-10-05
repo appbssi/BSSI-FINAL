@@ -2,9 +2,8 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getAuth, connectAuthEmulator, signInAnonymously } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore'
-import { initiateAnonymousSignIn } from './non-blocking-login';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -17,7 +16,7 @@ export function initializeFirebase() {
     // Automatically sign in the user anonymously if they are not already signed in.
     const auth = getAuth(app);
     if (!auth.currentUser) {
-      initiateAnonymousSignIn(auth);
+      signInAnonymously(auth);
     }
     
     return getSdks(app);
@@ -32,7 +31,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
   // Automatically sign in the user anonymously if they are not already signed in.
   // This is useful for client-side apps that need a UID without a full login flow.
   if (!auth.currentUser) {
-    initiateAnonymousSignIn(auth);
+    signInAnonymously(auth);
   }
   return {
     firebaseApp,
@@ -45,7 +44,5 @@ export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
-export * from './non-blocking-updates';
-export * from './non-blocking-login';
 export * from './errors';
 export * from './error-emitter';

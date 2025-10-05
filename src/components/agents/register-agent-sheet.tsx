@@ -20,8 +20,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection } from 'firebase/firestore';
+import { addDoc, collection } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useState } from 'react';
 import {
@@ -62,16 +61,25 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
     },
   });
 
-  const onSubmit = (data: AgentFormValues) => {
+  const onSubmit = async (data: AgentFormValues) => {
     if (!firestore) return;
-    const agentsCollection = collection(firestore, 'agents');
-    addDocumentNonBlocking(agentsCollection, data);
-    toast({
-      title: 'Agent enregistré !',
-      description: `L'agent ${data.firstName} ${data.lastName} a été ajouté avec succès.`,
-    });
-    form.reset();
-    setIsOpen(false);
+    try {
+      const agentsCollection = collection(firestore, 'agents');
+      await addDoc(agentsCollection, data);
+      toast({
+        title: 'Agent enregistré !',
+        description: `L'agent ${data.firstName} ${data.lastName} a été ajouté avec succès.`,
+      });
+      form.reset();
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement de l'agent: ", error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: "Une erreur est survenue lors de l'enregistrement de l'agent.",
+      });
+    }
   };
 
   return (

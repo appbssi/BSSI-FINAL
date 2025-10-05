@@ -24,9 +24,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { Agent } from '@/lib/types';
 import { useFirestore } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, setDoc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 type AgentImportData = Omit<Agent, 'id' | 'availability'>;
 
@@ -87,11 +86,12 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
     reader.readAsArrayBuffer(file);
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     if (!firestore || agentsToImport.length === 0) return;
     
     setIsImporting(true);
     const agentsCollection = collection(firestore, 'agents');
+    const importPromises: Promise<void>[] = [];
 
     agentsToImport.forEach(agentData => {
         const newAgentRef = doc(agentsCollection);
@@ -99,17 +99,27 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             ...agentData,
             availability: 'Disponible',
         };
-        // Use non-blocking set which handles its own permission error reporting
-        setDocumentNonBlocking(newAgentRef, newAgent, {});
+        importPromises.push(setDoc(newAgentRef, newAgent));
     });
 
-    setIsImporting(false);
-    toast({
-        title: 'Importation lancée !',
-        description: `${agentsToImport.length} agents sont en cours d'importation.`,
-    });
-    setAgentsToImport([]);
-    setIsOpen(false);
+    try {
+        await Promise.all(importPromises);
+        toast({
+            title: 'Importation réussie !',
+            description: `${agentsToImport.length} agents ont été importés avec succès.`,
+        });
+    } catch (error) {
+        console.error("Erreur lors de l'importation des agents: ", error);
+        toast({
+            variant: 'destructive',
+            title: 'Erreur d\'importation',
+            description: "Une erreur est survenue lors de l'importation des agents.",
+        });
+    } finally {
+        setIsImporting(false);
+        setAgentsToImport([]);
+        setIsOpen(false);
+    }
   };
 
   return (

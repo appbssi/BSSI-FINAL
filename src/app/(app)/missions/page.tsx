@@ -31,12 +31,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { CreateMissionForm } from '@/components/missions/create-mission-form';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, doc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import type { Agent, Mission } from '@/lib/types';
 import { useState, useMemo } from 'react';
 import { EditMissionSheet } from '@/components/missions/edit-mission-sheet';
-import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -269,25 +268,43 @@ export default function MissionsPage() {
     }
   };
   
-  const handleCancelMission = () => {
+  const handleCancelMission = async () => {
     if (!firestore || !missionToCancel) return;
-    const missionRef = doc(firestore, 'missions', missionToCancel.id);
-    updateDocumentNonBlocking(missionRef, { status: 'Annulée' });
-    toast({
-        title: 'Mission annulée',
-        description: `La mission "${missionToCancel.name}" a été annulée.`
-    });
+    try {
+        const missionRef = doc(firestore, 'missions', missionToCancel.id);
+        await updateDoc(missionRef, { status: 'Annulée' });
+        toast({
+            title: 'Mission annulée',
+            description: `La mission "${missionToCancel.name}" a été annulée.`
+        });
+    } catch (error) {
+        console.error("Erreur lors de l'annulation de la mission: ", error);
+        toast({
+            variant: 'destructive',
+            title: 'Erreur',
+            description: "Une erreur est survenue lors de l'annulation de la mission.",
+        });
+    }
     setMissionToCancel(null);
   }
 
-  const handleDeleteMission = () => {
+  const handleDeleteMission = async () => {
     if (!firestore || !missionToDelete) return;
-    const missionRef = doc(firestore, 'missions', missionToDelete.id);
-    deleteDocumentNonBlocking(missionRef);
-    toast({
-      title: 'Mission supprimée',
-      description: `La mission "${missionToDelete.name}" a été supprimée.`,
-    });
+    try {
+      const missionRef = doc(firestore, 'missions', missionToDelete.id);
+      await deleteDoc(missionRef);
+      toast({
+        title: 'Mission supprimée',
+        description: `La mission "${missionToDelete.name}" a été supprimée.`,
+      });
+    } catch (error) {
+        console.error("Erreur lors de la suppression de la mission: ", error);
+        toast({
+            variant: 'destructive',
+            title: 'Erreur',
+            description: "Une erreur est survenue lors de la suppression de la mission.",
+        });
+    }
     setMissionToDelete(null);
   };
 
@@ -469,7 +486,7 @@ export default function MissionsPage() {
         <AlertDialog open={!!missionToDelete} onOpenChange={(open) => !open && setMissionToDelete(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Êtes-vous absolument sûr?</AlertDialogTitle>
+              <AlertDialogTitle>Êtes-vous absolutely sûr?</AlertDialogTitle>
               <AlertDialogDescription>
                 Cette action est irréversible. La mission{' '}
                 <span className="font-semibold">{missionToDelete.name}</span> sera définitivement supprimée.
@@ -492,4 +509,5 @@ export default function MissionsPage() {
     
 
     
+
 

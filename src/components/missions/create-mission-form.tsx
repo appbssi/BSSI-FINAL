@@ -21,8 +21,7 @@ import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { collection, Timestamp } from 'firebase/firestore';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { collection, Timestamp, addDoc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import { useState } from 'react';
 import { useCollection } from '@/firebase/firestore/use-collection';
@@ -83,22 +82,31 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   const { data: allAgents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   const { data: allMissions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
 
-  const onSubmit = (data: MissionFormValues) => {
+  const onSubmit = async (data: MissionFormValues) => {
     if (!firestore) return;
-    const missionsCollection = collection(firestore, 'missions');
-    addDocumentNonBlocking(missionsCollection, {
-      ...data,
-      startDate: Timestamp.fromDate(data.startDate),
-      endDate: Timestamp.fromDate(data.endDate),
-      status: 'Planification',
-    });
-    toast({
-        title: "Mission créée !",
-        description: `La mission "${data.name}" a été créée avec succès.`,
-    });
-    form.reset();
-    if (onMissionCreated) {
-      onMissionCreated();
+    try {
+        const missionsCollection = collection(firestore, 'missions');
+        await addDoc(missionsCollection, {
+        ...data,
+        startDate: Timestamp.fromDate(data.startDate),
+        endDate: Timestamp.fromDate(data.endDate),
+        status: 'Planification',
+        });
+        toast({
+            title: "Mission créée !",
+            description: `La mission "${data.name}" a été créée avec succès.`,
+        });
+        form.reset();
+        if (onMissionCreated) {
+        onMissionCreated();
+        }
+    } catch (error) {
+        console.error("Erreur lors de la création de la mission: ", error);
+        toast({
+            variant: 'destructive',
+            title: 'Erreur',
+            description: "Une erreur est survenue lors de la création de la mission.",
+        });
     }
   };
 

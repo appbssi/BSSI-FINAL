@@ -30,8 +30,7 @@ import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { collection, Timestamp, doc } from 'firebase/firestore';
-import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { collection, Timestamp, doc, updateDoc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import {
   Select,
@@ -122,19 +121,28 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
   }, [mission, form]);
 
 
-  const onSubmit = (data: MissionFormValues) => {
+  const onSubmit = async (data: MissionFormValues) => {
     if (!firestore) return;
-    const missionRef = doc(firestore, 'missions', mission.id);
-    updateDocumentNonBlocking(missionRef, {
-      ...data,
-      startDate: Timestamp.fromDate(data.startDate),
-      endDate: Timestamp.fromDate(data.endDate),
-    });
-    toast({
-        title: "Mission mise à jour !",
-        description: `La mission "${data.name}" a été mise à jour.`,
-    });
-    onOpenChange(false);
+    try {
+        const missionRef = doc(firestore, 'missions', mission.id);
+        await updateDoc(missionRef, {
+        ...data,
+        startDate: Timestamp.fromDate(data.startDate),
+        endDate: Timestamp.fromDate(data.endDate),
+        });
+        toast({
+            title: "Mission mise à jour !",
+            description: `La mission "${data.name}" a été mise à jour.`,
+        });
+        onOpenChange(false);
+    } catch (error) {
+        console.error("Erreur lors de la mise à jour de la mission: ", error);
+        toast({
+            variant: 'destructive',
+            title: 'Erreur',
+            description: "Une erreur est survenue lors de la mise à jour de la mission.",
+        });
+    }
   };
   
   const startDate = form.watch('startDate');
