@@ -1,70 +1,57 @@
 /**
- * @fileoverview Firestore Security Rules for the Agent-Mission application.
- *
- * Core Philosophy:
- * This ruleset employs a strict user-ownership model for agents, allowing only authenticated users to create, read, update, and delete their own agent profiles.
- * Missions are publicly readable but only authorized users (e.g., admins) can create, update, or delete missions.
+ * @file Overview
+ * This ruleset enforces a security model where agents and missions are managed with authorization checks.
  *
  * Data Structure:
- * - /agents/{agentId}: Stores individual agent profiles. agentId corresponds to the authenticated user's UID.
- * - /missions/{missionId}: Stores details about individual missions.
+ * - /agents/{agentId}: Stores information about agents.
+ * - /missions/{missionId}: Stores information about missions.
  *
  * Key Security Decisions:
- * - Agents can only manage their own profiles, preventing unauthorized access to other agents' data.
- * - Public read access to missions allows for easy information dissemination, while write access is restricted.
- * - Data validation is relaxed in this prototyping phase, focusing on ownership and relational integrity rather than full schema enforcement.
- *
- * Denormalization for Authorization:
- * - Agents: The agentId in the path should match the authenticated user's UID.
+ * - Agents and missions are NOT owned by specific users.  Anyone authenticated can read and write.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to agent profiles. Only authenticated users can manage their own profiles.
+     * @description Manages access to agent documents.
      * @path /agents/{agentId}
-     * @allow (create) - An authenticated user with UID 'user123' can create a new agent profile at /agents/user123. The request.resource.data.id field matches the agentId.
-     * @allow (get, list) - Any authenticated user can read their own agent profile at /agents/user123.
-     * @allow (update, delete) - An authenticated user with UID 'user123' can update or delete their own agent profile at /agents/user123.
-     * @deny (create) - An authenticated user with UID 'user123' cannot create an agent profile at /agents/anotherUser.
-     * @deny (update, delete) - An authenticated user with UID 'user123' cannot update or delete another user's agent profile at /agents/anotherUser.
-     * @principle Enforces document ownership for agent profiles.
+     * @allow (create) Signed-in user can create an agent.
+     * @allow (get) Anyone can read agent data.
+     * @allow (list) Anyone can list agents.
+     * @allow (update) Signed-in user can update an agent.
+     * @allow (delete) Signed-in user can delete an agent.
+     * @deny (create) Unauthenticated users cannot create agents.
+     * @principle Allows any signed-in user to manage agents.
      */
     match /agents/{agentId} {
-      // isSigned
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      // isOwner
-      function isOwner(agentId) {
-        return request.auth.uid == agentId;
-      }
-      // isExistingOwner
-      function isExistingOwner(agentId) {
-        return isOwner(agentId) && resource != null;
-      }
-
-      allow get: if isSignedIn() && isOwner(agentId);
-      allow list: if isSignedIn() && isOwner(agentId);
-      allow create: if isSignedIn() && isOwner(agentId);
-      allow update: if isSignedIn() && isExistingOwner(agentId);
-      allow delete: if isSignedIn() && isExistingOwner(agentId);
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
     }
 
     /**
-     * @description Controls access to mission details. Missions are publicly readable, but only authorized users can create, update, or delete them.
+     * @description Manages access to mission documents.
      * @path /missions/{missionId}
-     * @allow (get, list) - Any user, authenticated or not, can read mission details.
-     * @deny (create, update, delete) - Only authorized users (e.g., admins) can create, update, or delete missions. This is a placeholder and needs to be implemented.
-     * @principle Provides public read access while restricting write access to authorized users.
+     * @allow (create) Signed-in user can create a mission.
+     * @allow (get) Anyone can read mission data.
+     * @allow (list) Anyone can list missions.
+     * @allow (update) Signed-in user can update a mission.
+     * @allow (delete) Signed-in user can delete a mission.
+     * @deny (create) Unauthenticated users cannot create missions.
+     * @principle Allows any signed-in user to manage missions.
      */
     match /missions/{missionId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false; // TODO: Implement admin check
-      allow update: if false; // TODO: Implement admin check and existing document validation
-      allow delete: if false; // TODO: Implement admin check and existing document validation
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
     }
+  }
+
+  // Helper function to determine if a user is signed in.
+  function isSignedIn() {
+    return request.auth != null;
   }
 }

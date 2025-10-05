@@ -24,10 +24,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { Agent } from '@/lib/types';
 import { useFirestore } from '@/firebase';
-import { writeBatch, collection, doc } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 type AgentImportData = Omit<Agent, 'id' | 'availability'>;
 
@@ -59,12 +58,12 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
 
 
         const parsedAgents: AgentImportData[] = json.map((row) => ({
-            firstName: String(row.firstName || ''),
-            lastName: String(row.lastName || ''),
-            registrationNumber: String(row.registrationNumber || ''),
-            rank: String(row.rank || ''),
-            contact: String(row.contact || ''),
-            address: String(row.address || ''),
+            firstName: String(row.firstName || '').trim(),
+            lastName: String(row.lastName || '').trim(),
+            registrationNumber: String(row.registrationNumber || '').trim(),
+            rank: String(row.rank || '').trim(),
+            contact: String(row.contact || '').trim(),
+            address: String(row.address || '').trim(),
         })).filter(agent => agent.firstName && agent.lastName && agent.registrationNumber);
 
         if(parsedAgents.length === 0){
@@ -92,7 +91,6 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
     if (!firestore || agentsToImport.length === 0) return;
     
     setIsImporting(true);
-    const batch = writeBatch(firestore);
     const agentsCollection = collection(firestore, 'agents');
 
     agentsToImport.forEach(agentData => {
@@ -101,24 +99,17 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             ...agentData,
             availability: 'Disponible',
         };
-        batch.set(newAgentRef, newAgent);
+        // Use non-blocking set which handles its own permission error reporting
+        setDocumentNonBlocking(newAgentRef, newAgent, {});
     });
 
-    batch.commit().catch(error => {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: agentsCollection.path,
-        operation: 'write',
-        requestResourceData: agentsToImport,
-      }));
-    }).finally(() => {
-        setIsImporting(false);
-        toast({
-            title: 'Importation réussie !',
-            description: `${agentsToImport.length} agents ont été importés avec succès.`,
-        });
-        setAgentsToImport([]);
-        setIsOpen(false);
+    setIsImporting(false);
+    toast({
+        title: 'Importation lancée !',
+        description: `${agentsToImport.length} agents sont en cours d'importation.`,
     });
+    setAgentsToImport([]);
+    setIsOpen(false);
   };
 
   return (
