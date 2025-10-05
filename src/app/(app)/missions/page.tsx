@@ -44,7 +44,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function MissionsPage() {
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -151,36 +150,43 @@ export default function MissionsPage() {
                     <TableCell colSpan={6} className="text-center">Chargement des missions...</TableCell>
                 </TableRow>
             ) : (
-            missions?.map((mission) => (
+            missions?.map((mission) => {
+              const assignedAgents = (mission.assignedAgentIds || [])
+                .map(id => agentsById[id])
+                .filter(Boolean)
+                .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
+
+              return (
               <TableRow key={mission.id}>
                 <TableCell className="font-medium">{mission.name}</TableCell>
                 <TableCell>{mission.location}</TableCell>
                 <TableCell>{mission.startDate.toDate().toLocaleDateString('fr-FR')}</TableCell>
                 <TableCell>
                    <div className="flex items-center gap-2">
-                    {mission.assignedAgentIds && mission.assignedAgentIds.length > 0 ? (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div className="flex items-center">
-                                        <Avatar className="h-8 w-8 border-2 border-background">
-                                            <AvatarFallback>
-                                                <Users className="h-4 w-4" />
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <span className="ml-2 font-medium">{mission.assignedAgentIds.length}</span>
-                                    </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <ul>
-                                        {mission.assignedAgentIds.map(agentId => {
-                                            const agent = agentsById[agentId];
-                                            return <li key={agentId}>{agent ? `${agent.firstName} ${agent.lastName}` : 'Agent inconnu'}</li>;
-                                        })}
+                    {assignedAgents && assignedAgents.length > 0 ? (
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="ghost" className="flex items-center gap-2 px-2">
+                                    <Users className="h-4 w-4" />
+                                    <span className="font-medium">{assignedAgents.length}</span>
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80">
+                                <div className="space-y-4">
+                                    <h4 className="font-medium leading-none">Agents Assignés</h4>
+                                    <ul className="space-y-2">
+                                        {assignedAgents.map(agent => (
+                                            <li key={agent.id} className="text-sm">
+                                                <div className="font-semibold">{agent.firstName} {agent.lastName}</div>
+                                                <div className="text-muted-foreground">
+                                                    <span>{agent.rank}</span> | <span>{agent.contact}</span>
+                                                </div>
+                                            </li>
+                                        ))}
                                     </ul>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
                     ) : (
                       <span className="text-sm text-muted-foreground">Non assigné</span>
                     )}
@@ -220,7 +226,7 @@ export default function MissionsPage() {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))
+            )})
             )}
              {!missionsLoading && missions?.length === 0 && (
                 <TableRow>
