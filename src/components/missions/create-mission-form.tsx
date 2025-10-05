@@ -22,7 +22,8 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { collection, Timestamp, addDoc, writeBatch, doc } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
+import { FirestorePermissionError } from '@/firebase/errors';
 import { useState } from 'react';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { Agent, Mission } from '@/lib/types';
@@ -86,41 +87,41 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
 
   const onSubmit = async (data: MissionFormValues) => {
     if (!firestore) return;
-    try {
-        const batch = writeBatch(firestore);
+    
+    const batch = writeBatch(firestore);
 
-        const missionsCollection = collection(firestore, 'missions');
-        const newMissionRef = doc(missionsCollection);
-        batch.set(newMissionRef, {
-            ...data,
-            startDate: Timestamp.fromDate(data.startDate),
-            endDate: Timestamp.fromDate(data.endDate),
-            status: 'Planification',
-        });
+    const missionsCollection = collection(firestore, 'missions');
+    const newMissionRef = doc(missionsCollection);
+    const newMissionData = {
+        ...data,
+        startDate: Timestamp.fromDate(data.startDate),
+        endDate: Timestamp.fromDate(data.endDate),
+        status: 'Planification',
+    };
+    batch.set(newMissionRef, newMissionData);
 
-        data.assignedAgentIds.forEach(agentId => {
-            const agentRef = doc(firestore, 'agents', agentId);
-            batch.update(agentRef, { availability: 'En mission' });
-        });
+    data.assignedAgentIds.forEach(agentId => {
+        const agentRef = doc(firestore, 'agents', agentId);
+        batch.update(agentRef, { availability: 'En mission' });
+    });
 
-        await batch.commit();
-
+    batch.commit().then(() => {
         toast({
             title: "Mission créée !",
             description: `La mission "${data.name}" a été créée avec succès.`,
         });
         form.reset();
         if (onMissionCreated) {
-        onMissionCreated();
+          onMissionCreated();
         }
-    } catch (error) {
-        console.error("Erreur lors de la création de la mission: ", error);
-        toast({
-            variant: 'destructive',
-            title: 'Erreur',
-            description: "Une erreur est survenue lors de la création de la mission.",
+    }).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: newMissionRef.path,
+            operation: 'create',
+            requestResourceData: newMissionData,
         });
-    }
+        errorEmitter.emit('permission-error', permissionError);
+    });
   };
 
   const handleNextStep = async () => {

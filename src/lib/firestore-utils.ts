@@ -1,6 +1,11 @@
 
-import { collection, getDocs, writeBatch, Firestore, doc } from "firebase/firestore";
+'use client';
+
+import { collection, getDocs, writeBatch, Firestore, doc, deleteDoc } from "firebase/firestore";
 import type { Agent } from "./types";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
+
 
 /**
  * Finds and deletes duplicate agents from Firestore based on the registrationNumber.
@@ -42,8 +47,27 @@ export async function deleteDuplicateAgents(firestore: Firestore): Promise<numbe
 
   // Commit the deletions if any
   if (duplicatesDeleted > 0) {
-    await batch.commit();
+     batch.commit().catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: 'agents/[multiple]', // Generic path for batch operation
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
   }
 
   return duplicatesDeleted;
+}
+
+export function deleteAgent(firestore: Firestore, agent: Agent) {
+    if (!agent) return;
+    const agentRef = doc(firestore, 'agents', agent.id);
+
+    deleteDoc(agentRef).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: agentRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
 }

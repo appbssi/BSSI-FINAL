@@ -23,7 +23,8 @@ import {
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, errorEmitter } from '@/firebase';
+import { FirestorePermissionError } from '@/firebase/errors';
 import { Loader2 } from 'lucide-react';
 
 const agentSchema = z.object({
@@ -89,22 +90,34 @@ export function RegisterAgentSheet({ isOpen, onOpenChange }: RegisterAgentSheetP
           return;
       }
       
-      await addDoc(agentsRef, {
+      const agentData = {
         ...data,
         availability: 'Disponible',
-      });
-      toast({
-        title: 'Agent enregistré !',
-        description: `L'agent ${data.firstName} ${data.lastName} a été ajouté avec succès.`,
-      });
-      form.reset();
-      onOpenChange(false);
+      };
+
+      addDoc(agentsRef, agentData)
+        .then(() => {
+            toast({
+                title: 'Agent enregistré !',
+                description: `L'agent ${data.firstName} ${data.lastName} a été ajouté avec succès.`,
+            });
+            form.reset();
+            onOpenChange(false);
+        })
+        .catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: agentsRef.path,
+                operation: 'create',
+                requestResourceData: agentData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
+
     } catch (error) {
-      console.error("Erreur lors de l'enregistrement de l'agent: ", error);
       toast({
         variant: 'destructive',
         title: 'Erreur',
-        description: "Une erreur est survenue lors de l'enregistrement de l'agent.",
+        description: "Une erreur de validation est survenue.",
       });
     }
   };

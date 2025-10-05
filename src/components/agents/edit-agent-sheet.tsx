@@ -23,7 +23,8 @@ import {
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, errorEmitter } from '@/firebase';
+import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent } from '@/lib/types';
 
 const agentSchema = z.object({
@@ -93,18 +94,26 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
 
 
       const agentRef = doc(firestore, 'agents', agent.id);
-      await updateDoc(agentRef, data);
-      toast({
-        title: 'Agent mis à jour !',
-        description: `Les informations de l'agent ${data.firstName} ${data.lastName} ont été mises à jour.`,
+      updateDoc(agentRef, data).then(() => {
+        toast({
+            title: 'Agent mis à jour !',
+            description: `Les informations de l'agent ${data.firstName} ${data.lastName} ont été mises à jour.`,
+        });
+        onOpenChange(false);
+      }).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: agentRef.path,
+            operation: 'update',
+            requestResourceData: data,
+        });
+        errorEmitter.emit('permission-error', permissionError);
       });
-      onOpenChange(false);
+      
     } catch (error) {
-       console.error("Erreur lors de la mise à jour de l'agent: ", error);
        toast({
         variant: 'destructive',
         title: 'Erreur',
-        description: "Une erreur est survenue lors de la mise à jour de l'agent.",
+        description: "Une erreur de validation est survenue.",
       });
     }
   };

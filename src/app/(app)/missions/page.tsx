@@ -32,7 +32,8 @@ import { Input } from '@/components/ui/input';
 import { CreateMissionForm } from '@/components/missions/create-mission-form';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
+import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent, Mission } from '@/lib/types';
 import { useState, useMemo } from 'react';
 import { EditMissionSheet } from '@/components/missions/edit-mission-sheet';
@@ -270,62 +271,59 @@ export default function MissionsPage() {
   const handleCancelMission = async () => {
     if (!firestore || !missionToCancel) return;
     const batch = writeBatch(firestore);
-    try {
-        const missionRef = doc(firestore, 'missions', missionToCancel.id);
-        batch.update(missionRef, { status: 'Annulée' });
-        
-        // Make agents available again
-        for (const agentId of missionToCancel.assignedAgentIds) {
-            const agentRef = doc(firestore, 'agents', agentId);
-            batch.update(agentRef, { availability: 'Disponible' });
-        }
+    
+    const missionRef = doc(firestore, 'missions', missionToCancel.id);
+    const updateData = { status: 'Annulée' };
+    batch.update(missionRef, updateData);
+    
+    for (const agentId of missionToCancel.assignedAgentIds) {
+        const agentRef = doc(firestore, 'agents', agentId);
+        batch.update(agentRef, { availability: 'Disponible' });
+    }
 
-        await batch.commit();
-
+    batch.commit().then(() => {
         toast({
             title: 'Mission annulée',
             description: `La mission "${missionToCancel.name}" a été annulée.`
         });
-    } catch (error) {
-        console.error("Erreur lors de l'annulation de la mission: ", error);
-        toast({
-            variant: 'destructive',
-            title: 'Erreur',
-            description: "Une erreur est survenue lors de l'annulation de la mission.",
+    }).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: missionRef.path,
+            operation: 'update',
+            requestResourceData: updateData,
         });
-    }
+        errorEmitter.emit('permission-error', permissionError);
+    });
     setMissionToCancel(null);
   }
 
   const handleDeleteMission = async () => {
     if (!firestore || !missionToDelete) return;
     const batch = writeBatch(firestore);
-    try {
-      const missionRef = doc(firestore, 'missions', missionToDelete.id);
-      batch.delete(missionRef);
-      
-      // Make agents available again if mission was active or planned
-      if (missionToDelete.status === 'En cours' || missionToDelete.status === 'Planification') {
-        for (const agentId of missionToDelete.assignedAgentIds) {
-            const agentRef = doc(firestore, 'agents', agentId);
-            batch.update(agentRef, { availability: 'Disponible' });
-        }
+    
+    const missionRef = doc(firestore, 'missions', missionToDelete.id);
+    batch.delete(missionRef);
+    
+    if (missionToDelete.status === 'En cours' || missionToDelete.status === 'Planification') {
+      for (const agentId of missionToDelete.assignedAgentIds) {
+          const agentRef = doc(firestore, 'agents', agentId);
+          batch.update(agentRef, { availability: 'Disponible' });
       }
-
-      await batch.commit();
-
-      toast({
-        title: 'Mission supprimée',
-        description: `La mission "${missionToDelete.name}" a été supprimée.`,
-      });
-    } catch (error) {
-        console.error("Erreur lors de la suppression de la mission: ", error);
-        toast({
-            variant: 'destructive',
-            title: 'Erreur',
-            description: "Une erreur est survenue lors de la suppression de la mission.",
-        });
     }
+
+    batch.commit().then(() => {
+        toast({
+            title: 'Mission supprimée',
+            description: `La mission "${missionToDelete.name}" a été supprimée.`,
+        });
+    }).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: missionRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
+
     setMissionToDelete(null);
   };
 

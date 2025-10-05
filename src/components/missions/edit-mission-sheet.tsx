@@ -31,7 +31,8 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { collection, Timestamp, doc, updateDoc, writeBatch } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
+import { FirestorePermissionError } from '@/firebase/errors';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
@@ -133,48 +134,47 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
 
     const batch = writeBatch(firestore);
 
-    try {
-        const missionRef = doc(firestore, 'missions', mission.id);
-        batch.update(missionRef, {
-          ...data,
-          startDate: Timestamp.fromDate(data.startDate),
-          endDate: Timestamp.fromDate(data.endDate),
-        });
+    const missionRef = doc(firestore, 'missions', mission.id);
+    const missionUpdateData = {
+        ...data,
+        startDate: Timestamp.fromDate(data.startDate),
+        endDate: Timestamp.fromDate(data.endDate),
+    };
+    batch.update(missionRef, missionUpdateData);
 
-        const originalAgentIds = new Set(mission.assignedAgentIds || []);
-        const newAgentIds = new Set(data.assignedAgentIds);
+    const originalAgentIds = new Set(mission.assignedAgentIds || []);
+    const newAgentIds = new Set(data.assignedAgentIds);
 
-        // Agents removed from mission -> set to Disponible
-        for (const agentId of originalAgentIds) {
-            if (!newAgentIds.has(agentId)) {
-                const agentRef = doc(firestore, 'agents', agentId);
-                batch.update(agentRef, { availability: 'Disponible' });
-            }
+    // Agents removed from mission -> set to Disponible
+    for (const agentId of originalAgentIds) {
+        if (!newAgentIds.has(agentId)) {
+            const agentRef = doc(firestore, 'agents', agentId);
+            batch.update(agentRef, { availability: 'Disponible' });
         }
+    }
 
-        // Agents added to mission -> set to En mission
-        for (const agentId of newAgentIds) {
-            if (!originalAgentIds.has(agentId)) {
-                const agentRef = doc(firestore, 'agents', agentId);
-                batch.update(agentRef, { availability: 'En mission' });
-            }
+    // Agents added to mission -> set to En mission
+    for (const agentId of newAgentIds) {
+        if (!originalAgentIds.has(agentId)) {
+            const agentRef = doc(firestore, 'agents', agentId);
+            batch.update(agentRef, { availability: 'En mission' });
         }
-        
-        await batch.commit();
-        
+    }
+    
+    batch.commit().then(() => {
         toast({
             title: "Mission mise à jour !",
             description: `La mission "${data.name}" a été mise à jour.`,
         });
         onOpenChange(false);
-    } catch (error) {
-        console.error("Erreur lors de la mise à jour de la mission: ", error);
-        toast({
-            variant: 'destructive',
-            title: 'Erreur',
-            description: "Une erreur est survenue lors de la mise à jour de la mission.",
+    }).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: missionRef.path,
+            operation: 'update',
+            requestResourceData: missionUpdateData
         });
-    }
+        errorEmitter.emit('permission-error', permissionError);
+    });
   };
   
   const startDate = form.watch('startDate');

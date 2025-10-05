@@ -24,7 +24,8 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import type { Agent } from '@/lib/types';
-import { useFirestore } from '@/firebase';
+import { useFirestore, errorEmitter } from '@/firebase';
+import { FirestorePermissionError } from '@/firebase/errors';
 import { collection, doc, writeBatch, getDocs } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 
@@ -133,6 +134,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
     
     setIsImporting(true);
     const batch = writeBatch(firestore);
+    const allData = [];
 
     agentsToImport.forEach(agentData => {
         const newAgentRef = doc(collection(firestore, 'agents'));
@@ -141,26 +143,26 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             availability: 'Disponible',
         };
         batch.set(newAgentRef, newAgent);
+        allData.push(newAgent);
     });
 
-    try {
-        await batch.commit();
+    batch.commit().then(() => {
         toast({
             title: 'Importation réussie !',
             description: `${agentsToImport.length} agents ont été importés avec succès.`,
         });
-    } catch (error) {
-        console.error("Erreur lors de l'importation des agents: ", error);
-        toast({
-            variant: 'destructive',
-            title: 'Erreur d\'importation',
-            description: "Une erreur est survenue lors de l'importation des agents.",
+    }).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: 'agents/[batch]',
+            operation: 'create',
+            requestResourceData: allData,
         });
-    } finally {
+        errorEmitter.emit('permission-error', permissionError);
+    }).finally(() => {
         setIsImporting(false);
         setAgentsToImport([]);
         setIsOpen(false);
-    }
+    });
   };
 
   return (

@@ -29,7 +29,7 @@ import { useFirestore, useMemoFirebase } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
 import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
-import { deleteDuplicateAgents } from '@/lib/firestore-utils';
+import { deleteDuplicateAgents, deleteAgent } from '@/lib/firestore-utils';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -102,25 +102,15 @@ export default function AgentsPage() {
     if (!firestore || !agentToDelete) return;
     setIsDeleting(true);
 
-    try {
-      const agentRef = doc(firestore, 'agents', agentToDelete.id);
-      await deleteDoc(agentRef);
-      
-      toast({
-        title: 'Agent supprimé',
-        description: `L'agent ${agentToDelete.firstName} ${agentToDelete.lastName} a été supprimé.`,
-      });
-    } catch (error) {
-       console.error("Erreur lors de la suppression de l'agent: ", error);
-       toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: "Une erreur est survenue lors de la suppression de l'agent.",
-      });
-    } finally {
-      setIsDeleting(false);
-      setAgentToDelete(null); // Close the dialog
-    }
+    deleteAgent(firestore, agentToDelete);
+    
+    toast({
+      title: 'Agent supprimé',
+      description: `L'agent ${agentToDelete.firstName} ${agentToDelete.lastName} a été supprimé.`,
+    });
+
+    setIsDeleting(false);
+    setAgentToDelete(null); // Close the dialog
   };
 
   const handleDeduplicate = async () => {
