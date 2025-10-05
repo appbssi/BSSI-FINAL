@@ -159,12 +159,23 @@ export default function AgentsPage() {
     const doc = new jsPDF();
     const tableTitle = "Liste des Agents";
     const generationDate = new Date().toLocaleDateString('fr-FR');
-    
-    // Header
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Official Header
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text("REPUBLIQUE DE CÔTE D'IVOIRE", pageWidth / 2, 15, { align: 'center' });
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text("Union-Discipline-Travail", pageWidth / 2, 20, { align: 'center' });
+
+    // Report Header
     doc.setFontSize(18);
-    doc.text(tableTitle, 14, 22);
+    doc.setFont('helvetica', 'bold');
+    doc.text(tableTitle, 14, 35);
     doc.setFontSize(11);
-    doc.text(`Généré le: ${generationDate}`, 14, 30);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Généré le: ${generationDate}`, 14, 42);
 
     autoTable(doc, {
         head: [['Prénom', 'Nom', 'Matricule', 'Grade', 'Contact', 'Disponibilité']],
@@ -176,10 +187,10 @@ export default function AgentsPage() {
             agent.contact,
             agent.availability,
         ]),
-        startY: 40,
+        startY: 50,
         theme: 'striped',
         headStyles: {
-            fillColor: [41, 128, 185], // Professional Blue
+            fillColor: [39, 55, 70],
             textColor: 255,
             fontStyle: 'bold'
         },
@@ -416,6 +427,8 @@ export default function AgentsPage() {
       )}
     </div>
   );
+
+    
 
     
 
