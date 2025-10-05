@@ -44,7 +44,7 @@ export function SidebarNav() {
             <Rocket className="w-5 h-5 text-primary-foreground" />
           </div>
           <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">
-            E-Brigade
+            syges-BSSI
           </span>
         </div>
       </SidebarHeader>
