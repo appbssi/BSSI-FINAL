@@ -24,8 +24,8 @@ export type SuggestAgentsForMissionInput = z.infer<typeof SuggestAgentsForMissio
 
 const SuggestAgentsForMissionOutputSchema = z.array(z.object({
   name: z.string(),
-  reason: z.string().describe('Reason why this agent is suggested for the mission.'),
-})).describe('A list of suggested agents with reasons for their suitability.');
+  reason: z.string().describe("Raison pour laquelle cet agent est suggéré pour la mission."),
+})).describe("Une liste d'agents suggérés avec les raisons de leur adéquation.");
 export type SuggestAgentsForMissionOutput = z.infer<typeof SuggestAgentsForMissionOutputSchema>;
 
 export async function suggestAgentsForMission(input: SuggestAgentsForMissionInput): Promise<SuggestAgentsForMissionOutput> {
@@ -36,19 +36,19 @@ const suggestAgentsPrompt = ai.definePrompt({
   name: 'suggestAgentsPrompt',
   input: {schema: SuggestAgentsForMissionInputSchema},
   output: {schema: SuggestAgentsForMissionOutputSchema},
-  prompt: `You are an AI assistant specialized in suggesting the best agents for a mission. Your goal is to ensure a fair rotation of agents.
+  prompt: `Vous êtes un assistant IA spécialisé dans la suggestion des meilleurs agents pour une mission. Votre objectif est d'assurer une rotation équitable des agents.
 
-Given the following mission details:
+Compte tenu des détails de la mission suivants:
 {{{missionDetails}}}
 
-And the following available agents:
+Et des agents disponibles suivants:
 {{#each availableAgents}}
-- Name: {{this.name}}, Availability: {{this.availability}}, Completed Missions: {{this.completedMissions}}
+- Nom: {{this.name}}, Disponibilité: {{this.availability}}, Missions terminées: {{this.completedMissions}}
 {{/each}}
 
-Suggest the most suitable agents for the mission. Prioritize agents who have completed the fewest missions to ensure a good distribution of work. Provide a brief reason for each suggestion.
+Suggérez les agents les plus appropriés pour la mission. Donnez la priorité aux agents qui ont accompli le moins de missions pour assurer une bonne répartition du travail. Fournissez une brève justification pour chaque suggestion en français.
 
-Format your response as a JSON array of objects, where each object has the agent's name and the reason for their suggestion.`,
+Formatez votre réponse sous la forme d'un tableau JSON d'objets, où chaque objet contient le nom de l'agent et la raison de sa suggestion.`,
 });
 
 const suggestAgentsForMissionFlow = ai.defineFlow(
