@@ -1,4 +1,7 @@
-import { agents } from '@/lib/data';
+
+'use client';
+
+import { agents, missions } from '@/lib/data';
 import {
   Table,
   TableBody,
@@ -22,8 +25,26 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { RegisterAgentSheet } from '@/components/agents/register-agent-sheet';
+import type { Agent } from '@/lib/types';
 
 export default function AgentsPage() {
+
+  const getAgentAvailability = (agent: Agent): 'Disponible' | 'En mission' | 'En congé' => {
+    if (agent.availability === 'En congé') {
+      return 'En congé';
+    }
+
+    const now = new Date();
+    const isOnMission = missions.some(mission =>
+      mission.assignedAgents.some(a => a.id === agent.id) &&
+      mission.startDate <= now &&
+      mission.endDate >= now &&
+      (mission.status === 'En cours' || mission.status === 'Planification')
+    );
+
+    return isOnMission ? 'En mission' : 'Disponible';
+  };
+
   const getBadgeVariant = (availability: string) => {
     switch (availability) {
       case 'Disponible':
@@ -61,60 +82,65 @@ export default function AgentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {agents.map((agent) => (
-              <TableRow key={agent.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage src={agent.avatarUrl} alt={agent.name} />
-                      <AvatarFallback>
-                        {agent.name.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="font-medium">
-                      {agent.name}
-                      <div className="text-sm text-muted-foreground">
-                        {agent.email}
+            {agents.map((agent) => {
+              const availability = getAgentAvailability(agent);
+              return (
+                <TableRow key={agent.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarImage src={agent.avatarUrl} alt={agent.name} />
+                        <AvatarFallback>
+                          {agent.name.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="font-medium">
+                        {agent.name}
+                        <div className="text-sm text-muted-foreground">
+                          {agent.email}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {agent.skills.map((skill) => (
-                      <Badge key={skill} variant="secondary">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={getBadgeVariant(agent.availability)}>
-                    {agent.availability}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Modifier</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                        Supprimer
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {agent.skills.map((skill) => (
+                        <Badge key={skill} variant="secondary">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getBadgeVariant(availability)}>
+                      {availability}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Toggle menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem>Modifier</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                          Supprimer
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
     </div>
   );
 }
+
+    

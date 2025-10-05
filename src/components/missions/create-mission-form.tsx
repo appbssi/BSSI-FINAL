@@ -9,11 +9,10 @@ import {
   suggestAgentsForMission,
   type SuggestAgentsForMissionOutput,
 } from '@/ai/flows/suggest-agents-for-mission';
-import { agents as allAgents } from '@/lib/data';
-import type { Agent } from '@/lib/types';
+import { agents as allAgents, missions as allMissions } from '@/lib/data';
+import type { Agent, Mission } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Form,
   FormControl,
@@ -23,7 +22,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, Bot, CalendarIcon, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Loader2, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -48,11 +47,26 @@ const missionSchema = z.object({
 
 type MissionFormValues = z.infer<typeof missionSchema>;
 
+const isAgentAvailable = (agent: Agent, newMission: { startDate: Date, endDate: Date }): boolean => {
+  if (!newMission.startDate || !newMission.endDate) return false;
+
+  const agentMissions = allMissions.filter(mission => 
+    mission.assignedAgents.some(a => a.id === agent.id) &&
+    (mission.status === 'En cours' || mission.status === 'Planification')
+  );
+
+  return !agentMissions.some(mission =>
+    (newMission.startDate <= mission.endDate) && (newMission.endDate >= mission.startDate)
+  );
+};
+
+
 export function CreateMissionForm() {
   const [step, setStep] = useState(1);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestedAgents, setSuggestedAgents] =
     useState<SuggestAgentsForMissionOutput>([]);
+  const [availableAgentsForMission, setAvailableAgentsForMission] = useState<Agent[]>([]);
   const { toast } = useToast();
 
   const form = useForm<MissionFormValues>({
@@ -73,25 +87,42 @@ export function CreateMissionForm() {
 
   const handleSuggestAgents = async () => {
     setIsSuggesting(true);
+    
+    const missionDates = {
+      startDate: form.getValues("startDate"),
+      endDate: form.getValues("endDate")
+    }
+    const availableAgents = allAgents.filter(agent => isAgentAvailable(agent, missionDates));
+    setAvailableAgentsForMission(availableAgents);
+
     try {
       const missionDetails = `Nom: ${formData.name}\nLieu: ${formData.location}\nDate de début: ${formData.startDate}\nDate de fin: ${formData.endDate}`;
-      const availableAgents = allAgents
-        .filter((a) => a.availability === 'Disponible')
-        .map((a) => ({
+      
+      const agentsForAI = availableAgents.map((a) => ({
           name: a.name,
           skills: a.skills,
-          availability: a.availability,
+          availability: 'Disponible', // We've already filtered them
         }));
 
-      const result = await suggestAgentsForMission({
-        missionDetails,
-        availableAgents,
-      });
-      setSuggestedAgents(result);
-      toast({
-        title: 'Suggestions prêtes',
-        description: 'Nous avons suggéré les meilleurs agents pour cette mission.',
-      });
+      if(agentsForAI.length > 0) {
+        const result = await suggestAgentsForMission({
+          missionDetails,
+          availableAgents: agentsForAI,
+        });
+        setSuggestedAgents(result);
+        toast({
+          title: 'Suggestions prêtes',
+          description: 'Nous avons suggéré les meilleurs agents pour cette mission.',
+        });
+      } else {
+        setSuggestedAgents([]);
+        toast({
+          variant: 'default',
+          title: 'Aucun agent disponible',
+          description: 'Aucun agent n\'est disponible pour les dates sélectionnées.',
+        });
+      }
+
     } catch (error) {
       console.error(error);
       toast({
@@ -253,55 +284,58 @@ export function CreateMissionForm() {
                 {isSuggesting && (
                   <div className="flex items-center justify-center rounded-lg border border-dashed p-8">
                     <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                    <p>Analyse des agents...</p>
+                    <p>Recherche d'agents disponibles...</p>
                   </div>
                 )}
                 {!isSuggesting && (
                   <div className="space-y-4">
-                    <Card className="bg-primary/5">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg">
-                          <Sparkles className="h-5 w-5 text-primary" />
-                          Agents suggérés par l'IA
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {suggestedAgents.map((agentSugg) => {
-                          const agent = getAgentByName(agentSugg.name);
-                          if (!agent) return null;
-                          return (
-                            <div key={agent.id} className="flex items-start gap-4 p-3 rounded-md border bg-background">
-                              <Checkbox 
-                                id={agent.id} 
-                                onCheckedChange={(checked) => {
-                                  return checked ? append(agent.id) : remove(fields.findIndex(field => field.value === agent.id))
-                                }}
-                                checked={fields.some(field => field.value === agent.id)}
-                              />
-                              <div className="grid gap-1.5 w-full">
-                                <Label htmlFor={agent.id} className="flex items-center justify-between w-full">
-                                  <div className="flex items-center gap-3">
-                                      <Avatar className="h-9 w-9">
-                                          <AvatarImage src={agent.avatarUrl} alt={agent.name} />
-                                          <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                      </Avatar>
-                                      <div>
-                                          <div className="font-semibold">{agent.name}</div>
-                                          <div className="text-xs text-muted-foreground">{agent.skills.join(', ')}</div>
-                                      </div>
-                                  </div>
-                                </Label>
-                                <p className="text-sm text-muted-foreground pl-12"><span className="font-semibold">Raison:</span> {agentSugg.reason}</p>
+                    {suggestedAgents.length > 0 && (
+                       <Card className="bg-primary/5">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2 text-lg">
+                            <Sparkles className="h-5 w-5 text-primary" />
+                            Agents suggérés par l'IA
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {suggestedAgents.map((agentSugg) => {
+                            const agent = getAgentByName(agentSugg.name);
+                            if (!agent) return null;
+                            return (
+                              <div key={agent.id} className="flex items-start gap-4 p-3 rounded-md border bg-background">
+                                <Checkbox 
+                                  id={agent.id} 
+                                  onCheckedChange={(checked) => {
+                                    return checked ? append(agent.id) : remove(fields.findIndex(field => field.value === agent.id))
+                                  }}
+                                  checked={fields.some(field => field.value === agent.id)}
+                                />
+                                <div className="grid gap-1.5 w-full">
+                                  <Label htmlFor={agent.id} className="flex items-center justify-between w-full">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-9 w-9">
+                                            <AvatarImage src={agent.avatarUrl} alt={agent.name} />
+                                            <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <div className="font-semibold">{agent.name}</div>
+                                            <div className="text-xs text-muted-foreground">{agent.skills.join(', ')}</div>
+                                        </div>
+                                    </div>
+                                  </Label>
+                                  <p className="text-sm text-muted-foreground pl-12"><span className="font-semibold">Raison:</span> {agentSugg.reason}</p>
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </CardContent>
-                    </Card>
+                            );
+                          })}
+                        </CardContent>
+                      </Card>
+                    )}
+                   
                     <h4 className="font-semibold">Autres agents disponibles</h4>
                     <div className="space-y-2">
-                        {allAgents
-                          .filter(a => a.availability === 'Disponible' && !suggestedAgents.some(sa => sa.name === a.name))
+                        {availableAgentsForMission
+                          .filter(a => !suggestedAgents.some(sa => sa.name === a.name))
                           .map(agent => (
                             <div key={agent.id} className="flex items-center space-x-3 p-3 rounded-md border">
                                 <Checkbox 
@@ -323,6 +357,11 @@ export function CreateMissionForm() {
                                 </Label>
                             </div>
                         ))}
+                         {availableAgentsForMission.length === 0 && !isSuggesting && (
+                            <p className="text-sm text-muted-foreground text-center p-4">
+                                Aucun agent n'est disponible pour ces dates.
+                            </p>
+                        )}
                     </div>
                   </div>
                 )}
@@ -356,6 +395,9 @@ export function CreateMissionForm() {
                           </Badge>
                         )
                       })}
+                       {formData.assignedAgents.length === 0 && (
+                          <p className="text-sm text-muted-foreground">Aucun agent assigné.</p>
+                       )}
                       </div>
                     </div>
                   </CardContent>
@@ -371,8 +413,9 @@ export function CreateMissionForm() {
               )}
                <div className="flex-1" />
               {step < 3 && (
-                <Button type="button" onClick={nextStep}>
-                  Suivant <ArrowRight className="ml-2 h-4 w-4" />
+                <Button type="button" onClick={nextStep} disabled={isSuggesting}>
+                  {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Suivant'}
+                  {!isSuggesting && <ArrowRight className="ml-2 h-4 w-4" />}
                 </Button>
               )}
               {step === 3 && (
@@ -385,3 +428,5 @@ export function CreateMissionForm() {
     </Card>
   );
 }
+
+    
