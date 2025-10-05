@@ -26,7 +26,6 @@ import type { Agent } from '@/lib/types';
 import { useFirestore } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
-import { logActivity } from '@/lib/firestore-utils';
 
 type AgentImportData = Omit<Agent, 'id' | 'availability'>;
 
@@ -104,7 +103,6 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
 
     try {
         await batch.commit();
-        await logActivity(firestore, `Importation de ${agentsToImport.length} agents depuis un fichier.`, 'Agent', 'Importation');
         toast({
             title: 'Importation réussie !',
             description: `${agentsToImport.length} agents ont été importés avec succès.`,

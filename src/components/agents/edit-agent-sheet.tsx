@@ -31,7 +31,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
-import { logActivity } from '@/lib/firestore-utils';
 
 const agentSchema = z.object({
   firstName: z.string().min(2, 'Le prénom est requis'),
@@ -73,7 +72,6 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
     try {
       const agentRef = doc(firestore, 'agents', agent.id);
       await updateDoc(agentRef, data);
-      await logActivity(firestore, `Agent modifié: ${data.firstName} ${data.lastName} (${data.registrationNumber})`, 'Agent', 'Modification');
       toast({
         title: 'Agent mis à jour !',
         description: `Les informations de l'agent ${data.firstName} ${data.lastName} ont été mises à jour.`,

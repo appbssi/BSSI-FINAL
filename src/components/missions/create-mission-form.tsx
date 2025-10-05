@@ -28,7 +28,6 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import type { Agent, Mission } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
-import { logActivity } from '@/lib/firestore-utils';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
@@ -93,7 +92,6 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
         endDate: Timestamp.fromDate(data.endDate),
         status: 'Planification',
         });
-        await logActivity(firestore, `Mission créée: ${data.name}`, 'Mission', 'Création');
         toast({
             title: "Mission créée !",
             description: `La mission "${data.name}" a été créée avec succès.`,

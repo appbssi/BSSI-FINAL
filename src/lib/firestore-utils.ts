@@ -1,33 +1,6 @@
 
-import { collection, getDocs, writeBatch, Firestore, doc, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs, writeBatch, Firestore, doc } from "firebase/firestore";
 import type { Agent } from "./types";
-
-/**
- * Logs an activity to the activity_logs collection.
- * @param firestore - The Firestore instance.
- * @param action - A description of the action performed.
- * @param entity - The type of entity affected (e.g., 'Agent', 'Mission').
- * @param operation - The type of operation (e.g., 'Création', 'Modification', 'Suppression').
- */
-export const logActivity = async (
-    firestore: Firestore, 
-    action: string, 
-    entity: string, 
-    operation: 'Création' | 'Modification' | 'Suppression' | 'Importation' | 'Dédoublonnage'
-) => {
-    try {
-        const logsCollection = collection(firestore, 'activity_logs');
-        await addDoc(logsCollection, {
-            timestamp: serverTimestamp(),
-            action,
-            entity,
-            operation,
-        });
-    } catch (error) {
-        console.error("Erreur lors de la journalisation de l'activité: ", error);
-        // Optionally, handle logging errors, e.g., by reporting them to a monitoring service
-    }
-};
 
 /**
  * Finds and deletes duplicate agents from Firestore based on the registrationNumber.
@@ -70,7 +43,6 @@ export async function deleteDuplicateAgents(firestore: Firestore): Promise<numbe
   // Commit the deletions if any
   if (duplicatesDeleted > 0) {
     await batch.commit();
-    await logActivity(firestore, `${duplicatesDeleted} agent(s) en double supprimé(s) basé(s) sur le matricule.`, 'Agent', 'Dédoublonnage');
   }
 
   return duplicatesDeleted;

@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  History,
   LayoutDashboard,
   LucideIcon,
   Rocket,
@@ -31,7 +30,6 @@ const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
   { href: '/agents', label: 'Agents', icon: Users },
   { href: '/missions', label: 'Missions', icon: Rocket },
-  { href: '/history', label: 'Historique', icon: History },
 ];
 
 export function SidebarNav() {
