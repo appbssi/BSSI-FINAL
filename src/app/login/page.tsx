@@ -61,7 +61,7 @@ export default function LoginPage() {
           case 'auth/user-not-found':
           case 'auth/wrong-password':
           case 'auth/invalid-credential':
-            description = 'Email ou mot de passe incorrect.';
+            description = 'Les identifiants fournis sont invalides. Veuillez vérifier votre e-mail et votre mot de passe.';
             break;
           case 'auth/invalid-email':
             description = 'Veuillez saisir une adresse e-mail valide.';
