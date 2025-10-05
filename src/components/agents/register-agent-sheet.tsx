@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import { logActivity } from '@/lib/firestore-utils';
 
 const agentSchema = z.object({
   firstName: z.string().min(2, 'Le prénom est requis'),
@@ -66,6 +67,7 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
     try {
       const agentsCollection = collection(firestore, 'agents');
       await addDoc(agentsCollection, data);
+      await logActivity(firestore, `Nouvel agent enregistré: ${data.firstName} ${data.lastName} (${data.registrationNumber})`, 'Agent', 'Création');
       toast({
         title: 'Agent enregistré !',
         description: `L'agent ${data.firstName} ${data.lastName} a été ajouté avec succès.`,

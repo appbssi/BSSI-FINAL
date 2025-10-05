@@ -91,6 +91,31 @@
         "status",
         "assignedAgentIds"
       ]
+    },
+    "ActivityLog": {
+        "title": "Activity Log",
+        "type": "object",
+        "description": "Represents a log entry for an activity performed in the application.",
+        "properties": {
+            "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The time when the activity occurred."
+            },
+            "action": {
+                "type": "string",
+                "description": "A description of the action performed."
+            },
+            "entity": {
+                "type": "string",
+                "description": "The type of entity that was affected (e.g., 'Agent', 'Mission')."
+            },
+            "operation": {
+                "type": "string",
+                "description": "The type of operation (e.g., 'Création', 'Modification', 'Suppression')."
+            }
+        },
+        "required": ["timestamp", "action", "entity", "operation"]
     }
   },
   "auth": {
@@ -111,6 +136,12 @@
           "$ref": "#/entities/Mission"
         },
         "description": "Stores details about individual missions."
+      },
+      "/activity_logs/{logId}": {
+          "schema": {
+              "$ref": "#/entities/ActivityLog"
+          },
+          "description": "Stores a log of all activities performed in the application."
       }
   }
 }

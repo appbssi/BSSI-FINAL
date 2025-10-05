@@ -50,6 +50,7 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { logActivity } from '@/lib/firestore-utils';
 
 const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missionName: string }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -273,6 +274,7 @@ export default function MissionsPage() {
     try {
         const missionRef = doc(firestore, 'missions', missionToCancel.id);
         await updateDoc(missionRef, { status: 'Annulée' });
+        await logActivity(firestore, `Mission annulée: ${missionToCancel.name}`, 'Mission', 'Modification');
         toast({
             title: 'Mission annulée',
             description: `La mission "${missionToCancel.name}" a été annulée.`
@@ -293,6 +295,7 @@ export default function MissionsPage() {
     try {
       const missionRef = doc(firestore, 'missions', missionToDelete.id);
       await deleteDoc(missionRef);
+      await logActivity(firestore, `Mission supprimée: ${missionToDelete.name}`, 'Mission', 'Suppression');
       toast({
         title: 'Mission supprimée',
         description: `La mission "${missionToDelete.name}" a été supprimée.`,
@@ -509,5 +512,6 @@ export default function MissionsPage() {
     
 
     
+
 
 

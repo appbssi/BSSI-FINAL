@@ -29,7 +29,7 @@ import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
 import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
-import { deleteDuplicateAgents } from '@/lib/firestore-utils';
+import { deleteDuplicateAgents, logActivity } from '@/lib/firestore-utils';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -102,6 +102,7 @@ export default function AgentsPage() {
     try {
       const agentRef = doc(firestore, 'agents', agentToDelete.id);
       await deleteDoc(agentRef);
+      await logActivity(firestore, `Agent supprimé: ${agentToDelete.firstName} ${agentToDelete.lastName} (${agentToDelete.registrationNumber})`, 'Agent', 'Suppression');
       
       toast({
         title: 'Agent supprimé',

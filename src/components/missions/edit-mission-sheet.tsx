@@ -42,6 +42,7 @@ import {
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
+import { logActivity } from '@/lib/firestore-utils';
 
 
 const missionSchema = z.object({
@@ -130,6 +131,7 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
         startDate: Timestamp.fromDate(data.startDate),
         endDate: Timestamp.fromDate(data.endDate),
         });
+        await logActivity(firestore, `Mission modifiée: ${data.name}`, 'Mission', 'Modification');
         toast({
             title: "Mission mise à jour !",
             description: `La mission "${data.name}" a été mise à jour.`,

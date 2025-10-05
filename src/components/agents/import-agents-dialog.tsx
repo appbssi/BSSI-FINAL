@@ -24,8 +24,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { Agent } from '@/lib/types';
 import { useFirestore } from '@/firebase';
-import { collection, doc, setDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
+import { logActivity } from '@/lib/firestore-utils';
 
 type AgentImportData = Omit<Agent, 'id' | 'availability'>;
 
@@ -90,20 +91,20 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
     if (!firestore || agentsToImport.length === 0) return;
     
     setIsImporting(true);
-    const agentsCollection = collection(firestore, 'agents');
-    const importPromises: Promise<void>[] = [];
+    const batch = writeBatch(firestore);
 
     agentsToImport.forEach(agentData => {
-        const newAgentRef = doc(agentsCollection);
+        const newAgentRef = doc(collection(firestore, 'agents'));
         const newAgent: Omit<Agent, 'id'> = {
             ...agentData,
             availability: 'Disponible',
         };
-        importPromises.push(setDoc(newAgentRef, newAgent));
+        batch.set(newAgentRef, newAgent);
     });
 
     try {
-        await Promise.all(importPromises);
+        await batch.commit();
+        await logActivity(firestore, `Importation de ${agentsToImport.length} agents depuis un fichier.`, 'Agent', 'Importation');
         toast({
             title: 'Importation réussie !',
             description: `${agentsToImport.length} agents ont été importés avec succès.`,

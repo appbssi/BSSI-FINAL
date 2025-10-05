@@ -20,3 +20,11 @@ export type Mission = {
   status: 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
   assignedAgentIds: string[];
 };
+
+export type ActivityLog = {
+    id: string;
+    timestamp: Timestamp;
+    action: string;
+    entity: string;
+    operation: 'Création' | 'Modification' | 'Suppression' | 'Importation' | 'Dédoublonnage';
+}
