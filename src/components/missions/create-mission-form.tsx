@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
@@ -21,7 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, Sparkles, Loader2, CalendarIcon } from 'lucide-react';
+import { ArrowLeft, Sparkles, Loader2, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback } from '../ui/avatar';
@@ -35,7 +35,6 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, Timestamp } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { Badge } from '../ui/badge';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
@@ -74,8 +73,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   const { data: allMissions } = useCollection<Mission>(missionsQuery);
 
   const isAgentAvailable = (agent: Agent, newMission: { startDate: Date, endDate: Date }): boolean => {
-    if (agent.availability !== 'Disponible') return false;
-    if (!newMission.startDate || !newMission.endDate || !allMissions) return true; // Assume available if dates or missions are not set
+    if (!newMission.startDate || !newMission.endDate || !allMissions) return true;
   
     const agentMissions = allMissions.filter(mission => 
       mission.assignedAgentIds.includes(agent.id) &&
@@ -85,12 +83,10 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     const newMissionStart = newMission.startDate.getTime();
     const newMissionEnd = newMission.endDate.getTime();
   
-    // An agent is unavailable if they have any mission that overlaps with the new mission's timeframe.
     const isOverlapping = agentMissions.some(mission => {
       const existingMissionStart = mission.startDate.toDate().getTime();
       const existingMissionEnd = mission.endDate.toDate().getTime();
       
-      // Overlap condition: (StartA <= EndB) and (EndA >= StartB)
       return newMissionStart <= existingMissionEnd && newMissionEnd >= existingMissionStart;
     });
 
@@ -104,11 +100,6 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
       location: '',
       assignedAgentIds: [],
     },
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: 'assignedAgentIds',
   });
 
   const formData = form.watch();
@@ -172,8 +163,6 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     if (step === 1 && isStep1Valid) {
       setStep(2);
       await handleSuggestAgents();
-    } else if (step === 2) {
-      setStep(3);
     }
   };
 
@@ -360,14 +349,14 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                   id={`sugg-${agent.id}`}
                                   onCheckedChange={(checked) => {
                                     const agentId = agent.id;
-                                    const fieldIndex = fields.findIndex(field => field.value === agentId);
+                                    const fieldIndex = form.getValues('assignedAgentIds').findIndex(id => id === agentId);
                                     if (checked) {
-                                      if (fieldIndex === -1) append({value: agentId});
+                                      if (fieldIndex === -1) form.setValue('assignedAgentIds', [...form.getValues('assignedAgentIds'), agentId]);
                                     } else {
-                                      if (fieldIndex !== -1) remove(fieldIndex);
+                                      if (fieldIndex !== -1) form.setValue('assignedAgentIds', form.getValues('assignedAgentIds').filter(id => id !== agentId));
                                     }
                                   }}
-                                  checked={fields.some(field => field.value === agent.id)}
+                                  checked={form.getValues('assignedAgentIds').includes(agent.id)}
                                 />
                                 <div className="grid gap-1.5 w-full">
                                   <Label htmlFor={`sugg-${agent.id}`} className="flex items-center justify-between w-full cursor-pointer">
@@ -402,14 +391,14 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                   id={`avail-${agent.id}`}
                                   onCheckedChange={(checked) => {
                                     const agentId = agent.id;
-                                    const fieldIndex = fields.findIndex(field => field.value === agentId);
+                                    const fieldIndex = form.getValues('assignedAgentIds').findIndex(id => id === agentId);
                                     if (checked) {
-                                      if (fieldIndex === -1) append({value: agentId});
+                                       if (fieldIndex === -1) form.setValue('assignedAgentIds', [...form.getValues('assignedAgentIds'), agentId]);
                                     } else {
-                                      if (fieldIndex !== -1) remove(fieldIndex);
+                                      if (fieldIndex !== -1) form.setValue('assignedAgentIds', form.getValues('assignedAgentIds').filter(id => id !== agentId));
                                     }
                                   }}
-                                  checked={fields.some(field => field.value === agent.id)}
+                                  checked={form.getValues('assignedAgentIds').includes(agent.id)}
                                 />
                                 <Label htmlFor={`avail-${agent.id}`} className="flex items-center gap-3 font-normal flex-1 cursor-pointer">
                                     <Avatar className="h-9 w-9">
@@ -433,42 +422,6 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
               </div>
             )}
 
-            {step === 3 && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold">3. Vérifier et confirmer</h3>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{formData.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p><span className="font-semibold">Lieu:</span> {formData.location}</p>
-                    {formData.startDate && <p><span className="font-semibold">Date de début:</span> {format(formData.startDate, "PPP", { locale: fr })}</p>}
-                    {formData.endDate && <p><span className="font-semibold">Date de fin:</span> {format(formData.endDate, "PPP", { locale: fr })}</p>}
-                    <div>
-                      <h4 className="font-semibold">Agents assignés ({formData.assignedAgentIds.length}):</h4>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                      {formData.assignedAgentIds.map(agentId => {
-                        const agent = allAgents?.find(a => a.id === agentId);
-                        if (!agent) return null;
-                        return (
-                          <Badge key={agent.id} variant="outline" className="flex items-center gap-2 p-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarFallback>{(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}</AvatarFallback>
-                            </Avatar>
-                            {agent.firstName} {agent.lastName}
-                          </Badge>
-                        )
-                      })}
-                       {formData.assignedAgentIds.length === 0 && (
-                          <p className="text-sm text-muted-foreground">Aucun agent assigné.</p>
-                       )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
             <div className="flex justify-between pt-4">
               {step > 1 ? (
                 <Button type="button" variant="outline" onClick={prevStep}>
@@ -476,10 +429,9 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                 </Button>
               ) : <div />}
                <div className="flex-1" />
-              {step < 3 ? (
+              {step === 1 ? (
                 <Button type="button" onClick={nextStep} disabled={isSuggesting || !allAgents || !allMissions}>
                   {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Suivant'}
-                  {!isSuggesting && <ArrowRight className="ml-2 h-4 w-4" />}
                 </Button>
               ) : (
                 <Button type="submit">Créer la mission</Button>
@@ -491,3 +443,5 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     </Card>
   );
 }
+
+    
