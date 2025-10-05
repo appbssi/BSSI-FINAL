@@ -43,11 +43,11 @@ export function SidebarNav() {
     <>
       <SidebarHeader>
         <div className="flex items-center gap-2">
-          <div className="bg-primary rounded-md p-1 flex items-center justify-center h-10 w-10 relative">
+          <div className="bg-primary rounded-md p-1 flex items-center justify-center h-12 w-12 relative">
             {logo ? (
               <Image src={logo} alt="Logo" fill className="rounded-md object-cover" />
             ) : (
-              <Rocket className="w-5 h-5 text-primary-foreground" />
+              <Rocket className="w-6 h-6 text-primary-foreground" />
             )}
           </div>
           <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">
