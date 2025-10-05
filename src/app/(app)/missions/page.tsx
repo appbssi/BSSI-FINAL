@@ -67,8 +67,14 @@ const AssignedAgentsDialog = ({ agents }: { agents: Agent[] }) => {
     const handleExportPDF = () => {
         const doc = new jsPDF();
         const tableTitle = "Liste des Agents Assignés";
+        const generationDate = new Date().toLocaleDateString('fr-FR');
         
-        doc.text(tableTitle, 14, 15);
+        // Header
+        doc.setFontSize(18);
+        doc.text(tableTitle, 14, 22);
+        doc.setFontSize(11);
+        doc.text(`Généré le: ${generationDate}`, 14, 30);
+
         autoTable(doc, {
             head: [['Prénom', 'Nom', 'Grade', 'Contact']],
             body: filteredAgents.map(agent => [
@@ -77,14 +83,22 @@ const AssignedAgentsDialog = ({ agents }: { agents: Agent[] }) => {
                 agent.rank,
                 agent.contact,
             ]),
-            startY: 20,
+            startY: 40,
             theme: 'striped',
             headStyles: {
-                fillColor: '#3F51B5' // Deep Blue
+                fillColor: [41, 128, 185], // Professional Blue
+                textColor: 255,
+                fontStyle: 'bold'
             },
             alternateRowStyles: {
-                fillColor: '#F0F2F5' // Light Gray
+                fillColor: [245, 245, 245]
             },
+            didDrawPage: (data) => {
+                // Footer
+                const pageCount = doc.internal.getNumberOfPages();
+                doc.setFontSize(10);
+                doc.text(`Page ${data.pageNumber} sur ${pageCount}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
+            }
         });
         doc.save('agents_assignes.pdf');
     };
@@ -319,7 +333,6 @@ export default function MissionsPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Modifier</DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Prolonger</DropdownMenuItem>
                       {mission.status !== 'Annulée' && mission.status !== 'Terminée' && (
                         <DropdownMenuItem 
                             onSelect={() => setMissionToCancel(mission)}
@@ -327,6 +340,7 @@ export default function MissionsPage() {
                             Annuler la mission
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onSelect={() => setMissionToDelete(mission)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                         Supprimer
                       </DropdownMenuItem>
@@ -401,5 +415,7 @@ export default function MissionsPage() {
     </div>
   );
 }
+
+    
 
     
