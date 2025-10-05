@@ -1,10 +1,11 @@
+'use client';
+
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,17 +21,17 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection } from 'firebase/firestore';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { doc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
-import { useState } from 'react';
+import type { Agent } from '@/lib/types';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
+} from '@/components/ui/select';
 
 const agentSchema = z.object({
   firstName: z.string().min(2, 'Le prénom est requis'),
@@ -44,44 +45,47 @@ const agentSchema = z.object({
 
 type AgentFormValues = z.infer<typeof agentSchema>;
 
-export function RegisterAgentSheet({ children }: { children: React.ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
+interface EditAgentSheetProps {
+  agent: Agent;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+}
+
+export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
 
   const form = useForm<AgentFormValues>({
     resolver: zodResolver(agentSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      registrationNumber: '',
-      rank: '',
-      contact: '',
-      address: '',
-      availability: 'Disponible',
+      firstName: agent.firstName,
+      lastName: agent.lastName,
+      registrationNumber: agent.registrationNumber,
+      rank: agent.rank,
+      contact: agent.contact,
+      address: agent.address,
+      availability: agent.availability,
     },
   });
 
   const onSubmit = (data: AgentFormValues) => {
     if (!firestore) return;
-    const agentsCollection = collection(firestore, 'agents');
-    addDocumentNonBlocking(agentsCollection, data);
+    const agentRef = doc(firestore, 'agents', agent.id);
+    updateDocumentNonBlocking(agentRef, data);
     toast({
-      title: 'Agent enregistré !',
-      description: `L'agent ${data.firstName} ${data.lastName} a été ajouté avec succès.`,
+      title: 'Agent mis à jour !',
+      description: `Les informations de l'agent ${data.firstName} ${data.lastName} ont été mises à jour.`,
     });
-    form.reset();
-    setIsOpen(false);
+    onOpenChange(false);
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>{children}</SheetTrigger>
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Enregistrer un nouvel agent</SheetTitle>
+          <SheetTitle>Modifier l'agent</SheetTitle>
           <SheetDescription>
-            Ajoutez un nouvel agent à la brigade. Remplissez les détails ci-dessous.
+            Mettez à jour les informations de l'agent ci-dessous.
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
@@ -170,7 +174,7 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Disponibilité (Manuelle)</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selectionner une disponibilité" />
@@ -186,7 +190,7 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
               )}
             />
             <div className="flex justify-end pt-4">
-              <Button type="submit">Sauvegarder l'agent</Button>
+              <Button type="submit">Sauvegarder les modifications</Button>
             </div>
           </form>
         </Form>

@@ -27,11 +27,13 @@ import { collection, Timestamp } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
+import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
 
 export default function AgentsPage() {
   const firestore = useFirestore();
   const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
 
   const agentsQuery = useMemoFirebase(
     () => (firestore && user ? collection(firestore, 'agents') : null),
@@ -185,7 +187,7 @@ export default function AgentsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Modifier</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setEditingAgent(agent)}>Modifier</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                           Supprimer
                         </DropdownMenuItem>
@@ -199,6 +201,18 @@ export default function AgentsPage() {
           </TableBody>
         </Table>
       </div>
+
+       {editingAgent && (
+        <EditAgentSheet
+          agent={editingAgent}
+          isOpen={!!editingAgent}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEditingAgent(null);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
