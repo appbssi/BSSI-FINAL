@@ -253,10 +253,9 @@ export default function MissionsPage() {
     });
   }, [sortedMissions, searchQuery, statusFilter]);
 
+  type MissionStatus = 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
 
-  const getBadgeVariant = (
-    status: 'Planification' | 'En cours' | 'Terminée' | 'Annulée'
-  ) => {
+  const getBadgeVariant = (status: MissionStatus) => {
     switch (status) {
       case 'En cours':
         return 'default';
@@ -357,6 +356,15 @@ export default function MissionsPage() {
                 .map(id => agentsById[id])
                 .filter(Boolean)
                 .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
+              
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const missionEndDate = mission.endDate.toDate();
+
+              let displayStatus: MissionStatus = mission.status;
+              if (mission.status === 'En cours' && missionEndDate < today) {
+                displayStatus = 'Terminée';
+              }
 
               return (
               <TableRow key={mission.id}>
@@ -382,9 +390,9 @@ export default function MissionsPage() {
                 </TableCell>
                 <TableCell>
                   <Badge
-                    variant={getBadgeVariant(mission.status)}
+                    variant={getBadgeVariant(displayStatus)}
                   >
-                    {mission.status}
+                    {displayStatus}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -484,3 +492,4 @@ export default function MissionsPage() {
     
 
     
+
