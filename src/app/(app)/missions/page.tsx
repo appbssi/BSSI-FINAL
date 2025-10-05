@@ -29,8 +29,10 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import type { Agent, Mission } from '@/lib/types';
+import { useState } from 'react';
 
 export default function MissionsPage() {
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const firestore = useFirestore();
   const missionsQuery = useMemoFirebase(
     () => (firestore ? collection(firestore, 'missions') : null),
@@ -41,8 +43,8 @@ export default function MissionsPage() {
     [firestore]
   );
 
-  const { data: missions } = useCollection<Mission>(missionsQuery);
-  const { data: agents } = useCollection<Agent>(agentsQuery);
+  const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
+  const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
 
   const getBadgeVariant = (
     status: 'Planification' | 'En cours' | 'Terminée' | 'Annulée'
@@ -56,7 +58,7 @@ export default function MissionsPage() {
         return 'bg-red-500/20 text-red-700 border-red-500/30 hover:bg-red-500/30';
       case 'Planification':
       default:
-        return '';
+        return 'secondary';
     }
   };
   
@@ -66,14 +68,14 @@ export default function MissionsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Missions</h1>
-        <Popover>
+        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <PopoverTrigger asChild>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" /> Créer une mission
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full max-w-2xl">
-            <CreateMissionForm />
+          <PopoverContent className="w-full max-w-2xl" align="end">
+            <CreateMissionForm onMissionCreated={() => setPopoverOpen(false)}/>
           </PopoverContent>
         </Popover>
       </div>
@@ -92,7 +94,12 @@ export default function MissionsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {missions?.map((mission) => (
+            {missionsLoading || agentsLoading ? (
+                <TableRow>
+                    <TableCell colSpan={5} className="text-center">Chargement des missions...</TableCell>
+                </TableRow>
+            ) : (
+            missions?.map((mission) => (
               <TableRow key={mission.id}>
                 <TableCell className="font-medium">{mission.name}</TableCell>
                 <TableCell>{mission.location}</TableCell>
@@ -106,7 +113,7 @@ export default function MissionsPage() {
                 </TableCell>
                 <TableCell>
                   <div className="flex -space-x-2">
-                    {mission.assignedAgentIds.map((agentId) => {
+                    {mission.assignedAgentIds?.map((agentId) => {
                       const agent = getAgentById(agentId);
                       if(!agent) return null;
                       return (
@@ -120,7 +127,7 @@ export default function MissionsPage() {
                         </AvatarFallback>
                       </Avatar>
                     )})}
-                    {mission.assignedAgentIds.length === 0 && (
+                    {(!mission.assignedAgentIds || mission.assignedAgentIds.length === 0) && (
                       <span className="text-sm text-muted-foreground">
                         Non assigné
                       </span>
@@ -146,7 +153,8 @@ export default function MissionsPage() {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+            )}
           </TableBody>
         </Table>
       </div>

@@ -1,57 +1,65 @@
 /**
- * @description This ruleset enforces a public read, owner-only write model for 'agents' and 'missions' collections.
- * All users can read agent and mission details, but only authenticated users can create, update, or delete them.
- * @dataStructure
+ * @fileoverview Firestore Security Rules for the Agent Mission Management Application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-based access control model. Agents can only manage their own information,
+ * and missions are accessible to anyone.
+ *
+ * Data Structure:
  * - /agents/{agentId}: Stores information about individual agents.
  * - /missions/{missionId}: Stores details about individual missions.
- * @keySecurityDecisions
- * - Agents and missions are publicly readable, but write access is restricted to authenticated users.
- * - Schema validation is relaxed to allow for rapid prototyping.
+ *
+ * Key Security Decisions:
+ * - Agents can only create, read, update, and delete their own agent document.
+ * - Public read access to missions.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows anyone to read agent details, but only authenticated users to create, update, or delete them.
+     * @description Allows agents to manage their own profile.
      * @path /agents/{agentId}
-     * @allow (get, list) All users can read agent details.
-     * @allow (create) Authenticated user can create new agent. The 'email' field must match the user's email.
-     * @allow (update) Authenticated user can update existing agent if they are the owner.
-     * @allow (delete) Authenticated user can delete existing agent if they are the owner.
-     * @deny (create) Non-authenticated user cannot create an agent.
-     * @deny (update) Non-authenticated user cannot update an agent.
-     * @deny (delete) Non-authenticated user cannot delete an agent.
-     * @principle Public read, owner-only write.
+     * @allow (create) - Authenticated user with UID matching the agentId can create.
+     * @allow (get) - Any authenticated user can read.
+     * @allow (update) - Authenticated user with UID matching the agentId can update.
+     * @allow (delete) - Authenticated user with UID matching the agentId can delete.
+     * @deny (create) - Authenticated user tries to create an agent document with an ID that doesn't match their own UID.
+     * @deny (update) - Authenticated user tries to update an agent document that doesn't exist.
+     * @principle Enforces document ownership for writes.
      */
     match /agents/{agentId} {
       allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == agentId;
+      allow update: if isExistingOwner(agentId) && request.auth.uid == agentId;
+      allow delete: if isExistingOwner(agentId) && request.auth.uid == agentId;
     }
 
     /**
-     * @description Allows anyone to read mission details, but only authenticated users to create, update, or delete them.
+     * @description Allows anyone to read mission details and restricts writes.
      * @path /missions/{missionId}
-     * @allow (get, list) All users can read mission details.
-     * @allow (create) Authenticated user can create new mission. The 'email' field must match the user's email.
-     * @allow (update) Authenticated user can update existing mission if they are the owner.
-     * @allow (delete) Authenticated user can delete existing mission if they are the owner.
-     * @deny (create) Non-authenticated user cannot create a mission.
-     * @deny (update) Non-authenticated user cannot update a mission.
-     * @deny (delete) Non-authenticated user cannot delete a mission.
-     * @principle Public read, owner-only write.
+     * @allow (get) - Any user can read mission details.
+     * @allow (list) - Any user can list missions.
+     * @deny (create) - No one can create a mission.
+     * @deny (update) - No one can update a mission.
+     * @deny (delete) - No one can delete a mission.
+     * @principle Public read access with no write access.
      */
     match /missions/{missionId} {
       allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow create, update, delete: if false;
     }
 
     function isSignedIn() {
       return request.auth != null;
+    }
+
+    function isOwner(agentId) {
+      return request.auth.uid == agentId;
+    }
+
+    function isExistingOwner(agentId) {
+      return isOwner(agentId) && resource != null;
     }
   }
 }

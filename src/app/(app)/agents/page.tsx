@@ -35,8 +35,8 @@ export default function AgentsPage() {
     () => (firestore ? collection(firestore, 'missions') : null),
     [firestore]
   );
-  const { data: agents } = useCollection<Agent>(agentsQuery);
-  const { data: missions } = useCollection<Mission>(missionsQuery);
+  const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
+  const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
 
   const getAgentAvailability = (
     agent: Agent
@@ -46,15 +46,15 @@ export default function AgentsPage() {
     }
 
     if (!missions) {
-      return agent.availability as 'Disponible';
+      return 'Disponible'; // Default if missions are not loaded yet
     }
 
     const now = Timestamp.now();
     const isOnMission = missions.some(
       (mission) =>
         mission.assignedAgentIds.includes(agent.id) &&
-        mission.startDate <= now &&
-        mission.endDate >= now &&
+        mission.startDate.seconds <= now.seconds &&
+        mission.endDate.seconds >= now.seconds &&
         (mission.status === 'En cours' || mission.status === 'Planification')
     );
 
@@ -98,7 +98,12 @@ export default function AgentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {agents?.map((agent) => {
+            {agentsLoading || missionsLoading ? (
+               <TableRow>
+                  <TableCell colSpan={4} className="text-center">Chargement des agents...</TableCell>
+                </TableRow>
+            ) : (
+            agents?.map((agent) => {
               const availability = getAgentAvailability(agent);
               return (
                 <TableRow key={agent.id}>
@@ -120,7 +125,7 @@ export default function AgentsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {agent.skills.map((skill) => (
+                      {agent.skills?.map((skill) => (
                         <Badge key={skill} variant="secondary">
                           {skill}
                         </Badge>
@@ -155,7 +160,8 @@ export default function AgentsPage() {
                   </TableCell>
                 </TableRow>
               );
-            })}
+            })
+            )}
           </TableBody>
         </Table>
       </div>

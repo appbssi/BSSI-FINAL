@@ -6,19 +6,22 @@ import {
   SidebarProvider,
 } from '@/components/ui/sidebar';
 import { FirebaseClientProvider } from '@/firebase';
+import { AuthGuard } from '@/components/layout/auth-guard';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <FirebaseClientProvider>
-      <SidebarProvider>
-        <Sidebar>
-          <SidebarNav />
-        </Sidebar>
-        <SidebarInset>
-          <Header />
-          <main className="p-4 sm:p-6 lg:p-8">{children}</main>
-        </SidebarInset>
-      </SidebarProvider>
+      <AuthGuard>
+        <SidebarProvider>
+          <Sidebar>
+            <SidebarNav />
+          </Sidebar>
+          <SidebarInset>
+            <Header />
+            <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+          </SidebarInset>
+        </SidebarProvider>
+      </AuthGuard>
     </FirebaseClientProvider>
   );
 }

@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/chart';
 import type { Agent, Mission } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection } from 'firebase/firestore';
+import { collection, Timestamp } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 
 export function MissionOutcomesChart() {
@@ -26,10 +26,12 @@ export function MissionOutcomesChart() {
     () => (firestore ? collection(firestore, 'missions') : null),
     [firestore]
   );
-  const { data: missions } = useCollection<Mission>(missionsQuery);
+  const { data: missions, isLoading } = useCollection<Mission>(missionsQuery);
 
   const missionStatusData = missions?.reduce((acc, mission) => {
-    const month = mission.startDate.toDate().toLocaleString('fr-FR', { month: 'short' });
+    const date = mission.startDate?.toDate();
+    if (!date) return acc;
+    const month = date.toLocaleString('fr-FR', { month: 'short' });
     if (!acc[month]) {
         acc[month] = { month, completed: 0, ongoing: 0, planning: 0 };
     }
@@ -40,11 +42,16 @@ export function MissionOutcomesChart() {
   }, {} as Record<string, { month: string, completed: number, ongoing: number, planning: number }>) || {};
 
 
+  if (isLoading) {
+    return <div className="h-[300px] w-full flex items-center justify-center">Chargement...</div>;
+  }
+
   return (
     <ChartContainer
       config={{
         completed: { label: 'Terminées', color: 'hsl(var(--chart-2))' },
         ongoing: { label: 'En cours', color: 'hsl(var(--chart-1))' },
+        planning: { label: 'Planifiées', color: 'hsl(var(--chart-5))' },
       }}
       className="h-[300px] w-full"
     >
@@ -62,7 +69,8 @@ export function MissionOutcomesChart() {
         <RechartsTooltip content={<ChartTooltipContent />} />
         <Legend />
         <Bar dataKey="completed" stackId="a" fill="var(--color-completed)" radius={[4, 4, 0, 0]} />
-        <Bar dataKey="ongoing" stackId="a" fill="var(--color-ongoing)" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="ongoing" stackId="a" fill="var(--color-ongoing)" />
+        <Bar dataKey="planning" stackId="a" fill="var(--color-planning)" radius={[4, 4, 0, 0]}/>
       </BarChart>
     </ChartContainer>
   );
@@ -76,10 +84,35 @@ export function AgentActivityChart() {
     () => (firestore ? collection(firestore, 'agents') : null),
     [firestore]
   );
-  const { data: agents } = useCollection<Agent>(agentsQuery);
+  const missionsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'missions') : null),
+    [firestore]
+  );
+  const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
+  const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
+
+  const getAgentAvailability = (
+    agent: Agent
+  ): 'Disponible' | 'En mission' | 'En congé' => {
+    if (agent.availability === 'En congé') {
+      return 'En congé';
+    }
+    if (!missions) {
+      return 'Disponible';
+    }
+    const now = Timestamp.now();
+    const isOnMission = missions.some(
+      (mission) =>
+        mission.assignedAgentIds.includes(agent.id) &&
+        mission.startDate.seconds <= now.seconds &&
+        mission.endDate.seconds >= now.seconds &&
+        (mission.status === 'En cours' || mission.status === 'Planification')
+    );
+    return isOnMission ? 'En mission' : 'Disponible';
+  };
 
   const agentActivityData = agents?.reduce((acc, agent) => {
-    const status = agent.availability;
+    const status = getAgentAvailability(agent);
     const existing = acc.find(item => item.name === status);
     if(existing) {
         existing.value++;
@@ -89,6 +122,9 @@ export function AgentActivityChart() {
     return acc;
   }, [] as { name: string, value: number }[]) || [];
 
+  if (agentsLoading || missionsLoading) {
+    return <div className="h-[300px] w-full flex items-center justify-center">Chargement...</div>;
+  }
 
   return (
     <ChartContainer config={{}} className="h-[300px] w-full">

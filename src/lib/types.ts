@@ -4,6 +4,10 @@ export type Agent = {
   id: string;
   name: string;
   email: string;
+  matricule: string;
+  grade: string;
+  contact: string;
+  address: string;
   skills: string[];
   availability: 'Disponible' | 'En mission' | 'En congé';
   avatarUrl: string;
