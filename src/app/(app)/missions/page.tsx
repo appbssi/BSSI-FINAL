@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Users } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +44,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function MissionsPage() {
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -156,18 +157,30 @@ export default function MissionsPage() {
                 <TableCell>{mission.location}</TableCell>
                 <TableCell>{mission.startDate.toDate().toLocaleDateString('fr-FR')}</TableCell>
                 <TableCell>
-                  <div className="flex items-center -space-x-2">
+                   <div className="flex items-center gap-2">
                     {mission.assignedAgentIds && mission.assignedAgentIds.length > 0 ? (
-                      mission.assignedAgentIds.map(agentId => {
-                        const agent = agentsById[agentId];
-                        return (
-                          <Avatar key={agentId} className="h-8 w-8 border-2 border-background">
-                            <AvatarFallback>
-                              {agent ? `${agent.firstName[0]}${agent.lastName[0]}` : '?'}
-                            </AvatarFallback>
-                          </Avatar>
-                        )
-                      })
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="flex items-center">
+                                        <Avatar className="h-8 w-8 border-2 border-background">
+                                            <AvatarFallback>
+                                                <Users className="h-4 w-4" />
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <span className="ml-2 font-medium">{mission.assignedAgentIds.length}</span>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <ul>
+                                        {mission.assignedAgentIds.map(agentId => {
+                                            const agent = agentsById[agentId];
+                                            return <li key={agentId}>{agent ? `${agent.firstName} ${agent.lastName}` : 'Agent inconnu'}</li>;
+                                        })}
+                                    </ul>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     ) : (
                       <span className="text-sm text-muted-foreground">Non assigné</span>
                     )}
