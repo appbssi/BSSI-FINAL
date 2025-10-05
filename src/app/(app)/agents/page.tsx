@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { FileUp, MoreHorizontal, PlusCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +24,7 @@ import type { Agent, Mission } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, Timestamp } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 
 export default function AgentsPage() {
   const firestore = useFirestore();
@@ -80,11 +81,18 @@ export default function AgentsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
-        <RegisterAgentSheet>
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer un agent
-          </Button>
-        </RegisterAgentSheet>
+        <div className="flex items-center gap-2">
+          <ImportAgentsDialog>
+            <Button variant="outline">
+              <FileUp className="mr-2 h-4 w-4" /> Importer depuis Excel
+            </Button>
+          </ImportAgentsDialog>
+          <RegisterAgentSheet>
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer un agent
+            </Button>
+          </RegisterAgentSheet>
+        </div>
       </div>
 
       <div className="border rounded-lg">
