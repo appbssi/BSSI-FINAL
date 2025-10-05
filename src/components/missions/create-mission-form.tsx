@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -31,7 +32,6 @@ import { Badge } from '../ui/badge';
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
   location: z.string().min(3, 'Le lieu est requis'),
-  details: z.string().min(10, 'Les détails sont requis'),
   requiredSkills: z.string().min(3, 'Au moins une compétence est requise'),
   assignedAgents: z.array(z.string()),
 });
@@ -50,7 +50,6 @@ export function CreateMissionForm() {
     defaultValues: {
       name: '',
       location: '',
-      details: '',
       requiredSkills: '',
       assignedAgents: [],
     },
@@ -66,7 +65,7 @@ export function CreateMissionForm() {
   const handleSuggestAgents = async () => {
     setIsSuggesting(true);
     try {
-      const missionDetails = `Nom: ${formData.name}\nLieu: ${formData.location}\nDétails: ${formData.details}\nCompétences requises: ${formData.requiredSkills}`;
+      const missionDetails = `Nom: ${formData.name}\nLieu: ${formData.location}\nCompétences requises: ${formData.requiredSkills}`;
       const availableAgents = allAgents
         .filter((a) => a.availability === 'Disponible')
         .map((a) => ({
@@ -97,7 +96,7 @@ export function CreateMissionForm() {
   };
 
   const nextStep = async () => {
-    const isStep1Valid = await form.trigger(['name', 'location', 'details', 'requiredSkills']);
+    const isStep1Valid = await form.trigger(['name', 'location', 'requiredSkills']);
     if (step === 1 && isStep1Valid) {
       setStep(2);
       await handleSuggestAgents();
@@ -147,22 +146,6 @@ export function CreateMissionForm() {
                       <FormLabel>Lieu</FormLabel>
                       <FormControl>
                         <Input placeholder="Genève, Suisse" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="details"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Détails de la mission</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Fournissez une description détaillée des objectifs de la mission."
-                          {...field}
-                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -278,7 +261,6 @@ export function CreateMissionForm() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <p><span className="font-semibold">Lieu:</span> {formData.location}</p>
-                    <p><span className="font-semibold">Détails:</span> {formData.details}</p>
                     <p><span className="font-semibold">Compétences requises:</span> {formData.requiredSkills}</p>
                     <div>
                       <h4 className="font-semibold">Agents assignés:</h4>
@@ -325,3 +307,5 @@ export function CreateMissionForm() {
     </Card>
   );
 }
+
+    
