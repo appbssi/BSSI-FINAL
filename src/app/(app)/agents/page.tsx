@@ -57,6 +57,7 @@ export default function AgentsPage() {
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
   const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'Disponible' | 'En mission'>('all');
   const { toast } = useToast();
 
   const agentsQuery = useMemoFirebase(
@@ -69,20 +70,6 @@ export default function AgentsPage() {
   );
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
-
-  const sortedAgents = agents
-    ? [...agents].sort((a, b) => {
-        const firstNameComparison = a.firstName.localeCompare(b.firstName);
-        if (firstNameComparison !== 0) {
-          return firstNameComparison;
-        }
-        return a.lastName.localeCompare(b.lastName);
-      })
-    : [];
-
-  const filteredAgents = sortedAgents.filter(agent =>
-    `${agent.firstName} ${agent.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const getAgentAvailability = (
     agent: Agent
@@ -102,6 +89,23 @@ export default function AgentsPage() {
 
     return isOnMission ? 'En mission' : 'Disponible';
   };
+
+  const sortedAgents = agents
+    ? [...agents].sort((a, b) => {
+        const firstNameComparison = a.firstName.localeCompare(b.firstName);
+        if (firstNameComparison !== 0) {
+          return firstNameComparison;
+        }
+        return a.lastName.localeCompare(b.lastName);
+      })
+    : [];
+
+  const filteredAgents = sortedAgents.filter(agent => {
+    const availability = getAgentAvailability(agent);
+    const matchesSearch = `${agent.firstName} ${agent.lastName}`.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = availabilityFilter === 'all' || availability === availabilityFilter;
+    return matchesSearch && matchesFilter;
+  });
 
   const getBadgeVariant = (availability: string) => {
     switch (availability) {
@@ -206,6 +210,11 @@ export default function AgentsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+          </div>
+           <div className="flex items-center gap-2">
+            <Button variant={availabilityFilter === 'all' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('all')}>Tous</Button>
+            <Button variant={availabilityFilter === 'Disponible' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('Disponible')}>Disponibles</Button>
+            <Button variant={availabilityFilter === 'En mission' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En mission')}>En mission</Button>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -384,5 +393,7 @@ export default function AgentsPage() {
       )}
     </div>
   );
+
+    
 
     
