@@ -53,14 +53,14 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         const worksheet = workbook.Sheets[sheetName];
         
         const json = XLSX.utils.sheet_to_json(worksheet, {
-            header: ["lastName", "firstName", "registrationNumber", "rank", "contact", "address"],
-            range: 1
+            header: ["firstName", "lastName", "registrationNumber", "rank", "contact", "address"],
+            range: 1 // Skip the header row
         }) as any[];
 
 
         const parsedAgents: AgentImportData[] = json.map((row) => ({
-            lastName: String(row.lastName || ''),
             firstName: String(row.firstName || ''),
+            lastName: String(row.lastName || ''),
             registrationNumber: String(row.registrationNumber || ''),
             rank: String(row.rank || ''),
             contact: String(row.contact || ''),
@@ -71,7 +71,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             toast({
                 variant: 'destructive',
                 title: 'Fichier invalide ou vide',
-                description: "Le fichier ne contient aucun agent valide ou les colonnes ne sont pas correctes. Attendu: lastName, firstName, registrationNumber, rank, contact, address",
+                description: "Le fichier ne contient aucun agent valide ou les colonnes ne sont pas correctes. Attendu: firstName, lastName, registrationNumber, rank, contact, address",
             });
             return;
         }
@@ -133,7 +133,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         <DialogHeader>
           <DialogTitle>Importer des agents depuis Excel</DialogTitle>
           <DialogDescription>
-            Sélectionnez un fichier .xlsx ou .csv. Assurez-vous que le fichier a les colonnes : lastName, firstName, registrationNumber, rank, contact, address. La première ligne sera ignorée.
+            Sélectionnez un fichier .xlsx ou .csv. Assurez-vous que le fichier a les colonnes : firstName, lastName, registrationNumber, rank, contact, address. La première ligne sera ignorée.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -144,8 +144,8 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Nom</TableHead>
                                 <TableHead>Prénom</TableHead>
+                                <TableHead>Nom</TableHead>
                                 <TableHead>Matricule</TableHead>
                                 <TableHead>Grade</TableHead>
                                 <TableHead>Contact</TableHead>
@@ -155,8 +155,8 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
                         <TableBody>
                             {agentsToImport.map((agent, index) => (
                                 <TableRow key={index}>
-                                    <TableCell>{agent.lastName}</TableCell>
                                     <TableCell>{agent.firstName}</TableCell>
+                                    <TableCell>{agent.lastName}</TableCell>
                                     <TableCell>{agent.registrationNumber}</TableCell>
                                     <TableCell>{agent.rank}</TableCell>
                                     <TableCell>{agent.contact}</TableCell>
