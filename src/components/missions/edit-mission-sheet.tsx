@@ -32,13 +32,6 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { collection, Timestamp, doc, updateDoc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
@@ -53,7 +46,6 @@ const missionSchema = z.object({
   endDate: z.date({
     required_error: "La date de fin est requise.",
   }),
-  status: z.enum(['Planification', 'En cours', 'Terminée', 'Annulée']),
   assignedAgentIds: z.array(z.string()).min(1, "Vous devez assigner au moins un agent."),
 }).refine(data => data.endDate >= data.startDate, {
   message: "La date de fin ne peut pas être antérieure à la date de début.",
@@ -98,7 +90,6 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
       location: mission.location,
       startDate: mission.startDate.toDate(),
       endDate: mission.endDate.toDate(),
-      status: mission.status,
       assignedAgentIds: mission.assignedAgentIds || [],
     },
   });
@@ -117,7 +108,6 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
       location: mission.location,
       startDate: mission.startDate.toDate(),
       endDate: mission.endDate.toDate(),
-      status: mission.status,
       assignedAgentIds: mission.assignedAgentIds || [],
     });
   }, [mission, form, isOpen]);
@@ -128,9 +118,9 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
     try {
         const missionRef = doc(firestore, 'missions', mission.id);
         await updateDoc(missionRef, {
-        ...data,
-        startDate: Timestamp.fromDate(data.startDate),
-        endDate: Timestamp.fromDate(data.endDate),
+          ...data,
+          startDate: Timestamp.fromDate(data.startDate),
+          endDate: Timestamp.fromDate(data.endDate),
         });
         toast({
             title: "Mission mise à jour !",
@@ -277,29 +267,6 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                 )}
               />
             </div>
-             <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Statut</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Choisir un statut" />
-                        </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                        <SelectItem value="Planification">Planification</SelectItem>
-                        <SelectItem value="En cours">En cours</SelectItem>
-                        <SelectItem value="Terminée">Terminée</SelectItem>
-                        <SelectItem value="Annulée">Annulée</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
             
             <Controller
                 control={form.control}
