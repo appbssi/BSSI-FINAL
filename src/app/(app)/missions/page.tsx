@@ -1,7 +1,5 @@
-
 'use client';
 
-import { missions } from '@/lib/data';
 import {
   Table,
   TableBody,
@@ -11,10 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import {
-  MoreHorizontal,
-  PlusCircle,
-} from 'lucide-react';
+import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,10 +19,31 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { CreateMissionForm } from '@/components/missions/create-mission-form';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection } from 'firebase/firestore';
+import { useFirestore, useMemoFirebase } from '@/firebase';
+import type { Agent, Mission } from '@/lib/types';
 
 export default function MissionsPage() {
+  const firestore = useFirestore();
+  const missionsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'missions') : null),
+    [firestore]
+  );
+  const agentsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'agents') : null),
+    [firestore]
+  );
+
+  const { data: missions } = useCollection<Mission>(missionsQuery);
+  const { data: agents } = useCollection<Agent>(agentsQuery);
+
   const getBadgeVariant = (
     status: 'Planification' | 'En cours' | 'Terminée' | 'Annulée'
   ) => {
@@ -43,6 +59,8 @@ export default function MissionsPage() {
         return '';
     }
   };
+  
+  const getAgentById = (id: string) => agents?.find(a => a.id === id);
 
   return (
     <div className="space-y-4">
@@ -74,18 +92,24 @@ export default function MissionsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {missions.map((mission) => (
+            {missions?.map((mission) => (
               <TableRow key={mission.id}>
                 <TableCell className="font-medium">{mission.name}</TableCell>
                 <TableCell>{mission.location}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary" className={getBadgeVariant(mission.status)}>
+                  <Badge
+                    variant="secondary"
+                    className={getBadgeVariant(mission.status)}
+                  >
                     {mission.status}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <div className="flex -space-x-2">
-                    {mission.assignedAgents.map((agent) => (
+                    {mission.assignedAgentIds.map((agentId) => {
+                      const agent = getAgentById(agentId);
+                      if(!agent) return null;
+                      return (
                       <Avatar
                         key={agent.id}
                         className="border-2 border-background"
@@ -95,12 +119,12 @@ export default function MissionsPage() {
                           {agent.name.substring(0, 1)}
                         </AvatarFallback>
                       </Avatar>
-                    ))}
-                     {mission.assignedAgents.length === 0 && (
-                        <span className="text-sm text-muted-foreground">
-                          Non assigné
-                        </span>
-                      )}
+                    )})}
+                    {mission.assignedAgentIds.length === 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        Non assigné
+                      </span>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>

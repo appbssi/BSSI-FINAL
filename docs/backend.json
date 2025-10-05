@@ -6,17 +6,30 @@
       "type": "object",
       "description": "Represents an agent who can be assigned to missions.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Agent entity."
-        },
         "name": {
           "type": "string",
           "description": "The agent's full name."
         },
-        "contactInformation": {
+        "email": {
           "type": "string",
-          "description": "The agent's contact details (e.g., phone number, email address)."
+          "description": "The agent's email address.",
+          "format": "email"
+        },
+        "matricule": {
+            "type": "string",
+            "description": "The agent's service number."
+        },
+        "grade": {
+            "type": "string",
+            "description": "The agent's rank."
+        },
+        "contact": {
+            "type": "string",
+            "description": "The agent's contact details."
+        },
+        "address": {
+            "type": "string",
+            "description": "The agent's physical address."
         },
         "skills": {
           "type": "array",
@@ -27,15 +40,25 @@
         },
         "availability": {
           "type": "string",
-          "description": "The agent's availability schedule."
+          "description": "The agent's availability status.",
+          "enum": ["Disponible", "En mission", "En congé"]
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "URL of the agent's avatar image.",
+          "format": "uri"
         }
       },
       "required": [
-        "id",
         "name",
-        "contactInformation",
+        "email",
+        "matricule",
+        "grade",
+        "contact",
+        "address",
         "skills",
-        "availability"
+        "availability",
+        "avatarUrl"
       ]
     },
     "Mission": {
@@ -44,17 +67,22 @@
       "type": "object",
       "description": "Represents a mission to which agents are assigned.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Mission entity."
+        "name": {
+            "type": "string",
+            "description": "The name or title of the mission."
         },
         "location": {
           "type": "string",
           "description": "The location where the mission takes place."
         },
-        "time": {
+        "startDate": {
           "type": "string",
-          "description": "The scheduled time for the mission.",
+          "description": "The scheduled start time for the mission.",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "The scheduled end time for the mission.",
           "format": "date-time"
         },
         "requiredSkills": {
@@ -66,64 +94,24 @@
         },
         "assignedAgentIds": {
           "type": "array",
-          "description": "References to Agents assigned to this mission. (Relationship: Mission 1:N Agent)",
+          "description": "An array of Agent IDs assigned to this mission.",
           "items": {
             "type": "string"
           }
         },
         "status": {
           "type": "string",
-          "description": "The current status of the mission (e.g., 'Ongoing', 'Completed', 'Pending')."
+          "description": "The current status of the mission.",
+          "enum": ["Planification", "En cours", "Terminée", "Annulée"]
         }
       },
       "required": [
-        "id",
+        "name",
         "location",
-        "time",
-        "requiredSkills",
+        "startDate",
+        "endDate",
         "assignedAgentIds",
         "status"
-      ]
-    },
-    "Report": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Report",
-      "type": "object",
-      "description": "Represents a report on agent activity and mission outcomes.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Report entity."
-        },
-        "agentId": {
-          "type": "string",
-          "description": "Reference to Agent. (Relationship: Agent 1:N Report)"
-        },
-        "missionId": {
-          "type": "string",
-          "description": "Reference to Mission. (Relationship: Mission 1:N Report)"
-        },
-        "activitySummary": {
-          "type": "string",
-          "description": "A summary of the agent's activity during the mission."
-        },
-        "outcome": {
-          "type": "string",
-          "description": "The outcome of the mission."
-        },
-        "dateGenerated": {
-          "type": "string",
-          "description": "The date when the report was generated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "agentId",
-        "missionId",
-        "activitySummary",
-        "outcome",
-        "dateGenerated"
       ]
     }
   },
@@ -134,56 +122,17 @@
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/agents/{agentId}",
-        "definition": {
-          "entityName": "Agent",
-          "schema": {
-            "$ref": "#/backend/entities/Agent"
-          },
-          "description": "Stores agent information. Admin-only access. Includes 'id' as agentId.",
-          "params": [
-            {
-              "name": "agentId",
-              "description": "The unique identifier of the agent."
-            }
-          ]
-        }
+      "/agents/{agentId}": {
+        "schema": {
+          "$ref": "#/entities/Agent"
+        },
+        "description": "Stores information about individual agents."
       },
-      {
-        "path": "/missions/{missionId}",
-        "definition": {
-          "entityName": "Mission",
-          "schema": {
-            "$ref": "#/backend/entities/Mission"
-          },
-          "description": "Stores mission details. Admin-only access. Includes 'id' as missionId.",
-          "params": [
-            {
-              "name": "missionId",
-              "description": "The unique identifier of the mission."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/reports/{reportId}",
-        "definition": {
-          "entityName": "Report",
-          "schema": {
-            "$ref": "#/backend/entities/Report"
-          },
-          "description": "Stores reports. Admin-only access. Includes 'id' as reportId.",
-          "params": [
-            {
-              "name": "reportId",
-              "description": "The unique identifier of the report."
-            }
-          ]
-        }
+      "/missions/{missionId}": {
+        "schema": {
+          "$ref": "#/entities/Mission"
+        },
+        "description": "Stores details about individual missions."
       }
-    ],
-    "reasoning": "The Firestore structure is designed to manage agents, missions, and reports in the E-Brigade Dispatch application. It prioritizes authorization independence by avoiding hierarchical `get()` calls in security rules. The structure uses path-based ownership for user-related data and a membership map for collaborative data access when necessary.\n\n1.  **Agents (`/agents/{agentId}`):** Stores agent information. No specific ownership since this is an administrative function. List access is restricted to authenticated users (administrators).\n\n2.  **Missions (`/missions/{missionId}`):** Stores mission details. List access is restricted to authenticated users (administrators). The `assignedAgentIds` field maintains the relationship between missions and agents.\n\n3.  **Reports (`/reports/{reportId}`):** Stores reports. Uses Agent id and mission id to keep track of reports for agents and missions. List access is restricted to authenticated users (administrators).\n\nThis structure supports the required QAPs because:\n\n*   Authorization Independence: All authorization information is self-contained within each document, eliminating the need for `get()` calls in security rules.\n*   Structural Segregation: Each collection (`agents`, `missions`, `reports`) has a homogeneous security posture, simplifying rules.\n"
   }
 }

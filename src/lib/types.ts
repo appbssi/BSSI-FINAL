@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 export type Agent = {
   id: string;
   name: string;
@@ -11,9 +13,9 @@ export type Mission = {
   id: string;
   name: string;
   location: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: Timestamp;
+  endDate: Timestamp;
   requiredSkills: string[];
-  assignedAgents: Agent[];
+  assignedAgentIds: string[];
   status: 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
 };

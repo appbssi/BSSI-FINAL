@@ -13,13 +13,23 @@ import {
 } from 'recharts';
 import {
   ChartContainer,
-  ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { agents, missions } from '@/lib/data';
+import type { Agent, Mission } from '@/lib/types';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection } from 'firebase/firestore';
+import { useFirestore, useMemoFirebase } from '@/firebase';
 
-const missionStatusData = missions.reduce((acc, mission) => {
-    const month = mission.startDate.toLocaleString('fr-FR', { month: 'short' });
+export function MissionOutcomesChart() {
+  const firestore = useFirestore();
+  const missionsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'missions') : null),
+    [firestore]
+  );
+  const { data: missions } = useCollection<Mission>(missionsQuery);
+
+  const missionStatusData = missions?.reduce((acc, mission) => {
+    const month = mission.startDate.toDate().toLocaleString('fr-FR', { month: 'short' });
     if (!acc[month]) {
         acc[month] = { month, completed: 0, ongoing: 0, planning: 0 };
     }
@@ -27,10 +37,9 @@ const missionStatusData = missions.reduce((acc, mission) => {
     if (mission.status === 'En cours') acc[month].ongoing++;
     if (mission.status === 'Planification') acc[month].planning++;
     return acc;
-}, {} as Record<string, { month: string, completed: number, ongoing: number, planning: number }>);
+  }, {} as Record<string, { month: string, completed: number, ongoing: number, planning: number }>) || {};
 
 
-export function MissionOutcomesChart() {
   return (
     <ChartContainer
       config={{
@@ -59,8 +68,17 @@ export function MissionOutcomesChart() {
   );
 }
 
+const COLORS = ['hsl(var(--chart-2))', 'hsl(var(--chart-1))', 'hsl(var(--chart-5))'];
 
-const agentActivityData = agents.reduce((acc, agent) => {
+export function AgentActivityChart() {
+  const firestore = useFirestore();
+  const agentsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'agents') : null),
+    [firestore]
+  );
+  const { data: agents } = useCollection<Agent>(agentsQuery);
+
+  const agentActivityData = agents?.reduce((acc, agent) => {
     const status = agent.availability;
     const existing = acc.find(item => item.name === status);
     if(existing) {
@@ -69,12 +87,9 @@ const agentActivityData = agents.reduce((acc, agent) => {
         acc.push({ name: status, value: 1 });
     }
     return acc;
-}, [] as { name: string, value: number }[]);
+  }, [] as { name: string, value: number }[]) || [];
 
 
-const COLORS = ['hsl(var(--chart-2))', 'hsl(var(--chart-1))', 'hsl(var(--chart-5))'];
-
-export function AgentActivityChart() {
   return (
     <ChartContainer config={{}} className="h-[300px] w-full">
       <PieChart>

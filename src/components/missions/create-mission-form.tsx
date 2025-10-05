@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -9,7 +8,6 @@ import {
   suggestAgentsForMission,
   type SuggestAgentsForMissionOutput,
 } from '@/ai/flows/suggest-agents-for-mission';
-import { agents as allAgents, missions as allMissions } from '@/lib/data';
 import type { Agent, Mission } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +31,10 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Label } from '../ui/label';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, Timestamp } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useFirestore, useMemoFirebase } from '@/firebase';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
@@ -43,24 +45,10 @@ const missionSchema = z.object({
   endDate: z.date({
     required_error: "La date de fin est requise.",
   }),
-  assignedAgents: z.array(z.string()),
+  assignedAgentIds: z.array(z.string()),
 });
 
 type MissionFormValues = z.infer<typeof missionSchema>;
-
-const isAgentAvailable = (agent: Agent, newMission: { startDate: Date, endDate: Date }): boolean => {
-  if (!newMission.startDate || !newMission.endDate) return false;
-
-  const agentMissions = allMissions.filter(mission => 
-    mission.assignedAgents.some(a => a.id === agent.id) &&
-    (mission.status === 'En cours' || mission.status === 'Planification')
-  );
-
-  return !agentMissions.some(mission =>
-    (newMission.startDate <= mission.endDate) && (newMission.endDate >= mission.startDate)
-  );
-};
-
 
 export function CreateMissionForm() {
   const [step, setStep] = useState(1);
@@ -69,24 +57,54 @@ export function CreateMissionForm() {
     useState<SuggestAgentsForMissionOutput>([]);
   const [availableAgentsForMission, setAvailableAgentsForMission] = useState<Agent[]>([]);
   const { toast } = useToast();
+  const firestore = useFirestore();
+
+  const agentsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'agents') : null),
+    [firestore]
+  );
+  const missionsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'missions') : null),
+    [firestore]
+  );
+
+  const { data: allAgents } = useCollection<Agent>(agentsQuery);
+  const { data: allMissions } = useCollection<Mission>(missionsQuery);
+
+  const isAgentAvailable = (agent: Agent, newMission: { startDate: Date, endDate: Date }): boolean => {
+    if (!newMission.startDate || !newMission.endDate || !allMissions) return true;
+  
+    const agentMissions = allMissions.filter(mission => 
+      mission.assignedAgentIds.includes(agent.id) &&
+      (mission.status === 'En cours' || mission.status === 'Planification')
+    );
+  
+    const newMissionStart = Timestamp.fromDate(newMission.startDate);
+    const newMissionEnd = Timestamp.fromDate(newMission.endDate);
+  
+    return !agentMissions.some(mission =>
+      (newMissionStart.seconds <= mission.endDate.seconds) && (newMissionEnd.seconds >= mission.startDate.seconds)
+    );
+  };
 
   const form = useForm<MissionFormValues>({
     resolver: zodResolver(missionSchema),
     defaultValues: {
       name: '',
       location: '',
-      assignedAgents: [],
+      assignedAgentIds: [],
     },
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: 'assignedAgents',
+    name: 'assignedAgentIds',
   });
 
   const formData = form.watch();
 
   const handleSuggestAgents = async () => {
+    if (!allAgents) return;
     setIsSuggesting(true);
     
     const missionDates = {
@@ -102,7 +120,7 @@ export function CreateMissionForm() {
       const agentsForAI = availableAgents.map((a) => ({
           name: a.name,
           skills: a.skills,
-          availability: 'Disponible', // We've already filtered them
+          availability: 'Disponible',
         }));
 
       if(agentsForAI.length > 0) {
@@ -149,14 +167,22 @@ export function CreateMissionForm() {
   const prevStep = () => setStep((s) => s - 1);
 
   const onSubmit = (data: MissionFormValues) => {
-    console.log(data);
+    if (!firestore) return;
+    const missionsCollection = collection(firestore, 'missions');
+    addDocumentNonBlocking(missionsCollection, {
+      ...data,
+      startDate: Timestamp.fromDate(data.startDate),
+      endDate: Timestamp.fromDate(data.endDate),
+      status: 'Planification',
+      requiredSkills: [], // Add logic for this if needed
+    });
     toast({
         title: "Mission créée !",
         description: `La mission "${data.name}" a été créée avec succès.`,
     });
   };
   
-  const getAgentByName = (name: string) => allAgents.find(a => a.name === name);
+  const getAgentByName = (name: string) => allAgents?.find(a => a.name === name);
 
   return (
     <Card>
@@ -383,8 +409,8 @@ export function CreateMissionForm() {
                     <div>
                       <h4 className="font-semibold">Agents assignés:</h4>
                       <div className="mt-2 flex flex-wrap gap-2">
-                      {formData.assignedAgents.map(agentId => {
-                        const agent = allAgents.find(a => a.id === agentId);
+                      {formData.assignedAgentIds.map(agentId => {
+                        const agent = allAgents?.find(a => a.id === agentId);
                         if (!agent) return null;
                         return (
                           <Badge key={agent.id} variant="outline" className="flex items-center gap-2 p-2">
@@ -396,7 +422,7 @@ export function CreateMissionForm() {
                           </Badge>
                         )
                       })}
-                       {formData.assignedAgents.length === 0 && (
+                       {formData.assignedAgentIds.length === 0 && (
                           <p className="text-sm text-muted-foreground">Aucun agent assigné.</p>
                        )}
                       </div>
@@ -414,7 +440,7 @@ export function CreateMissionForm() {
               )}
                <div className="flex-1" />
               {step < 3 && (
-                <Button type="button" onClick={nextStep} disabled={isSuggesting}>
+                <Button type="button" onClick={nextStep} disabled={isSuggesting || !allAgents}>
                   {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Suivant'}
                   {!isSuggesting && <ArrowRight className="ml-2 h-4 w-4" />}
                 </Button>
@@ -429,5 +455,3 @@ export function CreateMissionForm() {
     </Card>
   );
 }
-
-    

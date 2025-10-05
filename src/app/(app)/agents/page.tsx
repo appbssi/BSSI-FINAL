@@ -1,7 +1,5 @@
-
 'use client';
 
-import { agents, missions } from '@/lib/data';
 import {
   Table,
   TableBody,
@@ -12,10 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import {
-  MoreHorizontal,
-  PlusCircle,
-} from 'lucide-react';
+import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,21 +20,42 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { RegisterAgentSheet } from '@/components/agents/register-agent-sheet';
-import type { Agent } from '@/lib/types';
+import type { Agent, Mission } from '@/lib/types';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, Timestamp } from 'firebase/firestore';
+import { useFirestore, useMemoFirebase } from '@/firebase';
 
 export default function AgentsPage() {
+  const firestore = useFirestore();
+  const agentsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'agents') : null),
+    [firestore]
+  );
+  const missionsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'missions') : null),
+    [firestore]
+  );
+  const { data: agents } = useCollection<Agent>(agentsQuery);
+  const { data: missions } = useCollection<Mission>(missionsQuery);
 
-  const getAgentAvailability = (agent: Agent): 'Disponible' | 'En mission' | 'En congé' => {
+  const getAgentAvailability = (
+    agent: Agent
+  ): 'Disponible' | 'En mission' | 'En congé' => {
     if (agent.availability === 'En congé') {
       return 'En congé';
     }
 
-    const now = new Date();
-    const isOnMission = missions.some(mission =>
-      mission.assignedAgents.some(a => a.id === agent.id) &&
-      mission.startDate <= now &&
-      mission.endDate >= now &&
-      (mission.status === 'En cours' || mission.status === 'Planification')
+    if (!missions) {
+      return agent.availability as 'Disponible';
+    }
+
+    const now = Timestamp.now();
+    const isOnMission = missions.some(
+      (mission) =>
+        mission.assignedAgentIds.includes(agent.id) &&
+        mission.startDate <= now &&
+        mission.endDate >= now &&
+        (mission.status === 'En cours' || mission.status === 'Planification')
     );
 
     return isOnMission ? 'En mission' : 'Disponible';
@@ -82,7 +98,7 @@ export default function AgentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {agents.map((agent) => {
+            {agents?.map((agent) => {
               const availability = getAgentAvailability(agent);
               return (
                 <TableRow key={agent.id}>
@@ -119,7 +135,11 @@ export default function AgentsPage() {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <Button
+                          aria-haspopup="true"
+                          size="icon"
+                          variant="ghost"
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                           <span className="sr-only">Toggle menu</span>
                         </Button>
@@ -142,5 +162,3 @@ export default function AgentsPage() {
     </div>
   );
 }
-
-    

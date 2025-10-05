@@ -1,4 +1,5 @@
-import { agents, missions } from '@/lib/data';
+'use client';
+
 import {
   Card,
   CardContent,
@@ -23,24 +24,44 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, query, where, limit } from 'firebase/firestore';
+import { useFirestore, useMemoFirebase } from '@/firebase';
+import type { Agent, Mission } from '@/lib/types';
 
 export default function DashboardPage() {
-  const totalAgents = agents.length;
-  const activeMissions = missions.filter(
-    (m) => m.status === 'En cours'
-  ).length;
-  const completedMissions = missions.filter(
-    (m) => m.status === 'Terminée'
-  ).length;
-  const agentsOnMission = agents.filter(
-    (a) => a.availability === 'En mission'
-  ).length;
+  const firestore = useFirestore();
 
-  const upcomingMissions = missions
-    .filter((m) => m.status === 'Planification' || m.status === 'En cours')
-    .slice(0, 5);
+  const agentsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'agents') : null),
+    [firestore]
+  );
+  const missionsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'missions') : null),
+    [firestore]
+  );
+  
+  const upcomingMissionsQuery = useMemoFirebase(
+    () => (firestore ? query(collection(firestore, 'missions'), where('status', 'in', ['Planification', 'En cours']), limit(5)) : null),
+    [firestore]
+  );
+
+  const { data: agents } = useCollection<Agent>(agentsQuery);
+  const { data: missions } = useCollection<Mission>(missionsQuery);
+  const { data: upcomingMissions } = useCollection<Mission>(upcomingMissionsQuery);
+  const { data: allAgents } = useCollection<Agent>(agentsQuery);
+
+  const totalAgents = agents?.length ?? 0;
+  const activeMissions =
+    missions?.filter((m) => m.status === 'En cours').length ?? 0;
+  const completedMissions =
+    missions?.filter((m) => m.status === 'Terminée').length ?? 0;
+  const agentsOnMission =
+    agents?.filter((a) => a.availability === 'En mission').length ?? 0;
+
+  const getAgentById = (id: string) => allAgents?.find(a => a.id === id);
+
 
   return (
     <div className="space-y-8">
@@ -104,7 +125,7 @@ export default function DashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {upcomingMissions.map((mission) => (
+              {upcomingMissions?.map((mission) => (
                 <TableRow key={mission.id}>
                   <TableCell className="font-medium">{mission.name}</TableCell>
                   <TableCell>
@@ -125,18 +146,22 @@ export default function DashboardPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex -space-x-2">
-                      {mission.assignedAgents.map((agent) => (
-                        <Avatar
-                          key={agent.id}
-                          className="border-2 border-background"
-                        >
-                          <AvatarImage src={agent.avatarUrl} />
-                          <AvatarFallback>
-                            {agent.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                      ))}
-                      {mission.assignedAgents.length === 0 && (
+                      {mission.assignedAgentIds.map((agentId) => {
+                        const agent = getAgentById(agentId);
+                        if (!agent) return null;
+                        return (
+                          <Avatar
+                            key={agent.id}
+                            className="border-2 border-background"
+                          >
+                            <AvatarImage src={agent.avatarUrl} />
+                            <AvatarFallback>
+                              {agent.name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                        )
+                      })}
+                      {mission.assignedAgentIds.length === 0 && (
                         <span className="text-sm text-muted-foreground">
                           Non assigné
                         </span>
@@ -144,7 +169,7 @@ export default function DashboardPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {mission.startDate.toLocaleDateString('fr-FR')}
+                    {mission.startDate.toDate().toLocaleDateString('fr-FR')}
                   </TableCell>
                 </TableRow>
               ))}

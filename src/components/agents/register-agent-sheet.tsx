@@ -9,65 +9,189 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { collection } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+
+const agentSchema = z.object({
+  name: z.string().min(3, 'Le nom est requis'),
+  matricule: z.string().min(3, 'Le matricule est requis'),
+  grade: z.string().min(3, 'Le grade est requis'),
+  contact: z.string().min(3, 'Le contact est requis'),
+  address: z.string().min(3, 'L\'adresse est requise'),
+  email: z.string().email('Email invalide'),
+  skills: z.string(),
+  availability: z.string(),
+  avatarUrl: z.string().url("L'URL de l'avatar doit être une URL valide"),
+});
+
+type AgentFormValues = z.infer<typeof agentSchema>;
 
 export function RegisterAgentSheet({ children }: { children: React.ReactNode }) {
+  const { toast } = useToast();
+  const firestore = useFirestore();
+
+  const form = useForm<AgentFormValues>({
+    resolver: zodResolver(agentSchema),
+    defaultValues: {
+      name: '',
+      matricule: '',
+      grade: '',
+      contact: '',
+      address: '',
+      email: '',
+      skills: '',
+      availability: 'Disponible',
+      avatarUrl: '',
+    },
+  });
+
+  const onSubmit = (data: AgentFormValues) => {
+    if (!firestore) return;
+    const agentsCollection = collection(firestore, 'agents');
+    addDocumentNonBlocking(agentsCollection, {
+      ...data,
+      skills: data.skills.split(',').map((s) => s.trim()),
+    });
+    toast({
+      title: 'Agent enregistré !',
+      description: `L'agent ${data.name} a été ajouté avec succès.`,
+    });
+  };
+
   return (
     <Sheet>
       <SheetTrigger asChild>{children}</SheetTrigger>
-      <SheetContent>
+      <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Enregistrer un nouvel agent</SheetTitle>
           <SheetDescription>
             Ajoutez un nouvel agent à la brigade. Remplissez les détails ci-dessous.
           </SheetDescription>
         </SheetHeader>
-        <div className="grid gap-6 py-6">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Nom et Prénom
-            </Label>
-            <Input id="name" placeholder="Alex Johnson" className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="matricule" className="text-right">
-              Matricule
-            </Label>
-            <Input
-              id="matricule"
-              placeholder="E-B-007"
-              className="col-span-3"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom et Prénom</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Alex Johnson" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="grade" className="text-right">
-              Grade
-            </Label>
-            <Input
-              id="grade"
-              placeholder="Capitaine"
-              className="col-span-3"
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="agent@e-brigade.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="contact" className="text-right">
-              Contact
-            </Label>
-            <Input
-              id="contact"
-              placeholder="+33 1 23 45 67 89"
-              className="col-span-3"
+            <FormField
+              control={form.control}
+              name="matricule"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Matricule</FormLabel>
+                  <FormControl>
+                    <Input placeholder="E-B-007" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="address" className="text-right">
-              Adresse
-            </Label>
-            <Input id="address" placeholder="123 Rue de la Mission, Paris" className="col-span-3" />
-          </div>
-        </div>
-        <div className="flex justify-end">
-          <Button type="submit">Sauvegarder l'agent</Button>
-        </div>
+            <FormField
+              control={form.control}
+              name="grade"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Grade</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Capitaine" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="contact"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contact</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+33 1 23 45 67 89" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Adresse</FormLabel>
+                  <FormControl>
+                    <Input placeholder="123 Rue de la Mission, Paris" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="skills"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Compétences (séparées par des virgules)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Infiltration, Piratage" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="avatarUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL de l'avatar</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex justify-end">
+              <Button type="submit">Sauvegarder l'agent</Button>
+            </div>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );
