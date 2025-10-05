@@ -23,7 +23,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
@@ -322,8 +322,8 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                                                 field.onChange(newValue);
                                             }}
                                         >
-                                            <div className="w-5 h-5 flex items-center justify-center font-mono text-lg text-muted-foreground">
-                                                {isChecked ? '[x]' : '[ ]'}
+                                            <div className={cn("h-5 w-5 flex items-center justify-center rounded border", isChecked ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground/50")}>
+                                              {isChecked && <Check className="h-4 w-4" />}
                                             </div>
                                              <Avatar>
                                                 <AvatarFallback>{agent.firstName?.[0] ?? ''}{agent.lastName?.[0] ?? ''}</AvatarFallback>
