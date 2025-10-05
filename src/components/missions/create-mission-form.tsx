@@ -361,7 +361,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                         </Avatar>
                                         <div>
                                             <div className="font-semibold">{fullName}</div>
-                                            <div className="text-xs text-muted-foreground">{agent.rank}</div>
+                                            <div className="text-xs text-muted-foreground">{agent.rank} | {agent.contact}</div>
                                         </div>
                                     </div>
                                   </Label>
@@ -401,7 +401,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                     </Avatar>
                                     <div>
                                         <div className="font-semibold">{fullName}</div>
-                                        <div className="text-xs text-muted-foreground">{agent.rank}</div>
+                                        <div className="text-xs text-muted-foreground">{agent.rank} | {agent.contact}</div>
                                     </div>
                                 </Label>
                             </div>
