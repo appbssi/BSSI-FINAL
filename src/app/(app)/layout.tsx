@@ -1,3 +1,4 @@
+
 import { Header } from '@/components/layout/header';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import {
@@ -7,22 +8,25 @@ import {
 } from '@/components/ui/sidebar';
 import { FirebaseClientProvider } from '@/firebase';
 import { AuthGuard } from '@/components/layout/auth-guard';
+import { LogoProvider } from '@/context/logo-context';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <FirebaseClientProvider>
       <AuthGuard>
-        <SidebarProvider>
-          <Sidebar>
-            <SidebarNav />
-          </Sidebar>
-          <SidebarInset>
-            <Header />
-            <main className="p-4 sm:p-6 lg:p-8">
-                {children}
-            </main>
-          </SidebarInset>
-        </SidebarProvider>
+        <LogoProvider>
+          <SidebarProvider>
+            <Sidebar>
+              <SidebarNav />
+            </Sidebar>
+            <SidebarInset>
+              <Header />
+              <main className="p-4 sm:p-6 lg:p-8 soft-shadow-inset">
+                  {children}
+              </main>
+            </SidebarInset>
+          </SidebarProvider>
+        </LogoProvider>
       </AuthGuard>
     </FirebaseClientProvider>
   );

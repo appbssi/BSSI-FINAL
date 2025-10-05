@@ -20,6 +20,8 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { UserNav } from './user-nav';
+import { useLogo } from '@/context/logo-context';
+import Image from 'next/image';
 
 type NavItem = {
   href: string;
@@ -35,13 +37,18 @@ const navItems: NavItem[] = [
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const { logo } = useLogo();
 
   return (
     <>
       <SidebarHeader>
         <div className="flex items-center gap-2">
-          <div className="bg-primary rounded-md p-2 flex items-center justify-center">
-            <Rocket className="w-5 h-5 text-primary-foreground" />
+          <div className="bg-primary rounded-md p-1 flex items-center justify-center h-10 w-10 relative">
+            {logo ? (
+              <Image src={logo} alt="Logo" fill className="rounded-md object-cover" />
+            ) : (
+              <Rocket className="w-5 h-5 text-primary-foreground" />
+            )}
           </div>
           <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">
             sBSSI
