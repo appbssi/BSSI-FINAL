@@ -50,6 +50,7 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { MissionDetailsSheet } from '@/components/missions/mission-details-sheet';
 
 const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missionName: string }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -192,6 +193,7 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
 export default function MissionsPage() {
   const [isCreateMissionOpen, setCreateMissionOpen] = useState(false);
   const [editingMission, setEditingMission] = useState<Mission | null>(null);
+  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [missionToCancel, setMissionToCancel] = useState<Mission | null>(null);
   const [missionToDelete, setMissionToDelete] = useState<Mission | null>(null);
   const { toast } = useToast();
@@ -384,7 +386,7 @@ export default function MissionsPage() {
               }
 
               return (
-              <TableRow key={mission.id}>
+              <TableRow key={mission.id} onClick={() => setSelectedMission(mission)} className="cursor-pointer">
                 <TableCell className="font-medium">{mission.name}</TableCell>
                 <TableCell>{mission.location}</TableCell>
                 <TableCell>{mission.startDate.toDate().toLocaleDateString('fr-FR')}</TableCell>
@@ -393,7 +395,7 @@ export default function MissionsPage() {
                     {assignedAgents && assignedAgents.length > 0 ? (
                         <Dialog>
                             <DialogTrigger asChild>
-                                <Button variant="ghost" className="flex items-center gap-2 px-2">
+                                <Button variant="ghost" className="flex items-center gap-2 px-2" onClick={(e) => e.stopPropagation()}>
                                     <Users className="h-4 w-4" />
                                     <span className="font-medium">{assignedAgents.length}</span>
                                 </Button>
@@ -415,7 +417,7 @@ export default function MissionsPage() {
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                      <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
                         <MoreHorizontal className="h-4 w-4" />
                         <span className="sr-only">Toggle menu</span>
                       </Button>
@@ -458,6 +460,19 @@ export default function MissionsPage() {
           onOpenChange={(open) => {
             if (!open) {
               setEditingMission(null);
+            }
+          }}
+        />
+      )}
+
+      {selectedMission && (
+        <MissionDetailsSheet
+          mission={selectedMission}
+          agents={agents || []}
+          isOpen={!!selectedMission}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedMission(null);
             }
           }}
         />
@@ -509,6 +524,7 @@ export default function MissionsPage() {
     
 
     
+
 
 
 
