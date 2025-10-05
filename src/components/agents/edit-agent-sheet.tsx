@@ -22,16 +22,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import type { Agent } from '@/lib/types';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
 
 const agentSchema = z.object({
   firstName: z.string().min(2, 'Le prénom est requis'),
@@ -69,6 +62,21 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
   const onSubmit = async (data: AgentFormValues) => {
     if (!firestore) return;
     try {
+       // Check for uniqueness of registrationNumber if it has changed
+      if (data.registrationNumber !== agent.registrationNumber) {
+        const agentsRef = collection(firestore, 'agents');
+        const q = query(agentsRef, where("registrationNumber", "==", data.registrationNumber));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          form.setError('registrationNumber', {
+            type: 'manual',
+            message: 'Ce matricule est déjà utilisé par un autre agent.',
+          });
+          return; // Stop submission
+        }
+      }
+
       const agentRef = doc(firestore, 'agents', agent.id);
       await updateDoc(agentRef, data);
       toast({

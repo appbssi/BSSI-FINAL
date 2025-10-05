@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 
@@ -61,9 +61,22 @@ export function RegisterAgentSheet({ isOpen, onOpenChange }: RegisterAgentSheetP
 
   const onSubmit = async (data: AgentFormValues) => {
     if (!firestore) return;
+
     try {
-      const agentsCollection = collection(firestore, 'agents');
-      await addDoc(agentsCollection, {
+      // Check for uniqueness of registrationNumber
+      const agentsRef = collection(firestore, 'agents');
+      const q = query(agentsRef, where("registrationNumber", "==", data.registrationNumber));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        form.setError('registrationNumber', {
+          type: 'manual',
+          message: 'Ce matricule est déjà utilisé par un autre agent.',
+        });
+        return; // Stop submission
+      }
+      
+      await addDoc(agentsRef, {
         ...data,
         availability: 'Disponible',
       });
