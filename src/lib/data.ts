@@ -1,0 +1,87 @@
+import type { Agent, Mission } from './types';
+
+export const agents: Agent[] = [
+  {
+    id: 'agt-001',
+    name: 'Alex "Ghost" Johnson',
+    email: 'alex.j@e-brigade.com',
+    skills: ['Surveillance', 'Infiltration', 'Combat'],
+    availability: 'Available',
+    avatarUrl: 'https://picsum.photos/seed/1/200/200',
+  },
+  {
+    id: 'agt-002',
+    name: 'Maria "Phoenix" Garcia',
+    email: 'maria.g@e-brigade.com',
+    skills: ['Hacking', 'Cryptography', 'Intel Analysis'],
+    availability: 'On Mission',
+    avatarUrl: 'https://picsum.photos/seed/2/200/200',
+  },
+  {
+    id: 'agt-003',
+    name: 'Sam "Viper" Chen',
+    email: 'sam.c@e-brigade.com',
+    skills: ['Demolitions', 'Close Quarters Combat', 'EOD'],
+    availability: 'Available',
+    avatarUrl: 'https://picsum.photos/seed/3/200/200',
+  },
+  {
+    id: 'agt-004',
+    name: 'Isabelle "Muse" Dubois',
+    email: 'isabelle.d@e-brigade.com',
+    skills: ['Linguistics', 'Interrogation', 'Psychological Operations'],
+    availability: 'Available',
+    avatarUrl: 'https://picsum.photos/seed/4/200/200',
+  },
+  {
+    id: 'agt-005',
+    name: 'Kenji "Shadow" Tanaka',
+    email: 'kenji.t@e-brigade.com',
+    skills: ['Stealth', 'Reconnaissance', 'Marksmanship'],
+    availability: 'On Leave',
+    avatarUrl: 'https://picsum.photos/seed/5/200/200',
+  },
+];
+
+export const missions: Mission[] = [
+  {
+    id: 'msn-001',
+    name: 'Operation Nightfall',
+    location: 'Geneva, Switzerland',
+    startDate: new Date('2024-08-15T09:00:00'),
+    endDate: new Date('2024-08-20T17:00:00'),
+    requiredSkills: ['Hacking', 'Surveillance'],
+    assignedAgents: [agents[1]],
+    status: 'Ongoing',
+  },
+  {
+    id: 'msn-002',
+    name: 'Project Chimera',
+    location: 'Tokyo, Japan',
+    startDate: new Date('2024-09-01T09:00:00'),
+    endDate: new Date('2024-09-10T17:00:00'),
+    requiredSkills: ['Infiltration', 'Combat', 'Demolitions'],
+    assignedAgents: [],
+    status: 'Planning',
+  },
+  {
+    id: 'msn-003',
+    name: 'Operation Silent Serpent',
+    location: 'Cairo, Egypt',
+    startDate: new Date('2024-07-01T09:00:00'),
+    endDate: new Date('2024-07-05T17:00:00'),
+    requiredSkills: ['Linguistics', 'Stealth'],
+    assignedAgents: [agents[3], agents[4]],
+    status: 'Completed',
+  },
+  {
+    id: 'msn-004',
+    name: 'Arctic Fox Initiative',
+    location: 'Svalbard, Norway',
+    startDate: new Date('2024-10-10T09:00:00'),
+    endDate: new Date('2024-10-15T17:00:00'),
+    requiredSkills: ['Survival', 'Reconnaissance'],
+    assignedAgents: [],
+    status: 'Planning',
+  },
+];
