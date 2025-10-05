@@ -28,8 +28,11 @@ import { useFirestore, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { collection, doc, writeBatch, getDocs } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
+import * as z from 'zod';
 
 type AgentImportData = Omit<Agent, 'id' | 'availability'>;
+
+const contactSchema = z.string().length(10, 'Le contact doit contenir exactement 10 chiffres.').regex(/^[0-9]+$/, 'Le contact ne doit contenir que des chiffres.');
 
 export function ImportAgentsDialog({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -69,6 +72,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         const seenInFileContact = new Set<string>();
         let duplicatesInFile = 0;
         let duplicatesInDb = 0;
+        let invalidContacts = 0;
 
         const parsedAgents: AgentImportData[] = json.map((row) => ({
             firstName: String(row.firstName || '').trim(),
@@ -81,6 +85,14 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             if (!agent.firstName || !agent.lastName || !agent.registrationNumber || !agent.contact) {
                 return false;
             }
+
+            // Validate contact format
+            const contactValidation = contactSchema.safeParse(agent.contact);
+            if (!contactValidation.success) {
+                invalidContacts++;
+                return false;
+            }
+
             // Check for duplicates in DB
             if (existingRegNumbers.has(agent.registrationNumber) || existingContacts.has(agent.contact)) {
                 duplicatesInDb++;
@@ -96,18 +108,20 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             return true;
         });
 
-        if (duplicatesInDb > 0 || duplicatesInFile > 0) {
-            let message = '';
-            if (duplicatesInDb > 0) message += `${duplicatesInDb} agent(s) existant(s) déjà dans la base de données ont été ignoré(s). `;
-            if (duplicatesInFile > 0) message += `${duplicatesInFile} doublon(s) dans le fichier ont été ignoré(s).`;
+        if (duplicatesInDb > 0 || duplicatesInFile > 0 || invalidContacts > 0) {
+            let messages = [];
+            if (duplicatesInDb > 0) messages.push(`${duplicatesInDb} agent(s) existant(s) déjà dans la base de données ont été ignoré(s).`);
+            if (duplicatesInFile > 0) messages.push(`${duplicatesInFile} doublon(s) dans le fichier ont été ignoré(s).`);
+            if (invalidContacts > 0) messages.push(`${invalidContacts} agent(s) avec un format de contact invalide ont été ignoré(s).`);
+            
             toast({
-                title: 'Doublons ignorés',
-                description: message,
+                title: 'Données ignorées',
+                description: messages.join(' '),
             });
         }
 
         if(parsedAgents.length === 0){
-            if(duplicatesInDb === 0 && duplicatesInFile === 0) {
+            if(duplicatesInDb === 0 && duplicatesInFile === 0 && invalidContacts === 0) {
               toast({
                   variant: 'destructive',
                   title: 'Fichier invalide ou vide',
