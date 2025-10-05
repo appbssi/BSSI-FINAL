@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -114,7 +114,6 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   
   const startDate = form.watch('startDate');
   const endDate = form.watch('endDate');
-  const assignedAgentIds = form.watch('assignedAgentIds');
 
   const availableAgents = allAgents?.filter(agent => 
       startDate && endDate ? isAgentAvailable(agent, allMissions || [], startDate, endDate) : false
@@ -249,10 +248,10 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                 <h3 className="text-xl font-semibold">2. Assigner les agents</h3>
                 <p className="text-sm text-muted-foreground">Sélectionnez les agents à assigner à cette mission. Seuls les agents disponibles pour les dates choisies sont affichés.</p>
                 
-                <FormField
-                    control={form.control}
-                    name="assignedAgentIds"
-                    render={({ field }) => (
+                <Controller
+                  control={form.control}
+                  name="assignedAgentIds"
+                  render={({ field }) => (
                     <FormItem>
                         <div className="rounded-lg border">
                              <ScrollArea className="h-72">
@@ -273,7 +272,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                                      const newValue = isChecked
                                                          ? currentValues.filter((id) => id !== agent.id)
                                                          : [...currentValues, agent.id];
-                                                     form.setValue('assignedAgentIds', newValue, { shouldValidate: true });
+                                                     field.onChange(newValue);
                                                  }}
                                             >
                                                 <Checkbox

@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import type { Agent, Mission } from '@/lib/types';
@@ -147,7 +147,7 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
   ) || [];
 
   const currentlyAssignedAgents = allAgents?.filter(agent => form.watch('assignedAgentIds').includes(agent.id)) || [];
-  const combinedAgentList = [...new Set([...currentlyAssignedAgents, ...availableAgents])];
+  const combinedAgentList = [...new Map([...currentlyAssignedAgents, ...availableAgents].map(agent => [agent.id, agent])).values()];
 
 
   return (
@@ -292,7 +292,7 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                 )}
             />
             
-            <FormField
+            <Controller
                 control={form.control}
                 name="assignedAgentIds"
                 render={({ field }) => (
@@ -320,7 +320,7 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                                                 const newValue = isChecked
                                                     ? currentValues.filter((id) => id !== agent.id)
                                                     : [...currentValues, agent.id];
-                                                form.setValue('assignedAgentIds', newValue, { shouldValidate: true });
+                                                field.onChange(newValue);
                                             }}
                                         >
                                             <Checkbox
