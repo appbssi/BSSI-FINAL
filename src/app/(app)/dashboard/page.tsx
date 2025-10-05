@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -35,8 +36,8 @@ export default function DashboardPage() {
     [firestore, user]
   );
   
-  const upcomingMissionsQuery = useMemoFirebase(
-    () => (firestore && user ? query(collection(firestore, 'missions'), where('status', 'in', ['Planification', 'En cours']), limit(5)) : null),
+  const activeMissionsQuery = useMemoFirebase(
+    () => (firestore && user ? query(collection(firestore, 'missions'), where('status', '==', 'En cours'), limit(5)) : null),
     [firestore, user]
   );
 
@@ -47,10 +48,10 @@ export default function DashboardPage() {
 
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
-  const { data: upcomingMissions, isLoading: upcomingMissionsLoading } = useCollection<Mission>(upcomingMissionsQuery);
+  const { data: activeMissions, isLoading: activeMissionsLoading } = useCollection<Mission>(activeMissionsQuery);
 
   const totalAgents = agents?.length ?? 0;
-  const activeMissions =
+  const activeMissionsCount =
     missions?.filter((m) => m.status === 'En cours').length ?? 0;
     
   const agentsOnMission = agents?.filter(a => a.availability === 'En mission').length ?? 0;
@@ -96,7 +97,7 @@ export default function DashboardPage() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{missionsLoading ? '...' : activeMissions}</div>
+            <div className="text-2xl font-bold">{missionsLoading ? '...' : activeMissionsCount}</div>
           </CardContent>
         </Card>
       </div>
@@ -116,12 +117,12 @@ export default function DashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {upcomingMissionsLoading && (
+              {activeMissionsLoading && (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center">Chargement...</TableCell>
                 </TableRow>
               )}
-              {upcomingMissions?.map((mission) => (
+              {activeMissions?.map((mission) => (
                 <TableRow key={mission.id}>
                   <TableCell className="font-medium">{mission.name}</TableCell>
                    <TableCell>{mission.location}</TableCell>
@@ -141,10 +142,10 @@ export default function DashboardPage() {
                   </TableCell>
                 </TableRow>
               ))}
-               {!upcomingMissionsLoading && upcomingMissions?.length === 0 && (
+               {!activeMissionsLoading && activeMissions?.length === 0 && (
                  <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">
-                        Aucune mission à venir.
+                        Aucune mission active.
                     </TableCell>
                 </TableRow>
             )}
