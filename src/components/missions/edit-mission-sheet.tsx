@@ -326,7 +326,14 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                                             <Checkbox
                                                 checked={isChecked}
                                                 disabled={isDisabled}
-                                                readOnly
+                                                onCheckedChange={(checked) => {
+                                                  if(isDisabled) return;
+                                                  const currentValues = field.value || [];
+                                                  const newValue = checked
+                                                      ? [...currentValues, agent.id]
+                                                      : currentValues.filter((id) => id !== agent.id);
+                                                  field.onChange(newValue);
+                                                }}
                                             />
                                              <Avatar>
                                                 <AvatarFallback>{agent.firstName?.[0] ?? ''}{agent.lastName?.[0] ?? ''}</AvatarFallback>

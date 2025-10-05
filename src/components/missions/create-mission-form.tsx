@@ -248,7 +248,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                 <h3 className="text-xl font-semibold">2. Assigner les agents</h3>
                 <p className="text-sm text-muted-foreground">Sélectionnez les agents à assigner à cette mission. Seuls les agents disponibles pour les dates choisies sont affichés.</p>
                 
-                <Controller
+                <FormField
                   control={form.control}
                   name="assignedAgentIds"
                   render={({ field }) => (
@@ -277,7 +277,13 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                             >
                                                 <Checkbox
                                                     checked={isChecked}
-                                                    readOnly
+                                                    onCheckedChange={(checked) => {
+                                                        const currentValues = field.value || [];
+                                                        const newValue = checked
+                                                            ? [...currentValues, agent.id]
+                                                            : currentValues.filter((id) => id !== agent.id);
+                                                        field.onChange(newValue);
+                                                    }}
                                                 />
                                                  <Avatar>
                                                     <AvatarFallback>{agent.firstName?.[0] ?? ''}{agent.lastName?.[0] ?? ''}</AvatarFallback>
