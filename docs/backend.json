@@ -32,8 +32,7 @@
         },
         "availability": {
           "type": "string",
-          "description": "The agent's manual availability status (overridden by missions).",
-          "enum": ["Disponible", "En congé"]
+          "description": "The agent's manual availability status (overridden by missions)."
         }
       },
       "required": [
