@@ -13,20 +13,18 @@ export function initializeFirebase() {
     
     // In development, connect to emulators.
     // In production, these will no-op and connect to live services.
-    // Note: VITE_USE_EMULATORS is a Vite-specific environment variable.
-    // You might need to adapt this for other build tools (e.g., Next.js).
     if (process.env.NODE_ENV === 'development') {
        try {
+        const auth = getAuth(app);
         // It's important to check if the emulators are already connected
         // to avoid re-connecting, which can cause issues.
-        // The `_isInitialized` property is an internal flag, but useful here.
-        const auth = getAuth(app);
-        if (!(auth as any)._isInitialized) {
+        if (!(auth as any)._emulatorConfig) {
             connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
         }
 
         const db = getFirestore(app);
-        if (!(db as any)._isInitialized) {
+        // A simple check to see if the host is already set to the emulator.
+        if (!(db as any)._settings.host.includes('127.0.0.1')) {
             connectFirestoreEmulator(db, '127.0.0.1', 8080);
         }
        } catch (e) {
