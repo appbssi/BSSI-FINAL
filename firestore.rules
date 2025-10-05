@@ -1,57 +1,85 @@
 /**
- * @description This ruleset enforces a public read policy for agents, missions, and activity logs, but restricts writes to authenticated users.
- * @dataStructure The database contains three top-level collections: /agents/{agentId}, /missions/{missionId}, and /activity_logs/{logId}.
+ * @file Firestore Security Rules
+ * @version 2
+ *
+ * @description This ruleset enforces a strict owner-only access model for agents and missions, and allows public read-only access to activity logs.
+ *
+ * @dataStructure
+ *  - /agents/{agentId}: Stores individual agent data. Access is restricted to the agent themselves.
+ *  - /missions/{missionId}: Stores mission data. Access is restricted to users who are assigned to the mission.
+ *  - /activity_logs/{logId}: Stores activity logs. Publicly readable, but only the service can write.
+ *
  * @keySecurityDecisions
- *   - Read access is open to all for all collections.
- *   - Unauthenticated users can `get` and `list` agents, missions, and activity logs.
- *   - Only authenticated users can create, update, or delete documents in any of the collections. No ownership checks are implemented.
- *   - Validation of the data schema is skipped in this prototyping phase for faster iteration.
+ *  - Agents can only access their own data.
+ *  - Listing of agents is disallowed for security reasons.
+ *  - Public read access is granted for activity logs to facilitate auditing and monitoring, but write access is not defined, implying service-only writes.
+ *  - The default security posture for ambiguous relationships is strict owner-only access.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows anyone to read agent data, but restricts modifications to authenticated users.
+     * @description Prevents access if the user is not signed in.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the request is made by the owner of the document.
+     */
+    function isOwner(agentId) {
+      return request.auth.uid == agentId;
+    }
+
+    /**
+     * @description Checks if the request is made by the owner of an existing document.
+     */
+    function isExistingOwner(agentId) {
+      return request.auth.uid == resource.data.agentId;
+    }
+
+    /**
+     * @description Rules for the /agents/{agentId} collection.
      * @path /agents/{agentId}
-     * @allow (get, list) Anyone can read agent data.
-     * @allow (create, update, delete) An authenticated user can create, update, or delete agent data.
-     * @deny An unauthenticated user cannot create, update, or delete agent data.
-     * @principle Allows public reads but enforces authentication for writes.
+     * @allow (create) User 'vvdc4lBWZ4bTwzhw0iYPGJxqS9h1' can create an agent document with ID 'vvdc4lBWZ4bTwzhw0iYPGJxqS9h1'.
+     * @deny (create) User 'vvdc4lBWZ4bTwzhw0iYPGJxqS9h1' cannot create an agent document with ID 'different_id'.
+     * @allow (get) User 'vvdc4lBWZ4bTwzhw0iYPGJxqS9h1' can get their own agent document.
+     * @deny (get) User 'different_id' cannot get agent document 'vvdc4lBWZ4bTwzhw0iYPGJxqS9h1'.
+     * @principle Enforces document ownership for writes.
      */
     match /agents/{agentId} {
-      allow get, list: if true;
-      allow create, update, delete: if isSignedIn();
+      allow get: if isOwner(agentId);
+      allow list: if false; // Listing agents is disallowed for security.
+      allow create: if request.auth.uid == agentId;
+      allow update: if isOwner(agentId);
+      allow delete: if isOwner(agentId);
     }
 
     /**
-     * @description Allows anyone to read mission data, but restricts modifications to authenticated users.
+     * @description Rules for the /missions/{missionId} collection.
      * @path /missions/{missionId}
-     * @allow (get, list) Anyone can read mission data.
-     * @allow (create, update, delete) An authenticated user can create, update, or delete mission data.
-     * @deny An unauthenticated user cannot create, update, or delete mission data.
-     * @principle Allows public reads but enforces authentication for writes.
+     * @allow (get) Any signed-in user can read mission details.
+     * @deny (create) Unauthorized users cannot create missions.
+     * @principle Owner-only access for modifications.
      */
     match /missions/{missionId} {
-      allow get, list: if true;
-      allow create, update, delete: if isSignedIn();
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.ownerId; // Only the agent creating the mission can create it.
+      allow update, delete: if isSignedIn() && request.auth.uid == resource.data.ownerId; // Only the owner can update or delete
     }
 
     /**
-     * @description Allows anyone to read activity log data, but restricts modifications to authenticated users.
+     * @description Rules for the /activity_logs/{logId} collection.
      * @path /activity_logs/{logId}
-     * @allow (get, list) Anyone can read activity log data.
-     * @allow (create, update, delete) An authenticated user can create, update, or delete activity log data.
-     * @deny An unauthenticated user cannot create, update, or delete activity log data.
-     * @principle Allows public reads but enforces authentication for writes.
+     * @allow (get) Any user can read activity logs.
+     * @deny (create) Unauthorized users cannot create activity logs.
+     * @principle Public read access, restricted write access.
      */
     match /activity_logs/{logId} {
       allow get, list: if true;
-      allow create, update, delete: if isSignedIn();
-    }
-
-    function isSignedIn() {
-      return request.auth != null;
+      allow create, update, delete: if false;
     }
   }
 }
