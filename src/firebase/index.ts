@@ -11,26 +11,8 @@ export function initializeFirebase() {
   if (!getApps().length) {
     const app = initializeApp(firebaseConfig);
     
-    // In development, connect to emulators.
-    // In production, these will no-op and connect to live services.
-    if (process.env.NODE_ENV === 'development') {
-       try {
-        const auth = getAuth(app);
-        // It's important to check if the emulators are already connected
-        // to avoid re-connecting, which can cause issues.
-        if (!(auth as any)._emulatorConfig) {
-            connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-        }
-
-        const db = getFirestore(app);
-        // A simple check to see if the host is already set to the emulator.
-        if (!(db as any)._settings.host.includes('127.0.0.1')) {
-            connectFirestoreEmulator(db, '127.0.0.1', 8080);
-        }
-       } catch (e) {
-        console.error("Error connecting to emulators:", e)
-       }
-    }
+    // NOTE: Emulator connection logic has been removed to resolve network errors.
+    // The application will now connect to production Firebase services.
 
     // Automatically sign in the user anonymously if they are not already signed in.
     const auth = getAuth(app);
