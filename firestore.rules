@@ -1,50 +1,55 @@
-/**
- * @fileoverview Firestore Security Rules for the Agent Mission Management application.
- *
- * Core Philosophy:
- * This ruleset provides public read access to the 'agents' and 'missions' collections
- * but restricts write access to prevent unauthorized data modification. No authentication is required to read these collections.
- *
- * Data Structure:
- * The database consists of two top-level collections: 'agents' and 'missions'.
- *  - /agents/{agentId}: Stores agent profiles.
- *  - /missions/{missionId}: Stores mission details.
- *
- * Key Security Decisions:
- *  - Agents and Missions are publicly readable, but only writeable in the Firebase Console.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
     /**
-     * @description Grants public read access to the 'agents' collection, but denies all write operations.
-     * @path /databases/{database}/documents/agents/{agentId}
-     * @allow (get, list): Any unauthenticated client can read agent profiles.
-     * @deny (create, update, delete): No client-side write operations are permitted on agent profiles.
-     * @principle Allows public read access while preventing unauthorized modifications.
+     * @description This ruleset enforces a strict user-ownership model for agents and public read access to missions, with owner-only writes.
+     * @dataStructure Agents are stored in `/agents/{agentId}` and Missions are stored in `/missions/{missionId}`.
+     * @keySecurityDecisions Listing of agents is disallowed. Missions are publicly readable, but only owners can create, update, or delete them.
      */
-    match /agents/{agentId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+
+    // Helper function to check if the user is signed in.
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the authenticated user ID matches the provided user ID.
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Helper function to check if the authenticated user is the existing owner of the document.
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
     }
 
     /**
-     * @description Grants public read access to the 'missions' collection, but denies all write operations.
-     * @path /databases/{database}/documents/missions/{missionId}
-     * @allow (get, list): Any unauthenticated client can read mission details.
-     * @deny (create, update, delete): No client-side write operations are permitted on mission details.
-     * @principle Allows public read access while preventing unauthorized modifications.
+     * @description Manages access to individual agent documents.
+     * @path /agents/{agentId}
+     * @allow (create) User with ID 'user_abc' can create their own agent document at /agents/user_abc.
+     * @deny (create) User with ID 'user_abc' cannot create an agent document at /agents/user_xyz.
+     * @deny (update) User attempts to update an agent document that does not exist.
+     * @principle Enforces document ownership for writes.
+     */
+    match /agents/{agentId} {
+      allow get: if isOwner(agentId);
+      allow list: if false;
+      allow create: if isOwner(agentId);
+      allow update: if isExistingOwner(agentId);
+      allow delete: if isExistingOwner(agentId);
+    }
+
+    /**
+     * @description Manages access to individual mission documents.
+     * @path /missions/{missionId}
+     * @allow (get, list) Any user can read any mission.
+     * @deny (create, update, delete) Only the owner can modify or delete a mission.
+     * @principle Allows public reads, restricts writes to the owner.
      */
     match /missions/{missionId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+        allow get, list: if true;
+        allow create: if isSignedIn();
+        allow update: if isSignedIn();
+        allow delete: if isSignedIn();
     }
   }
 }
