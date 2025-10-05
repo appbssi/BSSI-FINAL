@@ -11,10 +11,6 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { Agent } from '@/lib/types';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import { Label } from '../ui/label';
-import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { doc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,9 +21,6 @@ interface AgentDetailsSheetProps {
 }
 
 export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsSheetProps) {
-    const firestore = useFirestore();
-    const { toast } = useToast();
-
   const getBadgeVariant = (availability: string) => {
     switch (availability) {
       case 'Disponible':
@@ -41,23 +34,13 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsS
     }
   };
 
-  const handleAvailabilityChange = (newAvailability: Agent['availability']) => {
-    if(!firestore) return;
-    const agentRef = doc(firestore, 'agents', agent.id);
-    updateDocumentNonBlocking(agentRef, { availability: newAvailability });
-    toast({
-        title: 'Disponibilité mise à jour',
-        description: `Le statut de ${agent.firstName} ${agent.lastName} est maintenant: ${newAvailability}`
-    })
-  }
-
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Détails de l'agent</SheetTitle>
           <SheetDescription>
-            Informations complètes sur l'agent et gestion de sa disponibilité.
+            Informations complètes sur l'agent.
           </SheetDescription>
         </SheetHeader>
         <div className="py-6 space-y-6">
@@ -84,27 +67,6 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsS
                             {agent.availability}
                         </Badge>
                     </div>
-                </div>
-                <div className="flex flex-col gap-3">
-                    <Label className="text-muted-foreground">Modifier la disponibilité</Label>
-                    <RadioGroup 
-                        defaultValue={agent.availability} 
-                        onValueChange={handleAvailabilityChange}
-                        className="flex items-center gap-4"
-                    >
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Disponible" id="r-disponible" />
-                            <Label htmlFor="r-disponible">Disponible</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="En mission" id="r-mission" />
-                            <Label htmlFor="r-mission">En mission</Label>
-                        </div>
-                         <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="En congé" id="r-conge" />
-                            <Label htmlFor="r-conge">En congé</Label>
-                        </div>
-                    </RadioGroup>
                 </div>
                 <div className="flex flex-col gap-1">
                     <span className="text-muted-foreground">Contact</span>
