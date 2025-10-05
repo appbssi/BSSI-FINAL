@@ -104,7 +104,7 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
                 <FormItem>
                   <FormLabel>Nom</FormLabel>
                   <FormControl>
-                    <Input placeholder="Johnson" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -117,7 +117,7 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
                 <FormItem>
                   <FormLabel>Prénom</FormLabel>
                   <FormControl>
-                    <Input placeholder="Alex" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -130,7 +130,7 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
                 <FormItem>
                   <FormLabel>Matricule</FormLabel>
                   <FormControl>
-                    <Input placeholder="E-B-007" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -143,7 +143,7 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
                 <FormItem>
                   <FormLabel>Grade</FormLabel>
                   <FormControl>
-                    <Input placeholder="Capitaine" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -156,7 +156,7 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
                 <FormItem>
                   <FormLabel>Contact</FormLabel>
                   <FormControl>
-                    <Input placeholder="+33 1 23 45 67 89" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -169,7 +169,7 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
                 <FormItem>
                   <FormLabel>Adresse</FormLabel>
                   <FormControl>
-                    <Input placeholder="123 Rue de la Mission, Paris" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

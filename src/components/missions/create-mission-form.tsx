@@ -151,7 +151,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                         <FormItem>
                         <FormLabel>Nom de la mission</FormLabel>
                         <FormControl>
-                            <Input placeholder="Opération Crépuscule" {...field} />
+                            <Input {...field} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -164,7 +164,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                         <FormItem>
                         <FormLabel>Lieu</FormLabel>
                         <FormControl>
-                            <Input placeholder="Genève, Suisse" {...field} />
+                            <Input {...field} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>

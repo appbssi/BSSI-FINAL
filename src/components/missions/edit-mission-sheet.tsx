@@ -207,7 +207,7 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                 <FormItem>
                   <FormLabel>Nom de la mission</FormLabel>
                   <FormControl>
-                    <Input placeholder="Opération Crépuscule" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -220,7 +220,7 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                 <FormItem>
                   <FormLabel>Lieu</FormLabel>
                   <FormControl>
-                    <Input placeholder="Genève, Suisse" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
