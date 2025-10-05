@@ -18,7 +18,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </Sidebar>
           <SidebarInset>
             <Header />
-            <main className="p-4 sm:p-6 lg:p-8 shadow-[-10px_0_25px_0px_rgba(249,115,22,0.2)]">{children}</main>
+            <main className="p-4 sm:p-6 lg:p-8">{children}</main>
           </SidebarInset>
         </SidebarProvider>
       </AuthGuard>
