@@ -27,20 +27,22 @@ import {
 import { CreateMissionForm } from '@/components/missions/create-mission-form';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import type { Agent, Mission } from '@/lib/types';
 import { useState } from 'react';
 
 export default function MissionsPage() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const firestore = useFirestore();
+  const { user } = useUser();
+  
   const missionsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'missions') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'missions') : null),
+    [firestore, user]
   );
   const agentsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'agents') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'agents') : null),
+    [firestore, user]
   );
 
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);

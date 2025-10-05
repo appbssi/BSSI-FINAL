@@ -23,17 +23,19 @@ import { RegisterAgentSheet } from '@/components/agents/register-agent-sheet';
 import type { Agent, Mission } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, Timestamp } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 
 export default function AgentsPage() {
   const firestore = useFirestore();
+  const { user } = useUser();
+
   const agentsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'agents') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'agents') : null),
+    [firestore, user]
   );
   const missionsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'missions') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'missions') : null),
+    [firestore, user]
   );
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);

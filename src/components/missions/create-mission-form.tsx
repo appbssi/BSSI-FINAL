@@ -34,7 +34,7 @@ import { Label } from '../ui/label';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, Timestamp } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
@@ -58,14 +58,15 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   const [availableAgentsForMission, setAvailableAgentsForMission] = useState<Agent[]>([]);
   const { toast } = useToast();
   const firestore = useFirestore();
+  const { user } = useUser();
 
   const agentsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'agents') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'agents') : null),
+    [firestore, user]
   );
   const missionsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'missions') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'missions') : null),
+    [firestore, user]
   );
 
   const { data: allAgents } = useCollection<Agent>(agentsQuery);

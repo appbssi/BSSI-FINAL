@@ -27,24 +27,25 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, where, limit, Timestamp } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import type { Agent, Mission } from '@/lib/types';
 
 export default function DashboardPage() {
   const firestore = useFirestore();
+  const { user } = useUser();
 
   const agentsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'agents') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'agents') : null),
+    [firestore, user]
   );
   const missionsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'missions') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'missions') : null),
+    [firestore, user]
   );
   
   const upcomingMissionsQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'missions'), where('status', 'in', ['Planification', 'En cours']), limit(5)) : null),
-    [firestore]
+    () => (firestore && user ? query(collection(firestore, 'missions'), where('status', 'in', ['Planification', 'En cours']), limit(5)) : null),
+    [firestore, user]
   );
 
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);

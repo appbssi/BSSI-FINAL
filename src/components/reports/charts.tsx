@@ -18,13 +18,15 @@ import {
 import type { Agent, Mission } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, Timestamp } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 
 export function MissionOutcomesChart() {
   const firestore = useFirestore();
+  const { user } = useUser();
+
   const missionsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'missions') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'missions') : null),
+    [firestore, user]
   );
   const { data: missions, isLoading } = useCollection<Mission>(missionsQuery);
 
@@ -80,13 +82,15 @@ const COLORS = ['hsl(var(--chart-2))', 'hsl(var(--chart-1))', 'hsl(var(--chart-5
 
 export function AgentActivityChart() {
   const firestore = useFirestore();
+  const { user } = useUser();
+
   const agentsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'agents') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'agents') : null),
+    [firestore, user]
   );
   const missionsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'missions') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'missions') : null),
+    [firestore, user]
   );
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
