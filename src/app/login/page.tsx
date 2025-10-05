@@ -17,13 +17,14 @@ import {
 } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInAnonymously } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Loader2, Rocket, Eye, EyeOff } from 'lucide-react';
 import { FirebaseError } from 'firebase/app';
 import { useLogo } from '@/context/logo-context';
 import Image from 'next/image';
+import { setRole } from '@/hooks/use-role';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Veuillez saisir votre login.'),
@@ -31,6 +32,11 @@ const loginSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
+
+const ADMIN_LOGIN = 'bssi';
+const ADMIN_PASS = 'adminR';
+const OBSERVER_PASS = 'admin';
+
 
 export default function LoginPage() {
   const { toast } = useToast();
@@ -51,24 +57,35 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
-      // AuthGuard will handle the redirect on successful login
+      const { email: login, password } = data;
+      
+      let userRole: 'admin' | 'observer' | null = null;
+
+      if (login.toLowerCase() === ADMIN_LOGIN) {
+        if (password === ADMIN_PASS) {
+            userRole = 'admin';
+        } else if (password === OBSERVER_PASS) {
+            userRole = 'observer';
+        }
+      }
+
+      if (userRole) {
+        setRole(userRole);
+        await signInAnonymously(auth);
+        // AuthGuard will handle redirection
+      } else {
+         toast({
+            variant: 'destructive',
+            title: 'Erreur de connexion',
+            description: 'Les identifiants fournis sont invalides. Veuillez vérifier votre login et votre mot de passe.',
+        });
+      }
+
     } catch (error) {
       console.error('Login Error:', error);
       let description = "Une erreur inconnue est survenue.";
       if (error instanceof FirebaseError) {
-        switch (error.code) {
-          case 'auth/user-not-found':
-          case 'auth/wrong-password':
-          case 'auth/invalid-credential':
-            description = 'Les identifiants fournis sont invalides. Veuillez vérifier votre login et votre mot de passe.';
-            break;
-          case 'auth/invalid-email':
-            description = 'Le format du login est invalide. Veuillez utiliser une adresse e-mail.';
-            break;
-          default:
-            description = "Impossible de se connecter. Veuillez réessayer.";
-        }
+         description = "Impossible de se connecter au service. Veuillez réessayer.";
       }
       toast({
         variant: 'destructive',

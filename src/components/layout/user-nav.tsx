@@ -17,7 +17,7 @@ import { SettingsSheet } from '@/components/settings/settings-sheet';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { useRole } from '@/hooks/use-role';
+import { useRole, clearRole } from '@/hooks/use-role';
 
 export function UserNav() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -28,6 +28,7 @@ export function UserNav() {
 
   const handleLogout = async () => {
     await signOut(auth);
+    clearRole();
     router.push('/login');
   };
 
@@ -49,7 +50,7 @@ export function UserNav() {
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">{capitalizedRole}</p>
               <p className="text-xs leading-none text-muted-foreground">
-                {user?.email}
+                {user?.isAnonymous ? 'Session locale' : user?.email}
               </p>
             </div>
           </DropdownMenuLabel>
