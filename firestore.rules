@@ -1,65 +1,52 @@
 /**
- * @fileoverview Firestore Security Rules for the Agent Mission Management Application.
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-based access control model. Agents can only manage their own information,
- * and missions are accessible to anyone.
+ * @file Overview
+ * This ruleset enforces a role-based access control model for the 'agents' and 'missions' collections.
  *
  * Data Structure:
- * - /agents/{agentId}: Stores information about individual agents.
- * - /missions/{missionId}: Stores details about individual missions.
+ * - /agents/{agentId}: Stores agent information.
+ * - /missions/{missionId}: Stores mission details.
  *
  * Key Security Decisions:
- * - Agents can only create, read, update, and delete their own agent document.
- * - Public read access to missions.
+ * - Agents: Only users with a 'admin' role can create, update, or delete agents. Read access is public.
+ * - Missions: Only users with a 'admin' role can create, update, or delete missions. Read access is public.
+ *
+ * Access Control Pattern:
+ * - Agents: Public Read with Role-Based Writes ('admin' role required).
+ * - Missions: Public Read with Role-Based Writes ('admin' role required).
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows agents to manage their own profile.
+     * @description Controls access to the 'agents' collection. Only admins can create, update, or delete agents.
      * @path /agents/{agentId}
-     * @allow (create) - Authenticated user with UID matching the agentId can create.
-     * @allow (get) - Any authenticated user can read.
-     * @allow (update) - Authenticated user with UID matching the agentId can update.
-     * @allow (delete) - Authenticated user with UID matching the agentId can delete.
-     * @deny (create) - Authenticated user tries to create an agent document with an ID that doesn't match their own UID.
-     * @deny (update) - Authenticated user tries to update an agent document that doesn't exist.
-     * @principle Enforces document ownership for writes.
+     * @allow (get, list): Any user can read agent data.
+     * @allow (create, update, delete): Only users with the 'admin' role can modify agent data.
+     * @deny (create, update, delete): Non-admin users cannot modify agent data.
+     * @principle Enforces role-based access control for agent management.
      */
     match /agents/{agentId} {
       allow get, list: if true;
-      allow create: if isSignedIn() && request.auth.uid == agentId;
-      allow update: if isExistingOwner(agentId) && request.auth.uid == agentId;
-      allow delete: if isExistingOwner(agentId) && request.auth.uid == agentId;
+      allow create, update, delete: if isAdmin();
     }
 
     /**
-     * @description Allows anyone to read mission details and restricts writes.
+     * @description Controls access to the 'missions' collection. Only admins can create, update, or delete missions.
      * @path /missions/{missionId}
-     * @allow (get) - Any user can read mission details.
-     * @allow (list) - Any user can list missions.
-     * @deny (create) - No one can create a mission.
-     * @deny (update) - No one can update a mission.
-     * @deny (delete) - No one can delete a mission.
-     * @principle Public read access with no write access.
+     * @allow (get, list): Any user can read mission data.
+     * @allow (create, update, delete): Only users with the 'admin' role can modify mission data.
+     * @deny (create, update, delete): Non-admin users cannot modify mission data.
+     * @principle Enforces role-based access control for mission management.
      */
     match /missions/{missionId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow create, update, delete: if isAdmin();
     }
 
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(agentId) {
-      return request.auth.uid == agentId;
-    }
-
-    function isExistingOwner(agentId) {
-      return isOwner(agentId) && resource != null;
+    // Helper function to check if the user has the 'admin' role.
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
     }
   }
 }
