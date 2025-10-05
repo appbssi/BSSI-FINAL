@@ -42,6 +42,8 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
     const file = event.target.files?.[0];
     if (!file) return;
 
+    setAgentsToImport([]); // Reset on new file selection
+
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -49,13 +51,13 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
+        
+        // Use sheet_to_json with a specific header configuration
         const json = XLSX.utils.sheet_to_json(worksheet, {
-            header: ["name", "matricule", "grade", "contact", "address"]
+            header: ["name", "matricule", "grade", "contact", "address"],
+            range: 1 // This will skip the first row (the header)
         }) as any[];
 
-        if(json.length > 0 && json[0].name === "name" && json[0].matricule === "matricule"){
-            json.shift();
-        }
 
         const parsedAgents: AgentImportData[] = json.map((row) => ({
             name: String(row.name || ''),
@@ -63,12 +65,12 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             grade: String(row.grade || ''),
             contact: String(row.contact || ''),
             address: String(row.address || ''),
-        })).filter(agent => agent.name && agent.matricule);
+        })).filter(agent => agent.name && agent.matricule); // Filter out empty rows
 
         if(parsedAgents.length === 0){
             toast({
                 variant: 'destructive',
-                title: 'Fichier invalide',
+                title: 'Fichier invalide ou vide',
                 description: 'Le fichier ne contient aucun agent valide ou les colonnes ne sont pas correctes. Attendu: name, matricule, grade, contact, address',
             });
             return;
@@ -132,7 +134,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         <DialogHeader>
           <DialogTitle>Importer des agents depuis Excel</DialogTitle>
           <DialogDescription>
-            Sélectionnez un fichier .xlsx ou .csv. Assurez-vous que le fichier a les colonnes : name, matricule, grade, contact, address.
+            Sélectionnez un fichier .xlsx ou .csv. Assurez-vous que le fichier a les colonnes : name, matricule, grade, contact, address. La première ligne sera ignorée.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
