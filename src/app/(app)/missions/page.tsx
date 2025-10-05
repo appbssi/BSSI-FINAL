@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -25,15 +26,30 @@ import {
 } from '@/components/ui/popover';
 import { CreateMissionForm } from '@/components/missions/create-mission-form';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import type { Mission } from '@/lib/types';
+import type { Agent, Mission } from '@/lib/types';
 import { useState } from 'react';
 import { EditMissionSheet } from '@/components/missions/edit-mission-sheet';
+import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function MissionsPage() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [editingMission, setEditingMission] = useState<Mission | null>(null);
+  const [missionToCancel, setMissionToCancel] = useState<Mission | null>(null);
+  const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
   
@@ -41,8 +57,23 @@ export default function MissionsPage() {
     () => (firestore && user ? collection(firestore, 'missions') : null),
     [firestore, user]
   );
+  
+  const agentsQuery = useMemoFirebase(
+    () => (firestore && user ? collection(firestore, 'agents') : null),
+    [firestore, user]
+  );
 
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
+  const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
+  
+  const agentsById = useMemoFirebase(() => {
+    if (!agents) return {};
+    return agents.reduce((acc, agent) => {
+        acc[agent.id] = agent;
+        return acc;
+    }, {} as Record<string, Agent>);
+  }, [agents]);
+
 
   const getBadgeVariant = (
     status: 'Planification' | 'En cours' | 'Terminée' | 'Annulée'
@@ -59,6 +90,17 @@ export default function MissionsPage() {
         return 'secondary';
     }
   };
+  
+  const handleCancelMission = () => {
+    if (!firestore || !missionToCancel) return;
+    const missionRef = doc(firestore, 'missions', missionToCancel.id);
+    updateDocumentNonBlocking(missionRef, { status: 'Annulée' });
+    toast({
+        title: 'Mission annulée',
+        description: `La mission "${missionToCancel.name}" a été annulée.`
+    });
+    setMissionToCancel(null);
+  }
 
   return (
     <div className="space-y-4">
@@ -70,7 +112,7 @@ export default function MissionsPage() {
               <PlusCircle className="mr-2 h-4 w-4" /> Créer une mission
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full max-w-lg" align="end">
+          <PopoverContent className="w-full max-w-2xl" align="end">
             <CreateMissionForm onMissionCreated={() => setPopoverOpen(false)}/>
           </PopoverContent>
         </Popover>
@@ -83,7 +125,7 @@ export default function MissionsPage() {
               <TableHead>Mission</TableHead>
               <TableHead>Lieu</TableHead>
               <TableHead>Date de début</TableHead>
-              <TableHead>Date de fin</TableHead>
+              <TableHead>Agents Assignés</TableHead>
               <TableHead>Statut</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
@@ -91,7 +133,7 @@ export default function MissionsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {missionsLoading ? (
+            {missionsLoading || agentsLoading ? (
                 <TableRow>
                     <TableCell colSpan={6} className="text-center">Chargement des missions...</TableCell>
                 </TableRow>
@@ -101,7 +143,24 @@ export default function MissionsPage() {
                 <TableCell className="font-medium">{mission.name}</TableCell>
                 <TableCell>{mission.location}</TableCell>
                 <TableCell>{mission.startDate.toDate().toLocaleDateString('fr-FR')}</TableCell>
-                <TableCell>{mission.endDate.toDate().toLocaleDateString('fr-FR')}</TableCell>
+                <TableCell>
+                  <div className="flex items-center -space-x-2">
+                    {mission.assignedAgentIds && mission.assignedAgentIds.length > 0 ? (
+                      mission.assignedAgentIds.map(agentId => {
+                        const agent = agentsById[agentId];
+                        return (
+                          <Avatar key={agentId} className="h-8 w-8 border-2 border-background">
+                            <AvatarFallback>
+                              {agent ? `${agent.firstName[0]}${agent.lastName[0]}` : '?'}
+                            </AvatarFallback>
+                          </Avatar>
+                        )
+                      })
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Non assigné</span>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell>
                   <Badge
                     variant="secondary"
@@ -121,9 +180,13 @@ export default function MissionsPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Modifier</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                        Annuler la mission
-                      </DropdownMenuItem>
+                      {mission.status !== 'Annulée' && mission.status !== 'Terminée' && (
+                        <DropdownMenuItem 
+                            onSelect={() => setMissionToCancel(mission)}
+                            className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                            Annuler la mission
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -152,6 +215,26 @@ export default function MissionsPage() {
           }}
         />
       )}
+
+      {missionToCancel && (
+         <AlertDialog open={!!missionToCancel} onOpenChange={(open) => !open && setMissionToCancel(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Êtes-vous sûr de vouloir annuler cette mission ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette action est irréversible. La mission <span className="font-semibold">{missionToCancel.name}</span> sera marquée comme "Annulée".
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setMissionToCancel(null)}>Retour</AlertDialogCancel>
+              <AlertDialogAction onClick={handleCancelMission} className="bg-destructive hover:bg-destructive/90">
+                Annuler la mission
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
     </div>
   );
 }

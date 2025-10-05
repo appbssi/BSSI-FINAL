@@ -74,6 +74,13 @@
           "type": "string",
           "description": "The current status of the mission.",
           "enum": ["Planification", "En cours", "Terminée", "Annulée"]
+        },
+        "assignedAgentIds": {
+          "type": "array",
+          "description": "A list of agent IDs assigned to the mission.",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": [
@@ -81,7 +88,8 @@
         "location",
         "startDate",
         "endDate",
-        "status"
+        "status",
+        "assignedAgentIds"
       ]
     }
   },
