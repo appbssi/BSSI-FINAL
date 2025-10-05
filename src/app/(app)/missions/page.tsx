@@ -56,7 +56,12 @@ import { useRole } from '@/hooks/use-role';
 const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missionName: string }) => {
     const [searchQuery, setSearchQuery] = useState('');
     
-    const filteredAgents = agents.filter(agent => 
+    const sortedAgents = useMemo(() => 
+        [...agents].sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName)),
+        [agents]
+    );
+
+    const filteredAgents = sortedAgents.filter(agent => 
         `${agent.firstName} ${agent.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -525,5 +530,7 @@ export default function MissionsPage() {
     </div>
   );
 }
+
+    
 
     
