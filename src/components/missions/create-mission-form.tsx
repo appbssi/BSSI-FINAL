@@ -195,6 +195,10 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   };
   
   const getAgentByName = (name: string) => allAgents?.find(a => `${a.firstName} ${a.lastName}` === name);
+  const getCompletedMissionsCount = (agentId: string) => {
+    if (!allMissions) return 0;
+    return allMissions.filter(m => m.assignedAgentIds.includes(agentId) && m.status === 'Terminée').length;
+  }
 
   return (
     <Card className="border-0 shadow-none">
@@ -341,6 +345,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                             const agent = getAgentByName(agentSugg.name);
                             if (!agent) return null;
                             const fullName = `${agent.firstName} ${agent.lastName}`;
+                            const completedMissions = getCompletedMissionsCount(agent.id);
                             return (
                               <div key={`sugg-${agent.id}`} className="flex items-start gap-4 p-3 rounded-md border bg-background">
                                 <Checkbox 
@@ -368,7 +373,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                         </div>
                                     </div>
                                   </Label>
-                                  <p className="text-sm text-muted-foreground pl-12"><span className="font-semibold">Raison:</span> {agentSugg.reason}</p>
+                                  <p className="text-sm text-muted-foreground pl-12"><span className="font-semibold">Missions terminées:</span> {completedMissions}</p>
                                 </div>
                               </div>
                             );
