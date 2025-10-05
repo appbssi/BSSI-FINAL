@@ -17,7 +17,5 @@ export type Mission = {
   location: string;
   startDate: Timestamp;
   endDate: Timestamp;
-  requiredSkills: string[];
-  assignedAgentIds: string[];
   status: 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
 };

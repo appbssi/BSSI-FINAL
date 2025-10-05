@@ -21,9 +21,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, where, limit, Timestamp } from 'firebase/firestore';
+import { collection, query, where, limit } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import type { Agent, Mission } from '@/lib/types';
 
@@ -35,13 +34,14 @@ export default function DashboardPage() {
     () => (firestore && user ? collection(firestore, 'agents') : null),
     [firestore, user]
   );
-  const missionsQuery = useMemoFirebase(
-    () => (firestore && user ? collection(firestore, 'missions') : null),
-    [firestore, user]
-  );
   
   const upcomingMissionsQuery = useMemoFirebase(
     () => (firestore && user ? query(collection(firestore, 'missions'), where('status', 'in', ['Planification', 'En cours']), limit(5)) : null),
+    [firestore, user]
+  );
+
+   const missionsQuery = useMemoFirebase(
+    () => (firestore && user ? collection(firestore, 'missions') : null),
     [firestore, user]
   );
 
@@ -49,39 +49,12 @@ export default function DashboardPage() {
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
   const { data: upcomingMissions, isLoading: upcomingMissionsLoading } = useCollection<Mission>(upcomingMissionsQuery);
 
-  const getAgentAvailability = (
-    agent: Agent
-  ): 'Disponible' | 'En mission' | 'En congé' => {
-    if (agent.availability === 'En congé') {
-      return 'En congé';
-    }
-
-    if (!missions) {
-      return agent.availability as 'Disponible';
-    }
-
-    const now = Timestamp.now();
-    const isOnMission = missions.some(
-      (mission) =>
-        mission.assignedAgentIds.includes(agent.id) &&
-        mission.startDate.seconds <= now.seconds &&
-        mission.endDate.seconds >= now.seconds &&
-        (mission.status === 'En cours' || mission.status === 'Planification')
-    );
-
-    return isOnMission ? 'En mission' : 'Disponible';
-  };
-
   const totalAgents = agents?.length ?? 0;
   const activeMissions =
     missions?.filter((m) => m.status === 'En cours').length ?? 0;
     
-  const agentsOnMission = agents?.filter(a => getAgentAvailability(a) === 'En mission').length ?? 0;
-  const availableAgents = agents?.filter(a => getAgentAvailability(a) === 'Disponible').length ?? 0;
-
-
-  const getAgentById = (id: string) => agents?.find(a => a.id === id);
-
+  const agentsOnMission = agents?.filter(a => a.availability === 'En mission').length ?? 0;
+  const availableAgents = agents?.filter(a => a.availability === 'Disponible').length ?? 0;
 
   return (
     <div className="space-y-8">
@@ -103,7 +76,7 @@ export default function DashboardPage() {
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{agentsLoading || missionsLoading ? '...' : availableAgents}</div>
+            <div className="text-2xl font-bold">{agentsLoading ? '...' : availableAgents}</div>
           </CardContent>
         </Card>
         <Card>
@@ -114,7 +87,7 @@ export default function DashboardPage() {
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{agentsLoading || missionsLoading ? '...' : agentsOnMission}</div>
+            <div className="text-2xl font-bold">{agentsLoading ? '...' : agentsOnMission}</div>
           </CardContent>
         </Card>
          <Card>
@@ -137,8 +110,8 @@ export default function DashboardPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Mission</TableHead>
+                 <TableHead>Lieu</TableHead>
                 <TableHead>Statut</TableHead>
-                <TableHead>Agents</TableHead>
                 <TableHead>Date de début</TableHead>
               </TableRow>
             </TableHeader>
@@ -151,6 +124,7 @@ export default function DashboardPage() {
               {upcomingMissions?.map((mission) => (
                 <TableRow key={mission.id}>
                   <TableCell className="font-medium">{mission.name}</TableCell>
+                   <TableCell>{mission.location}</TableCell>
                   <TableCell>
                     <Badge
                       variant={
@@ -163,33 +137,17 @@ export default function DashboardPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex -space-x-2">
-                      {mission.assignedAgentIds.map((agentId) => {
-                        const agent = getAgentById(agentId);
-                        if (!agent) return null;
-                        return (
-                          <Avatar
-                            key={agent.id}
-                            className="border-2 border-background"
-                          >
-                            <AvatarFallback>
-                              {(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}
-                            </AvatarFallback>
-                          </Avatar>
-                        )
-                      })}
-                      {mission.assignedAgentIds.length === 0 && (
-                        <span className="text-sm text-muted-foreground">
-                          Non assigné
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
                     {mission.startDate.toDate().toLocaleDateString('fr-FR')}
                   </TableCell>
                 </TableRow>
               ))}
+               {!upcomingMissionsLoading && upcomingMissions?.length === 0 && (
+                 <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        Aucune mission à venir.
+                    </TableCell>
+                </TableRow>
+            )}
             </TableBody>
           </Table>
         </CardContent>

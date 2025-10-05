@@ -18,7 +18,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Popover,
   PopoverContent,
@@ -28,7 +27,7 @@ import { CreateMissionForm } from '@/components/missions/create-mission-form';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import type { Agent, Mission } from '@/lib/types';
+import type { Mission } from '@/lib/types';
 import { useState } from 'react';
 import { EditMissionSheet } from '@/components/missions/edit-mission-sheet';
 
@@ -42,13 +41,8 @@ export default function MissionsPage() {
     () => (firestore && user ? collection(firestore, 'missions') : null),
     [firestore, user]
   );
-  const agentsQuery = useMemoFirebase(
-    () => (firestore && user ? collection(firestore, 'agents') : null),
-    [firestore, user]
-  );
 
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
-  const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
 
   const getBadgeVariant = (
     status: 'Planification' | 'En cours' | 'Terminée' | 'Annulée'
@@ -65,8 +59,6 @@ export default function MissionsPage() {
         return 'secondary';
     }
   };
-  
-  const getAgentById = (id: string) => agents?.find(a => a.id === id);
 
   return (
     <div className="space-y-4">
@@ -78,7 +70,7 @@ export default function MissionsPage() {
               <PlusCircle className="mr-2 h-4 w-4" /> Créer une mission
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full max-w-2xl" align="end">
+          <PopoverContent className="w-full max-w-lg" align="end">
             <CreateMissionForm onMissionCreated={() => setPopoverOpen(false)}/>
           </PopoverContent>
         </Popover>
@@ -90,23 +82,26 @@ export default function MissionsPage() {
             <TableRow>
               <TableHead>Mission</TableHead>
               <TableHead>Lieu</TableHead>
+              <TableHead>Date de début</TableHead>
+              <TableHead>Date de fin</TableHead>
               <TableHead>Statut</TableHead>
-              <TableHead>Agents assignés</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {missionsLoading || agentsLoading ? (
+            {missionsLoading ? (
                 <TableRow>
-                    <TableCell colSpan={5} className="text-center">Chargement des missions...</TableCell>
+                    <TableCell colSpan={6} className="text-center">Chargement des missions...</TableCell>
                 </TableRow>
             ) : (
             missions?.map((mission) => (
               <TableRow key={mission.id}>
                 <TableCell className="font-medium">{mission.name}</TableCell>
                 <TableCell>{mission.location}</TableCell>
+                <TableCell>{mission.startDate.toDate().toLocaleDateString('fr-FR')}</TableCell>
+                <TableCell>{mission.endDate.toDate().toLocaleDateString('fr-FR')}</TableCell>
                 <TableCell>
                   <Badge
                     variant="secondary"
@@ -114,28 +109,6 @@ export default function MissionsPage() {
                   >
                     {mission.status}
                   </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex -space-x-2">
-                    {mission.assignedAgentIds?.map((agentId) => {
-                      const agent = getAgentById(agentId);
-                      if(!agent) return null;
-                      return (
-                      <Avatar
-                        key={agent.id}
-                        className="border-2 border-background"
-                      >
-                        <AvatarFallback>
-                          {(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}
-                        </AvatarFallback>
-                      </Avatar>
-                    )})}
-                    {(!mission.assignedAgentIds || mission.assignedAgentIds.length === 0) && (
-                      <span className="text-sm text-muted-foreground">
-                        Non assigné
-                      </span>
-                    )}
-                  </div>
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -148,7 +121,6 @@ export default function MissionsPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Modifier</DropdownMenuItem>
-                      <DropdownMenuItem>Voir les détails</DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                         Annuler la mission
                       </DropdownMenuItem>
@@ -157,6 +129,13 @@ export default function MissionsPage() {
                 </TableCell>
               </TableRow>
             ))
+            )}
+             {!missionsLoading && missions?.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                        Aucune mission trouvée.
+                    </TableCell>
+                </TableRow>
             )}
           </TableBody>
         </Table>

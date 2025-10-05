@@ -32,7 +32,8 @@
         },
         "availability": {
           "type": "string",
-          "description": "The agent's manual availability status (overridden by missions)."
+          "description": "The agent's manual availability status.",
+          "enum": ["Disponible", "En mission", "En congé"]
         }
       },
       "required": [
@@ -49,7 +50,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Mission",
       "type": "object",
-      "description": "Represents a mission to which agents are assigned.",
+      "description": "Represents a mission.",
       "properties": {
         "name": {
             "type": "string",
@@ -69,20 +70,6 @@
           "description": "The scheduled end time for the mission.",
           "format": "date-time"
         },
-        "requiredSkills": {
-          "type": "array",
-          "description": "An array of skills required to complete the mission.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "assignedAgentIds": {
-          "type": "array",
-          "description": "An array of Agent IDs assigned to this mission.",
-          "items": {
-            "type": "string"
-          }
-        },
         "status": {
           "type": "string",
           "description": "The current status of the mission.",
@@ -94,7 +81,6 @@
         "location",
         "startDate",
         "endDate",
-        "assignedAgentIds",
         "status"
       ]
     }

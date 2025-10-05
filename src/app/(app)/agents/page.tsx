@@ -23,9 +23,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { RegisterAgentSheet } from '@/components/agents/register-agent-sheet';
-import type { Agent, Mission } from '@/lib/types';
+import type { Agent } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, Timestamp, doc } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
@@ -41,7 +41,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import jsPDF from 'jspdf';
@@ -59,38 +58,15 @@ export default function AgentsPage() {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'Disponible' | 'En mission'>('all');
+  const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'Disponible' | 'En mission' | 'En congé'>('all');
   const { toast } = useToast();
 
   const agentsQuery = useMemoFirebase(
     () => (firestore && user ? collection(firestore, 'agents') : null),
     [firestore, user]
   );
-  const missionsQuery = useMemoFirebase(
-    () => (firestore && user ? collection(firestore, 'missions') : null),
-    [firestore, user]
-  );
+
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
-  const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
-
-  const getAgentAvailability = (
-    agent: Agent
-  ): 'Disponible' | 'En mission' => {
-    if (!missions) {
-      return 'Disponible'; // Default if missions are not loaded yet
-    }
-
-    const now = Timestamp.now();
-    const isOnMission = missions.some(
-      (mission) =>
-        mission.assignedAgentIds.includes(agent.id) &&
-        mission.startDate.seconds <= now.seconds &&
-        mission.endDate.seconds >= now.seconds &&
-        (mission.status === 'En cours' || mission.status === 'Planification')
-    );
-
-    return isOnMission ? 'En mission' : 'Disponible';
-  };
 
   const sortedAgents = agents
     ? [...agents].sort((a, b) => {
@@ -103,9 +79,8 @@ export default function AgentsPage() {
     : [];
 
   const filteredAgents = sortedAgents.filter(agent => {
-    const availability = getAgentAvailability(agent);
     const matchesSearch = `${agent.firstName} ${agent.lastName}`.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = availabilityFilter === 'all' || availability === availabilityFilter;
+    const matchesFilter = availabilityFilter === 'all' || agent.availability === availabilityFilter;
     return matchesSearch && matchesFilter;
   });
 
@@ -115,6 +90,8 @@ export default function AgentsPage() {
         return 'outline';
       case 'En mission':
         return 'default';
+      case 'En congé':
+        return 'destructive';
       default:
         return 'secondary';
     }
@@ -169,7 +146,7 @@ export default function AgentsPage() {
         'Matricule': agent.registrationNumber,
         'Grade': agent.rank,
         'Contact': agent.contact,
-        'Disponibilité': getAgentAvailability(agent),
+        'Disponibilité': agent.availability,
     }));
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
@@ -188,7 +165,7 @@ export default function AgentsPage() {
             agent.registrationNumber,
             agent.rank,
             agent.contact,
-            getAgentAvailability(agent),
+            agent.availability,
         ]),
         startY: 20,
     });
@@ -217,6 +194,7 @@ export default function AgentsPage() {
             <Button size="sm" variant={availabilityFilter === 'all' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('all')}>Tous</Button>
             <Button size="sm" variant={availabilityFilter === 'Disponible' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('Disponible')}>Disponibles</Button>
             <Button size="sm" variant={availabilityFilter === 'En mission' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En mission')}>En mission</Button>
+            <Button size="sm" variant={availabilityFilter === 'En congé' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En congé')}>En congé</Button>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -294,13 +272,12 @@ export default function AgentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {agentsLoading || missionsLoading ? (
+            {agentsLoading ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center">Chargement des agents...</TableCell>
               </TableRow>
             ) : (
               filteredAgents.map((agent) => {
-                const availability = getAgentAvailability(agent);
                 const fullName = `${agent.firstName} ${agent.lastName}`;
                 return (
                   <TableRow key={agent.id} onClick={() => setSelectedAgent(agent)} className="cursor-pointer">
@@ -326,8 +303,8 @@ export default function AgentsPage() {
                       {agent.contact}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getBadgeVariant(availability)}>
-                        {availability}
+                      <Badge variant={getBadgeVariant(agent.availability)}>
+                        {agent.availability}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -359,6 +336,13 @@ export default function AgentsPage() {
                 );
               })
             )}
+            {!agentsLoading && filteredAgents.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                        Aucun agent trouvé.
+                    </TableCell>
+                </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
@@ -378,7 +362,6 @@ export default function AgentsPage() {
       {selectedAgent && (
         <AgentDetailsSheet
           agent={selectedAgent}
-          availability={getAgentAvailability(selectedAgent)}
           isOpen={!!selectedAgent}
           onOpenChange={(open) => {
             if (!open) {
@@ -409,9 +392,3 @@ export default function AgentsPage() {
       )}
     </div>
   );
-
-    
-
-    
-
-    
