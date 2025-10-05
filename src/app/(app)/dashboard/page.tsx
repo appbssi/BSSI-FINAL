@@ -13,6 +13,7 @@ import {
   Users,
   Shield,
   Clock,
+  UserCheck,
 } from 'lucide-react';
 import {
   Table,
@@ -82,6 +83,7 @@ export default function DashboardPage() {
     missions?.filter((m) => m.status === 'Terminée').length ?? 0;
     
   const agentsOnMission = agents?.filter(a => getAgentAvailability(a) === 'En mission').length ?? 0;
+  const availableAgents = agents?.filter(a => getAgentAvailability(a) === 'Disponible').length ?? 0;
 
 
   const getAgentById = (id: string) => agents?.find(a => a.id === id);
@@ -91,7 +93,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <h1 className="text-3xl font-bold tracking-tight">Tableau de bord</h1>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Agents au total</CardTitle>
@@ -102,6 +104,26 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Agents disponibles</CardTitle>
+            <UserCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{agentsLoading || missionsLoading ? '...' : availableAgents}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Agents en mission
+            </CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{agentsLoading || missionsLoading ? '...' : agentsOnMission}</div>
+          </CardContent>
+        </Card>
+         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Missions actives</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
@@ -119,17 +141,6 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{missionsLoading ? '...' : completedMissions}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Agents en mission
-            </CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{agentsLoading || missionsLoading ? '...' : agentsOnMission}</div>
           </CardContent>
         </Card>
       </div>
