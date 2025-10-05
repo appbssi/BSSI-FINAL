@@ -9,13 +9,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 export function RegisterAgentSheet({ children }: { children: React.ReactNode }) {
   return (
@@ -31,51 +24,45 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
         <div className="grid gap-6 py-6">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
-              Nom
+              Nom et Prénom
             </Label>
             <Input id="name" placeholder="Alex Johnson" className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="email" className="text-right">
-              Email
+            <Label htmlFor="matricule" className="text-right">
+              Matricule
             </Label>
             <Input
-              id="email"
-              type="email"
-              placeholder="alex.j@e-brigade.com"
+              id="matricule"
+              placeholder="E-B-007"
               className="col-span-3"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="skills" className="text-right">
-              Compétences
+            <Label htmlFor="grade" className="text-right">
+              Grade
             </Label>
             <Input
-              id="skills"
-              placeholder="Combat, Piratage,..."
+              id="grade"
+              placeholder="Capitaine"
+              className="col-span-3"
+            />
+          </div>
+           <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="contact" className="text-right">
+              Contact
+            </Label>
+            <Input
+              id="contact"
+              placeholder="+33 1 23 45 67 89"
               className="col-span-3"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="availability" className="text-right">
-              Disponibilité
+            <Label htmlFor="address" className="text-right">
+              Adresse
             </Label>
-            <Select>
-              <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Sélectionnez le statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Disponible">Disponible</SelectItem>
-                <SelectItem value="En mission">En mission</SelectItem>
-                <SelectItem value="En congé">En congé</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="avatar" className="text-right">
-              URL de l'avatar
-            </Label>
-            <Input id="avatar" type="url" className="col-span-3" />
+            <Input id="address" placeholder="123 Rue de la Mission, Paris" className="col-span-3" />
           </div>
         </div>
         <div className="flex justify-end">
