@@ -30,8 +30,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogDescription,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { CreateMissionForm } from '@/components/missions/create-mission-form';
@@ -57,7 +57,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
-const AssignedAgentsDialog = ({ agents }: { agents: Agent[] }) => {
+const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missionName: string }) => {
     const [searchQuery, setSearchQuery] = useState('');
     
     const filteredAgents = agents.filter(agent => 
@@ -66,7 +66,8 @@ const AssignedAgentsDialog = ({ agents }: { agents: Agent[] }) => {
 
     const handleExportPDF = () => {
         const doc = new jsPDF();
-        const tableTitle = "Liste des Agents Assignés";
+        const mainTitle = `Mission: ${missionName}`;
+        const subTitle = "Liste des Agents Assignés";
         const generationDate = new Date().toLocaleDateString('fr-FR');
         const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -81,10 +82,12 @@ const AssignedAgentsDialog = ({ agents }: { agents: Agent[] }) => {
         // Report Header
         doc.setFontSize(18);
         doc.setFont('helvetica', 'bold');
-        doc.text(tableTitle, 14, 35);
-        doc.setFontSize(11);
+        doc.text(mainTitle, pageWidth / 2, 35, { align: 'center' });
+        doc.setFontSize(14);
         doc.setFont('helvetica', 'normal');
-        doc.text(`Généré le: ${generationDate}`, 14, 42);
+        doc.text(subTitle, pageWidth / 2, 42, { align: 'center' });
+        doc.setFontSize(11);
+        doc.text(`Généré le: ${generationDate}`, 14, 50);
 
         autoTable(doc, {
             head: [['Prénom', 'Nom', 'Grade', 'Contact']],
@@ -94,7 +97,7 @@ const AssignedAgentsDialog = ({ agents }: { agents: Agent[] }) => {
                 agent.rank,
                 agent.contact,
             ]),
-            startY: 50,
+            startY: 60,
             theme: 'striped',
             headStyles: {
                 fillColor: [39, 55, 70],
@@ -111,7 +114,7 @@ const AssignedAgentsDialog = ({ agents }: { agents: Agent[] }) => {
                 doc.text(`Page ${data.pageNumber} sur ${pageCount}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
             }
         });
-        doc.save('agents_assignes.pdf');
+        doc.save(`agents_assignes_${missionName.replace(/ /g, '_')}.pdf`);
     };
 
     const handleExportXLSX = () => {
@@ -124,14 +127,14 @@ const AssignedAgentsDialog = ({ agents }: { agents: Agent[] }) => {
         const worksheet = XLSX.utils.json_to_sheet(dataToExport);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Agents Assignés');
-        XLSX.writeFile(workbook, 'agents_assignes.xlsx');
+        XLSX.writeFile(workbook, `agents_assignes_${missionName.replace(/ /g, '_')}.xlsx`);
     };
 
 
     return (
         <DialogContent className="max-w-3xl">
             <DialogHeader>
-                <DialogTitle>Agents Assignés</DialogTitle>
+                <DialogTitle>Agents Assignés à la mission "{missionName}"</DialogTitle>
                 <DialogDescription>
                     Liste des agents assignés à cette mission.
                 </DialogDescription>
@@ -318,7 +321,7 @@ export default function MissionsPage() {
                                     <span className="font-medium">{assignedAgents.length}</span>
                                 </Button>
                             </DialogTrigger>
-                            <AssignedAgentsDialog agents={assignedAgents} />
+                            <AssignedAgentsDialog agents={assignedAgents} missionName={mission.name} />
                         </Dialog>
                     ) : (
                       <span className="text-sm text-muted-foreground">Non assigné</span>
