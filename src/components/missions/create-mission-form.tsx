@@ -354,7 +354,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                     const agentId = agent.id;
                                     const fieldIndex = fields.findIndex(field => field.value === agentId);
                                     if (checked) {
-                                      if (fieldIndex === -1) append(agentId);
+                                      if (fieldIndex === -1) append({value: agentId});
                                     } else {
                                       if (fieldIndex !== -1) remove(fieldIndex);
                                     }
@@ -396,7 +396,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                     const agentId = agent.id;
                                     const fieldIndex = fields.findIndex(field => field.value === agentId);
                                     if (checked) {
-                                      if (fieldIndex === -1) append(agentId);
+                                      if (fieldIndex === -1) append({value: agentId});
                                     } else {
                                       if (fieldIndex !== -1) remove(fieldIndex);
                                     }
