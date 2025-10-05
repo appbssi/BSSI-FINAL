@@ -1,3 +1,6 @@
+
+'use client';
+
 import { missions } from '@/lib/data';
 import {
   Table,
@@ -21,7 +24,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import Link from 'next/link';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CreateMissionForm } from '@/components/missions/create-mission-form';
 
 export default function MissionsPage() {
   const getBadgeVariant = (
@@ -44,11 +48,16 @@ export default function MissionsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Missions</h1>
-        <Button asChild>
-          <Link href="/missions/create">
-            <PlusCircle className="mr-2 h-4 w-4" /> Créer une mission
-          </Link>
-        </Button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" /> Créer une mission
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full max-w-2xl">
+            <CreateMissionForm />
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="border rounded-lg">
