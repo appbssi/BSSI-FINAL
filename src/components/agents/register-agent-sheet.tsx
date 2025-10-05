@@ -63,17 +63,30 @@ export function RegisterAgentSheet({ isOpen, onOpenChange }: RegisterAgentSheetP
     if (!firestore) return;
 
     try {
-      // Check for uniqueness of registrationNumber
       const agentsRef = collection(firestore, 'agents');
-      const q = query(agentsRef, where("registrationNumber", "==", data.registrationNumber));
-      const querySnapshot = await getDocs(q);
+      
+      // Check for uniqueness of registrationNumber
+      const regQuery = query(agentsRef, where("registrationNumber", "==", data.registrationNumber));
+      const regQuerySnapshot = await getDocs(regQuery);
 
-      if (!querySnapshot.empty) {
+      if (!regQuerySnapshot.empty) {
         form.setError('registrationNumber', {
           type: 'manual',
           message: 'Ce matricule est déjà utilisé par un autre agent.',
         });
-        return; // Stop submission
+        return; 
+      }
+      
+      // Check for uniqueness of contact
+      const contactQuery = query(agentsRef, where("contact", "==", data.contact));
+      const contactQuerySnapshot = await getDocs(contactQuery);
+      
+      if (!contactQuerySnapshot.empty) {
+          form.setError('contact', {
+              type: 'manual',
+              message: 'Ce contact est déjà utilisé par un autre agent.',
+          });
+          return;
       }
       
       await addDoc(agentsRef, {

@@ -62,9 +62,9 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
   const onSubmit = async (data: AgentFormValues) => {
     if (!firestore) return;
     try {
+      const agentsRef = collection(firestore, 'agents');
        // Check for uniqueness of registrationNumber if it has changed
       if (data.registrationNumber !== agent.registrationNumber) {
-        const agentsRef = collection(firestore, 'agents');
         const q = query(agentsRef, where("registrationNumber", "==", data.registrationNumber));
         const querySnapshot = await getDocs(q);
 
@@ -73,9 +73,24 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
             type: 'manual',
             message: 'Ce matricule est déjà utilisé par un autre agent.',
           });
-          return; // Stop submission
+          return;
         }
       }
+
+      // Check for uniqueness of contact if it has changed
+      if (data.contact !== agent.contact) {
+        const q = query(agentsRef, where("contact", "==", data.contact));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            form.setError('contact', {
+                type: 'manual',
+                message: 'Ce contact est déjà utilisé par un autre agent.',
+            });
+            return;
+        }
+      }
+
 
       const agentRef = doc(firestore, 'agents', agent.id);
       await updateDoc(agentRef, data);
