@@ -26,22 +26,10 @@
             "type": "string",
             "description": "The agent's physical address."
         },
-        "skills": {
-          "type": "array",
-          "description": "An array of skills possessed by the agent.",
-          "items": {
-            "type": "string"
-          }
-        },
         "availability": {
           "type": "string",
           "description": "The agent's availability status.",
           "enum": ["Disponible", "En mission", "En congé"]
-        },
-        "avatarUrl": {
-          "type": "string",
-          "description": "URL of the agent's avatar image.",
-          "format": "uri"
         }
       },
       "required": [
@@ -50,9 +38,7 @@
         "grade",
         "contact",
         "address",
-        "skills",
-        "availability",
-        "avatarUrl"
+        "availability"
       ]
     },
     "Mission": {

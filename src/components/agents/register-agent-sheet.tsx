@@ -8,7 +8,6 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -31,9 +30,7 @@ const agentSchema = z.object({
   grade: z.string().min(3, 'Le grade est requis'),
   contact: z.string().min(3, 'Le contact est requis'),
   address: z.string().min(3, 'L\'adresse est requise'),
-  skills: z.string(),
   availability: z.string(),
-  avatarUrl: z.string().url("L'URL de l'avatar doit être une URL valide"),
 });
 
 type AgentFormValues = z.infer<typeof agentSchema>;
@@ -50,19 +47,14 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
       grade: '',
       contact: '',
       address: '',
-      skills: '',
       availability: 'Disponible',
-      avatarUrl: '',
     },
   });
 
   const onSubmit = (data: AgentFormValues) => {
     if (!firestore) return;
     const agentsCollection = collection(firestore, 'agents');
-    addDocumentNonBlocking(agentsCollection, {
-      ...data,
-      skills: data.skills.split(',').map((s) => s.trim()),
-    });
+    addDocumentNonBlocking(agentsCollection, data);
     toast({
       title: 'Agent enregistré !',
       description: `L'agent ${data.name} a été ajouté avec succès.`,
@@ -141,32 +133,6 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
                   <FormLabel>Adresse</FormLabel>
                   <FormControl>
                     <Input placeholder="123 Rue de la Mission, Paris" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="skills"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Compétences (séparées par des virgules)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Infiltration, Piratage" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="avatarUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL de l'avatar</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

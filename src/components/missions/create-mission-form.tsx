@@ -23,8 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, ArrowRight, Sparkles, Loader2, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Badge } from '../ui/badge';
+import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
@@ -122,7 +121,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
       
       const agentsForAI = availableAgents.map((a) => ({
           name: a.name,
-          skills: a.skills,
+          skills: [], // Skills have been removed
           availability: 'Disponible', // We've already filtered them, so they are available
         }));
 
@@ -354,12 +353,11 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                   <Label htmlFor={`sugg-${agent.id}`} className="flex items-center justify-between w-full cursor-pointer">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="h-9 w-9">
-                                            <AvatarImage src={agent.avatarUrl} alt={agent.name} />
                                             <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                         </Avatar>
                                         <div>
                                             <div className="font-semibold">{agent.name}</div>
-                                            <div className="text-xs text-muted-foreground">{agent.skills.join(', ')}</div>
+                                            <div className="text-xs text-muted-foreground">{agent.grade}</div>
                                         </div>
                                     </div>
                                   </Label>
@@ -393,12 +391,11 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                 />
                                 <Label htmlFor={`avail-${agent.id}`} className="flex items-center gap-3 font-normal flex-1 cursor-pointer">
                                     <Avatar className="h-9 w-9">
-                                        <AvatarImage src={agent.avatarUrl} alt={agent.name} />
                                         <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                     </Avatar>
                                     <div>
                                         <div className="font-semibold">{agent.name}</div>
-                                        <div className="text-xs text-muted-foreground">{agent.skills.join(', ')}</div>
+                                        <div className="text-xs text-muted-foreground">{agent.grade}</div>
                                     </div>
                                 </Label>
                             </div>
@@ -434,7 +431,6 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                         return (
                           <Badge key={agent.id} variant="outline" className="flex items-center gap-2 p-2">
                             <Avatar className="h-6 w-6">
-                              <AvatarImage src={agent.avatarUrl} />
                               <AvatarFallback>{agent.name[0]}</AvatarFallback>
                             </Avatar>
                             {agent.name}

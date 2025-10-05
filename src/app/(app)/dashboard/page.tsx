@@ -8,11 +8,8 @@ import {
 } from '@/components/ui/card';
 import {
   Activity,
-  CheckCircle,
-  Rocket,
   Users,
   Shield,
-  Clock,
   UserCheck,
 } from 'lucide-react';
 import {
@@ -24,8 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import Link from 'next/link';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, where, limit, Timestamp } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
@@ -176,7 +172,6 @@ export default function DashboardPage() {
                             key={agent.id}
                             className="border-2 border-background"
                           >
-                            <AvatarImage src={agent.avatarUrl} />
                             <AvatarFallback>
                               {agent.name.charAt(0)}
                             </AvatarFallback>

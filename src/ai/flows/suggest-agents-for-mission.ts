@@ -36,14 +36,14 @@ const suggestAgentsPrompt = ai.definePrompt({
   name: 'suggestAgentsPrompt',
   input: {schema: SuggestAgentsForMissionInputSchema},
   output: {schema: SuggestAgentsForMissionOutputSchema},
-  prompt: `You are an AI assistant specialized in suggesting the best agents for a mission based on their skills, availability, and past performance.
+  prompt: `You are an AI assistant specialized in suggesting the best agents for a mission based on their availability and past performance.
 
 Given the following mission details:
 {{{missionDetails}}}
 
 And the following available agents:
 {{#each availableAgents}}
-- Name: {{this.name}}, Skills: {{#each this.skills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}, Availability: {{this.availability}}{{#if this.pastPerformance}}, Past Performance: {{this.pastPerformance}}{{/if}}
+- Name: {{this.name}}, Availability: {{this.availability}}{{#if this.pastPerformance}}, Past Performance: {{this.pastPerformance}}{{/if}}
 {{/each}}
 
 Suggest the most suitable agents for the mission and provide a brief reason for each suggestion.

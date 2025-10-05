@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import {
@@ -92,7 +92,7 @@ export default function AgentsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Agent</TableHead>
-              <TableHead>Compétences</TableHead>
+              <TableHead>Grade</TableHead>
               <TableHead>Disponibilité</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
@@ -112,7 +112,6 @@ export default function AgentsPage() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar>
-                        <AvatarImage src={agent.avatarUrl} alt={agent.name} />
                         <AvatarFallback>
                           {agent.name.substring(0, 2).toUpperCase()}
                         </AvatarFallback>
@@ -126,13 +125,7 @@ export default function AgentsPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {agent.skills?.map((skill) => (
-                        <Badge key={skill} variant="secondary">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
+                    {agent.grade}
                   </TableCell>
                   <TableCell>
                     <Badge variant={getBadgeVariant(availability)}>

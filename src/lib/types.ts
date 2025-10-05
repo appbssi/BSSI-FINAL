@@ -7,9 +7,7 @@ export type Agent = {
   grade: string;
   contact: string;
   address: string;
-  skills: string[];
   availability: 'Disponible' | 'En mission' | 'En congé';
-  avatarUrl: string;
 };
 
 export type Mission = {
