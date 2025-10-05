@@ -106,7 +106,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   const formData = form.watch();
 
   const handleSuggestAgents = async () => {
-    if (!allAgents) return;
+    if (!allAgents || !allMissions) return;
     setIsSuggesting(true);
     setSuggestedAgents([]);
     
@@ -120,12 +120,15 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     try {
       const missionDetails = `Nom: ${formData.name}\nLieu: ${formData.location}\nDate de début: ${formData.startDate}\nDate de fin: ${formData.endDate}`;
       
-      const agentsForAI = availableAgents.map((a) => ({
+      const agentsForAI = availableAgents.map((a) => {
+        const completedMissions = allMissions.filter(m => m.assignedAgentIds.includes(a.id) && m.status === 'Terminée').length;
+        return {
           name: `${a.firstName} ${a.lastName}`,
           skills: [],
           availability: 'Disponible',
-          pastPerformance: '',
-        }));
+          completedMissions,
+        }
+      });
 
       if(agentsForAI.length > 0) {
         const result = await suggestAgentsForMission({

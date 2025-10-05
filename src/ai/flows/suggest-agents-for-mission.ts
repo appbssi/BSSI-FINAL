@@ -17,7 +17,7 @@ const SuggestAgentsForMissionInputSchema = z.object({
     name: z.string(),
     skills: z.array(z.string()),
     availability: z.string(),
-    pastPerformance: z.string().optional(),
+    completedMissions: z.number().describe('The number of missions this agent has completed.'),
   })).describe('A list of available agents with their skills, availability, and past performance.'),
 });
 export type SuggestAgentsForMissionInput = z.infer<typeof SuggestAgentsForMissionInputSchema>;
@@ -36,17 +36,17 @@ const suggestAgentsPrompt = ai.definePrompt({
   name: 'suggestAgentsPrompt',
   input: {schema: SuggestAgentsForMissionInputSchema},
   output: {schema: SuggestAgentsForMissionOutputSchema},
-  prompt: `You are an AI assistant specialized in suggesting the best agents for a mission based on their availability and past performance.
+  prompt: `You are an AI assistant specialized in suggesting the best agents for a mission. Your goal is to ensure a fair rotation of agents.
 
 Given the following mission details:
 {{{missionDetails}}}
 
 And the following available agents:
 {{#each availableAgents}}
-- Name: {{this.name}}, Availability: {{this.availability}}{{#if this.pastPerformance}}, Past Performance: {{this.pastPerformance}}{{/if}}
+- Name: {{this.name}}, Availability: {{this.availability}}, Completed Missions: {{this.completedMissions}}
 {{/each}}
 
-Suggest the most suitable agents for the mission and provide a brief reason for each suggestion.
+Suggest the most suitable agents for the mission. Prioritize agents who have completed the fewest missions to ensure a good distribution of work. Provide a brief reason for each suggestion.
 
 Format your response as a JSON array of objects, where each object has the agent's name and the reason for their suggestion.`,
 });
