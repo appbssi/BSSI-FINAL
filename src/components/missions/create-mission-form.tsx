@@ -74,21 +74,27 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   const { data: allMissions } = useCollection<Mission>(missionsQuery);
 
   const isAgentAvailable = (agent: Agent, newMission: { startDate: Date, endDate: Date }): boolean => {
-    if (!newMission.startDate || !newMission.endDate || !allMissions) return agent.availability === 'Disponible';
+    if (agent.availability !== 'Disponible') return false;
+    if (!newMission.startDate || !newMission.endDate || !allMissions) return true; // Assume available if dates or missions are not set
   
     const agentMissions = allMissions.filter(mission => 
       mission.assignedAgentIds.includes(agent.id) &&
       (mission.status === 'En cours' || mission.status === 'Planification')
     );
   
-    const newMissionStart = Timestamp.fromDate(newMission.startDate).seconds;
-    const newMissionEnd = Timestamp.fromDate(newMission.endDate).seconds;
+    const newMissionStart = newMission.startDate.getTime();
+    const newMissionEnd = newMission.endDate.getTime();
   
-    const isOverlapping = agentMissions.some(mission =>
-      (newMissionStart < mission.endDate.seconds) && (newMissionEnd > mission.startDate.seconds)
-    );
+    // An agent is unavailable if they have any mission that overlaps with the new mission's timeframe.
+    const isOverlapping = agentMissions.some(mission => {
+      const existingMissionStart = mission.startDate.toDate().getTime();
+      const existingMissionEnd = mission.endDate.toDate().getTime();
+      
+      // Overlap condition: (StartA <= EndB) and (EndA >= StartB)
+      return newMissionStart <= existingMissionEnd && newMissionEnd >= existingMissionStart;
+    });
 
-    return agent.availability === 'Disponible' && !isOverlapping;
+    return !isOverlapping;
   };
 
   const form = useForm<MissionFormValues>({
@@ -485,5 +491,3 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     </Card>
   );
 }
-
-    
