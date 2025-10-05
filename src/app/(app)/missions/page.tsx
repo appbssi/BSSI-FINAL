@@ -134,7 +134,7 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
     return (
         <DialogContent className="max-w-3xl">
             <DialogHeader>
-                <DialogTitle>Agents Assignés à la mission "{missionName}"</DialogTitle>
+                <DialogTitle>AGENT A LA MISSION "{missionName}"</DialogTitle>
                 <DialogDescription>
                     Liste des agents assignés à cette mission.
                 </DialogDescription>
