@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -10,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { FileUp, MoreHorizontal, PlusCircle } from 'lucide-react';
+import { FileUp, MoreHorizontal, PlusCircle, Search } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,10 +26,12 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, Timestamp } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
+import { Input } from '@/components/ui/input';
 
 export default function AgentsPage() {
   const firestore = useFirestore();
   const { user } = useUser();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const agentsQuery = useMemoFirebase(
     () => (firestore && user ? collection(firestore, 'agents') : null),
@@ -48,6 +51,10 @@ export default function AgentsPage() {
     }
     return a.firstName.localeCompare(b.firstName);
   });
+  
+  const filteredAgents = sortedAgents?.filter(agent => 
+    `${agent.firstName} ${agent.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const getAgentAvailability = (
     agent: Agent
@@ -87,17 +94,28 @@ export default function AgentsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
+        <div className="flex flex-1 items-center gap-2">
+            <div className="relative w-full max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                    placeholder="Rechercher un agent..."
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </div>
+        </div>
         <div className="flex items-center gap-2">
           <ImportAgentsDialog>
             <Button variant="outline">
-              <FileUp className="mr-2 h-4 w-4" /> Importer depuis Excel
+              <FileUp className="mr-2 h-4 w-4" /> Importer
             </Button>
           </ImportAgentsDialog>
           <RegisterAgentSheet>
             <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer un agent
+              <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
             </Button>
           </RegisterAgentSheet>
         </div>
@@ -109,6 +127,7 @@ export default function AgentsPage() {
             <TableRow>
               <TableHead>Agent</TableHead>
               <TableHead>Grade</TableHead>
+              <TableHead>Contact</TableHead>
               <TableHead>Disponibilité</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
@@ -118,10 +137,10 @@ export default function AgentsPage() {
           <TableBody>
             {agentsLoading || missionsLoading ? (
                <TableRow>
-                  <TableCell colSpan={4} className="text-center">Chargement des agents...</TableCell>
+                  <TableCell colSpan={5} className="text-center">Chargement des agents...</TableCell>
                 </TableRow>
             ) : (
-            sortedAgents?.map((agent) => {
+            filteredAgents?.map((agent) => {
               const availability = getAgentAvailability(agent);
               const fullName = `${agent.firstName} ${agent.lastName}`;
               return (
@@ -143,6 +162,9 @@ export default function AgentsPage() {
                   </TableCell>
                   <TableCell>
                     {agent.rank}
+                  </TableCell>
+                  <TableCell>
+                    {agent.contact}
                   </TableCell>
                   <TableCell>
                     <Badge variant={getBadgeVariant(availability)}>
