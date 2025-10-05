@@ -12,11 +12,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User } from 'lucide-react';
+import { User, LogOut } from 'lucide-react';
 import { SettingsSheet } from '@/components/settings/settings-sheet';
+import { useAuth, useUser } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+import { useRole } from '@/hooks/use-role';
 
 export function UserNav() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { user } = useUser();
+  const { role } = useRole();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+
+  const capitalizedRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : '';
+
 
   return (
     <>
@@ -31,21 +47,23 @@ export function UserNav() {
         <DropdownMenuContent className="w-56" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">Admin</p>
+              <p className="text-sm font-medium leading-none">{capitalizedRole}</p>
               <p className="text-xs leading-none text-muted-foreground">
-                admin@e-brigade.com
+                {user?.email}
               </p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem>Profil</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setIsSettingsOpen(true)}>
+             <DropdownMenuItem onSelect={() => setIsSettingsOpen(true)}>
               Paramètres
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Se déconnecter</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Se déconnecter
+            </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <SettingsSheet isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />

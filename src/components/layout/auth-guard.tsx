@@ -2,16 +2,37 @@
 
 import { useUser } from '@/firebase';
 import { Loader2 } from 'lucide-react';
-import React from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import React, { useEffect } from 'react';
+
+const publicPaths = ['/login'];
 
 /**
- * A client component that guards its children, showing a loading state
- * until the Firebase user's authentication state is determined.
+ * A client component that guards its children against unauthenticated access.
  */
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isUserLoading } = useUser();
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+  const pathname = usePathname();
 
-  if (isUserLoading) {
+  useEffect(() => {
+    if (isUserLoading) {
+      return; // Wait until user status is resolved
+    }
+
+    const isPublicPath = publicPaths.includes(pathname);
+
+    if (!user && !isPublicPath) {
+      router.push('/login');
+    }
+
+    if (user && isPublicPath) {
+      router.push('/dashboard');
+    }
+  }, [user, isUserLoading, router, pathname]);
+
+  // Show loading indicator while determining auth state or redirecting
+  if (isUserLoading || (!user && !publicPaths.includes(pathname)) || (user && publicPaths.includes(pathname))) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
         <div className="flex items-center gap-3 text-lg">

@@ -47,10 +47,12 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AgentDetailsSheet } from '@/components/agents/agent-details-sheet';
+import { useRole } from '@/hooks/use-role';
 
 
 export default function AgentsPage() {
   const firestore = useFirestore();
+  const { isObserver } = useRole();
   const [searchQuery, setSearchQuery] = useState('');
   const [isRegisterOpen, setRegisterOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
@@ -228,7 +230,6 @@ export default function AgentsPage() {
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Rechercher..."
               className="pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -256,47 +257,51 @@ export default function AgentsPage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-          <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="outline" size="icon" disabled={isDeleting}>
-                            {isDeleting ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Trash2 className="h-4 w-4" />
-                            )}
-                            <span className="sr-only">Supprimer les doublons</span>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Supprimer les doublons</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                  <AlertDialogHeader>
-                      <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                          Cette action va rechercher tous les agents avec le même matricule et supprimer les doublons. Cette action est irréversible.
-                      </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                      <AlertDialogCancel>Annuler</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDeduplicate}>Continuer</AlertDialogAction>
-                  </AlertDialogFooter>
-              </AlertDialogContent>
-          </AlertDialog>
-          <ImportAgentsDialog>
-            <Button variant="outline">
-              <FileUp className="mr-2 h-4 w-4" /> Importer
-            </Button>
-          </ImportAgentsDialog>
-          <Button onClick={() => setRegisterOpen(true)}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
-          </Button>
+          {!isObserver && (
+            <>
+              <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="outline" size="icon" disabled={isDeleting}>
+                                {isDeleting ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                )}
+                                <span className="sr-only">Supprimer les doublons</span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Supprimer les doublons</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                      <AlertDialogHeader>
+                          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                              Cette action va rechercher tous les agents avec le même matricule et supprimer les doublons. Cette action est irréversible.
+                          </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDeduplicate}>Continuer</AlertDialogAction>
+                      </AlertDialogFooter>
+                  </AlertDialogContent>
+              </AlertDialog>
+              <ImportAgentsDialog>
+                <Button variant="outline">
+                  <FileUp className="mr-2 h-4 w-4" /> Importer
+                </Button>
+              </ImportAgentsDialog>
+              <Button onClick={() => setRegisterOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -343,29 +348,31 @@ export default function AgentsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            aria-haspopup="true"
-                            size="icon"
-                            variant="ghost"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onSelect={() => setEditingAgent(agent)}>Modifier</DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onSelect={() => setAgentToDelete(agent)}
-                            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                          >
-                            Supprimer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {!isObserver && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              aria-haspopup="true"
+                              size="icon"
+                              variant="ghost"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onSelect={() => setEditingAgent(agent)}>Modifier</DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onSelect={() => setAgentToDelete(agent)}
+                              className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                            >
+                              Supprimer
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </TableCell>
                   </TableRow>
                 );

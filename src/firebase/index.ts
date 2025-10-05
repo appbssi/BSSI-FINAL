@@ -2,16 +2,13 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
 // This variable will hold the singleton instances of the Firebase services.
 let firebaseApp: FirebaseApp;
 let auth: Auth;
 let firestore: Firestore;
-
-// This flag ensures that the auth listener is only set up once.
-let isAuthListenerInitialized = false;
 
 /**
  * Initializes Firebase, creating a singleton instance of the app and its services.
@@ -28,18 +25,6 @@ export function initializeFirebase() {
     firebaseApp = getApp();
     auth = getAuth(firebaseApp);
     firestore = getFirestore(firebaseApp);
-  }
-
-  // Set up the anonymous sign-in listener only once.
-  if (!isAuthListenerInitialized) {
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        signInAnonymously(auth).catch((error) => {
-          console.error("Anonymous sign-in failed:", error);
-        });
-      }
-    });
-    isAuthListenerInitialized = true;
   }
 
   return {

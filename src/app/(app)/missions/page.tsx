@@ -50,6 +50,7 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { useRole } from '@/hooks/use-role';
 
 const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missionName: string }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -138,7 +139,6 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
                     <div className="relative w-full max-w-sm">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Rechercher..."
                             className="pl-10"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -190,6 +190,7 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
 }
 
 export default function MissionsPage() {
+  const { isObserver } = useRole();
   const [isCreateMissionOpen, setCreateMissionOpen] = useState(false);
   const [editingMission, setEditingMission] = useState<Mission | null>(null);
   const [missionToCancel, setMissionToCancel] = useState<Mission | null>(null);
@@ -332,19 +333,21 @@ export default function MissionsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Missions</h1>
-        <Dialog open={isCreateMissionOpen} onOpenChange={setCreateMissionOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Créer une mission
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-             <DialogHeader>
-                <DialogTitle>Créer une nouvelle mission</DialogTitle>
-             </DialogHeader>
-            <CreateMissionForm onMissionCreated={() => setCreateMissionOpen(false)}/>
-          </DialogContent>
-        </Dialog>
+        {!isObserver && (
+          <Dialog open={isCreateMissionOpen} onOpenChange={setCreateMissionOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> Créer une mission
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                  <DialogTitle>Créer une nouvelle mission</DialogTitle>
+              </DialogHeader>
+              <CreateMissionForm onMissionCreated={() => setCreateMissionOpen(false)}/>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
        <div className="flex items-center justify-between gap-4">
@@ -352,7 +355,6 @@ export default function MissionsPage() {
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Rechercher..."
                 className="pl-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -433,29 +435,31 @@ export default function MissionsPage() {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Modifier/Prolonger</DropdownMenuItem>
-                      {mission.status !== 'Annulée' && mission.status !== 'Terminée' && (
-                        <DropdownMenuItem 
-                            onSelect={() => setMissionToCancel(mission)}
-                            className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                            Annuler la mission
+                  {!isObserver && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Toggle menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Modifier/Prolonger</DropdownMenuItem>
+                        {mission.status !== 'Annulée' && mission.status !== 'Terminée' && (
+                          <DropdownMenuItem 
+                              onSelect={() => setMissionToCancel(mission)}
+                              className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                              Annuler la mission
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => setMissionToDelete(mission)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                          Supprimer
                         </DropdownMenuItem>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onSelect={() => setMissionToDelete(mission)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                        Supprimer
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </TableCell>
               </TableRow>
             )})
