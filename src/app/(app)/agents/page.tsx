@@ -48,6 +48,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AgentDetailsSheet } from '@/components/agents/agent-details-sheet';
 
 
 export default function AgentsPage() {
@@ -55,6 +56,7 @@ export default function AgentsPage() {
   const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'Disponible' | 'En mission'>('all');
@@ -301,7 +303,7 @@ export default function AgentsPage() {
                 const availability = getAgentAvailability(agent);
                 const fullName = `${agent.firstName} ${agent.lastName}`;
                 return (
-                  <TableRow key={agent.id}>
+                  <TableRow key={agent.id} onClick={() => setSelectedAgent(agent)} className="cursor-pointer">
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
@@ -335,6 +337,7 @@ export default function AgentsPage() {
                             aria-haspopup="true"
                             size="icon"
                             variant="ghost"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             <MoreHorizontal className="h-4 w-4" />
                             <span className="sr-only">Toggle menu</span>
@@ -367,6 +370,19 @@ export default function AgentsPage() {
           onOpenChange={(open) => {
             if (!open) {
               setEditingAgent(null);
+            }
+          }}
+        />
+      )}
+
+      {selectedAgent && (
+        <AgentDetailsSheet
+          agent={selectedAgent}
+          availability={getAgentAvailability(selectedAgent)}
+          isOpen={!!selectedAgent}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedAgent(null);
             }
           }}
         />
