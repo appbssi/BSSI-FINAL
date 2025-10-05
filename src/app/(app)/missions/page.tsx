@@ -67,7 +67,7 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
     const handleExportPDF = () => {
         const doc = new jsPDF();
         const mainTitle = `Mission: ${missionName}`;
-        const subTitle = "Liste des Agents Assignés";
+        const subTitle = "Agents en Mission";
         const generationDate = new Date().toLocaleDateString('fr-FR');
         const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -134,7 +134,7 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
     return (
         <DialogContent className="max-w-3xl">
             <DialogHeader>
-                <DialogTitle>AGENT A LA MISSION "{missionName}"</DialogTitle>
+                <DialogTitle>AGENT A LA MISSION "{missionName.toUpperCase()}"</DialogTitle>
                 <DialogDescription>
                     Liste des agents assignés à cette mission.
                 </DialogDescription>
