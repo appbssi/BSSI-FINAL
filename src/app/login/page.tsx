@@ -26,7 +26,7 @@ import { useLogo } from '@/context/logo-context';
 import Image from 'next/image';
 
 const loginSchema = z.object({
-  email: z.string().email('Veuillez saisir une adresse e-mail valide.'),
+  email: z.string().min(1, 'Veuillez saisir votre login.'),
   password: z.string().min(1, 'Le mot de passe est requis.'),
 });
 
@@ -61,10 +61,10 @@ export default function LoginPage() {
           case 'auth/user-not-found':
           case 'auth/wrong-password':
           case 'auth/invalid-credential':
-            description = 'Les identifiants fournis sont invalides. Veuillez vérifier votre e-mail et votre mot de passe.';
+            description = 'Les identifiants fournis sont invalides. Veuillez vérifier votre login et votre mot de passe.';
             break;
           case 'auth/invalid-email':
-            description = 'Veuillez saisir une adresse e-mail valide.';
+            description = 'Le format du login est invalide. Veuillez utiliser une adresse e-mail.';
             break;
           default:
             description = "Impossible de se connecter. Veuillez réessayer.";
@@ -104,9 +104,9 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Login</FormLabel>
                     <FormControl>
-                      <Input type="email" {...field} />
+                      <Input type="text" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
