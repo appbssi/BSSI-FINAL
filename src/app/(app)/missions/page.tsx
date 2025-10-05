@@ -32,7 +32,7 @@ import { Input } from '@/components/ui/input';
 import { CreateMissionForm } from '@/components/missions/create-mission-form';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { useFirestore, useMemoFirebase } from '@/firebase';
 import type { Agent, Mission } from '@/lib/types';
 import { useState, useMemo } from 'react';
 import { EditMissionSheet } from '@/components/missions/edit-mission-sheet';
@@ -419,9 +419,9 @@ export default function MissionsPage() {
                         <span className="sr-only">Toggle menu</span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Prolonger</DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Modifier/Prolonger</DropdownMenuItem>
                       {mission.status !== 'Annulée' && mission.status !== 'Terminée' && (
                         <DropdownMenuItem 
                             onSelect={() => setMissionToCancel(mission)}

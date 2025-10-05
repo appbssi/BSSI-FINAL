@@ -1,13 +1,17 @@
-
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAuth, Auth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
-// This variable will hold the singleton instance of the Firebase app.
+// This variable will hold the singleton instances of the Firebase services.
 let firebaseApp: FirebaseApp;
+let auth: Auth;
+let firestore: Firestore;
+
+// This flag ensures that the auth listener is only set up once.
+let isAuthListenerInitialized = false;
 
 /**
  * Initializes Firebase, creating a singleton instance of the app and its services.
@@ -17,23 +21,26 @@ export function initializeFirebase() {
   if (!getApps().length) {
     // Initialize the app if it hasn't been already.
     firebaseApp = initializeApp(firebaseConfig);
+    auth = getAuth(firebaseApp);
+    firestore = getFirestore(firebaseApp);
   } else {
     // If it has been initialized, get the existing app instance.
     firebaseApp = getApp();
+    auth = getAuth(firebaseApp);
+    firestore = getFirestore(firebaseApp);
   }
 
-  const auth = getAuth(firebaseApp);
-  const firestore = getFirestore(firebaseApp);
-  
-  // This listener ensures we sign in anonymously as soon as auth is available.
-  // It only attempts to sign in if there's no current user.
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      signInAnonymously(auth).catch((error) => {
-        console.error("Anonymous sign-in failed:", error);
-      });
-    }
-  });
+  // Set up the anonymous sign-in listener only once.
+  if (!isAuthListenerInitialized) {
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        signInAnonymously(auth).catch((error) => {
+          console.error("Anonymous sign-in failed:", error);
+        });
+      }
+    });
+    isAuthListenerInitialized = true;
+  }
 
   return {
     firebaseApp,

@@ -1,71 +1,50 @@
 /**
- * @file Firestore Security Rules
- * @version 2
+ * @fileoverview Firestore Security Rules for the Agent Mission Management application.
  *
- * @Core Philosophy
- * This ruleset implements a role-based access control system.
- * Agents can only manage their own profile, while missions are publicly readable but only modifiable by agents.
+ * Core Philosophy:
+ * This ruleset provides public read access to the 'agents' and 'missions' collections
+ * but restricts write access to prevent unauthorized data modification. No authentication is required to read these collections.
  *
- * @Data Structure
- * - /agents/{agentId}: Stores agent profile information. Accessible only to the agent themselves.
- * - /missions/{missionId}: Stores mission details. Publicly readable, writable only by agents.
+ * Data Structure:
+ * The database consists of two top-level collections: 'agents' and 'missions'.
+ *  - /agents/{agentId}: Stores agent profiles.
+ *  - /missions/{missionId}: Stores mission details.
  *
- * @Key Security Decisions
- * - Agents can only manage their own agent profile.
- * - Missions are publicly readable, but agent-only writable.
- *
+ * Key Security Decisions:
+ *  - Agents and Missions are publicly readable, but only writeable in the Firebase Console.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to individual agent documents.
-     * @path /agents/{agentId}
-     * @allow (get, update, delete) if the request is made by the agent with matching ID.
-     * @allow (create) if the request is made by the agent creating their own profile.
-     * @deny (get, list) if the request is not made by the agent.
-     * @deny (create, update, delete) if the request is not made by the agent or if they are trying to modify another agent's profile.
-     * @principle Enforces document ownership for agents; each agent can only access their own data.
+     * @description Grants public read access to the 'agents' collection, but denies all write operations.
+     * @path /databases/{database}/documents/agents/{agentId}
+     * @allow (get, list): Any unauthenticated client can read agent profiles.
+     * @deny (create, update, delete): No client-side write operations are permitted on agent profiles.
+     * @principle Allows public read access while preventing unauthorized modifications.
      */
     match /agents/{agentId} {
-      allow get: if isSignedIn() && isOwner(agentId);
-      allow list: if false;
-      allow create: if isSignedIn() && isOwner(agentId);
-      allow update: if isSignedIn() && isExistingOwner(agentId);
-      allow delete: if isSignedIn() && isExistingOwner(agentId);
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
 
     /**
-     * @description Controls access to mission documents.
-     * @path /missions/{missionId}
-     * @allow (get, list) to all users.
-     * @allow (create, update, delete) only to authenticated agents.
-     * @deny (create, update, delete) if the request is not made by an authenticated agent.
-     * @principle Allows public read access to missions, but restricts modifications to authenticated agents.
+     * @description Grants public read access to the 'missions' collection, but denies all write operations.
+     * @path /databases/{database}/documents/missions/{missionId}
+     * @allow (get, list): Any unauthenticated client can read mission details.
+     * @deny (create, update, delete): No client-side write operations are permitted on mission details.
+     * @principle Allows public read access while preventing unauthorized modifications.
      */
     match /missions/{missionId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
-    }
-
-    // --- Helper functions ---
-
-    // Checks if the user is signed in.
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    // Checks if the request is made by the owner of the document.
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    // Checks if the request is made by the owner of an existing document.
-    function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }

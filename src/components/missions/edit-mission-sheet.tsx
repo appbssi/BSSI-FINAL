@@ -120,7 +120,7 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
       status: mission.status,
       assignedAgentIds: mission.assignedAgentIds || [],
     });
-  }, [mission, form]);
+  }, [mission, form, isOpen]);
 
 
   const onSubmit = async (data: MissionFormValues) => {
@@ -154,8 +154,9 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
       startDate && endDate ? isAgentAvailable(agent, allMissions || [], startDate, endDate, mission.id) : false
   ) || [];
 
-  const currentlyAssignedAgents = allAgents?.filter(agent => form.watch('assignedAgentIds').includes(agent.id)) || [];
-  const combinedAgentList = [...new Map([...currentlyAssignedAgents, ...availableAgents].map(agent => [agent.id, agent])).values()];
+  const currentlyAssignedAgents = allAgents?.filter(agent => (form.watch('assignedAgentIds') || []).includes(agent.id)) || [];
+
+  const combinedAgentList = [...new Map([...currentlyAssignedAgents, ...availableAgents].map(agent => [agent.id, agent])).values()].sort((a,b) => a.firstName.localeCompare(b.firstName));
 
 
   return (
@@ -337,7 +338,7 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                                             <div className="font-medium flex-1">
                                                 {agent.firstName} {agent.lastName}
                                                 <div className="text-sm text-muted-foreground">
-                                                   {agent.rank} | {agent.registrationNumber} | {agent.contact}
+                                                   {agent.rank} | {agent.registrationNumber}
                                                 </div>
                                             </div>
                                             <Badge variant={!isAvailable && !isChecked ? "destructive" : (agent.availability === 'Disponible' ? 'outline' : 'secondary')}>{isDisabled && !isChecked ? 'Indisponible' : agent.availability}</Badge>

@@ -25,7 +25,7 @@ import { RegisterAgentSheet } from '@/components/agents/register-agent-sheet';
 import type { Agent } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, deleteDoc, doc } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { useFirestore, useMemoFirebase } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
 import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
@@ -50,7 +50,6 @@ import { AgentDetailsSheet } from '@/components/agents/agent-details-sheet';
 
 export default function AgentsPage() {
   const firestore = useFirestore();
-  const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [isRegisterOpen, setRegisterOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
@@ -98,6 +97,7 @@ export default function AgentsPage() {
 
   const handleDeleteAgent = async () => {
     if (!firestore || !agentToDelete) return;
+    setIsDeleting(true);
 
     try {
       const agentRef = doc(firestore, 'agents', agentToDelete.id);
@@ -114,10 +114,10 @@ export default function AgentsPage() {
         title: 'Erreur',
         description: "Une erreur est survenue lors de la suppression de l'agent.",
       });
+    } finally {
+      setIsDeleting(false);
+      setAgentToDelete(null); // Close the dialog
     }
-
-
-    setAgentToDelete(null); // Close the dialog
   };
 
   const handleDeduplicate = async () => {
@@ -354,11 +354,11 @@ export default function AgentsPage() {
                             <span className="sr-only">Toggle menu</span>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onSelect={(e) => { e.stopPropagation(); setEditingAgent(agent)}}>Modifier</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => setEditingAgent(agent)}>Modifier</DropdownMenuItem>
                           <DropdownMenuItem 
-                            onSelect={(e) => { e.stopPropagation(); setAgentToDelete(agent)}}
+                            onSelect={() => setAgentToDelete(agent)}
                             className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                           >
                             Supprimer
@@ -422,7 +422,8 @@ export default function AgentsPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setAgentToDelete(null)}>Annuler</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteAgent} className="bg-destructive hover:bg-destructive/90">
+              <AlertDialogAction onClick={handleDeleteAgent} className="bg-destructive hover:bg-destructive/90" disabled={isDeleting}>
+                 {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Supprimer
               </AlertDialogAction>
             </AlertDialogFooter>
