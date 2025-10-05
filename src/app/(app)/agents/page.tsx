@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { RegisterAgentSheet } from '@/components/agents/register-agent-sheet';
 import type { Agent, Mission } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, Timestamp } from 'firebase/firestore';
+import { collection, Timestamp, doc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
@@ -40,13 +40,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+
 
 export default function AgentsPage() {
   const firestore = useFirestore();
   const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
+  const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
@@ -103,6 +106,20 @@ export default function AgentsPage() {
       default:
         return 'secondary';
     }
+  };
+
+  const handleDeleteAgent = () => {
+    if (!firestore || !agentToDelete) return;
+
+    const agentRef = doc(firestore, 'agents', agentToDelete.id);
+    deleteDocumentNonBlocking(agentRef);
+    
+    toast({
+      title: 'Agent supprimé',
+      description: `L'agent ${agentToDelete.firstName} ${agentToDelete.lastName} a été supprimé.`,
+    });
+
+    setAgentToDelete(null); // Close the dialog
   };
 
   const handleDeduplicate = async () => {
@@ -252,7 +269,10 @@ export default function AgentsPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem onSelect={() => setEditingAgent(agent)}>Modifier</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                          <DropdownMenuItem 
+                            onSelect={() => setAgentToDelete(agent)}
+                            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                          >
                             Supprimer
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -276,6 +296,26 @@ export default function AgentsPage() {
             }
           }}
         />
+      )}
+
+      {agentToDelete && (
+        <AlertDialog open={!!agentToDelete} onOpenChange={(open) => !open && setAgentToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Êtes-vous absolument sûr?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette action est irréversible. L'agent{' '}
+                <span className="font-semibold">{`${agentToDelete.firstName} ${agentToDelete.lastName}`}</span> sera définitivement supprimé.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setAgentToDelete(null)}>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteAgent} className="bg-destructive hover:bg-destructive/90">
+                Supprimer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </div>
   );
