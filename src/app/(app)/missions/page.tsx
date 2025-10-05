@@ -396,12 +396,16 @@ export default function MissionsPage() {
               
               const today = new Date();
               today.setHours(0, 0, 0, 0);
+              const missionStartDate = mission.startDate.toDate();
               const missionEndDate = mission.endDate.toDate();
 
               let displayStatus: MissionStatus = mission.status;
-              if (mission.status === 'En cours' && missionEndDate < today) {
+              if (mission.status === 'Planification' && missionStartDate <= today) {
+                displayStatus = 'En cours';
+              } else if (mission.status === 'En cours' && missionEndDate < today) {
                 displayStatus = 'Terminée';
               }
+
 
               return (
               <TableRow key={mission.id}>
