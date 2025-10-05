@@ -14,7 +14,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Card, CardContent } from '@/components/ui/card';
 import { CalendarIcon, Loader2, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
@@ -119,8 +118,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   ) || [];
 
   return (
-    <Card className="border-0 shadow-none">
-      <CardContent className="p-0 sm:p-6">
+    <div className="p-0 sm:p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {currentStep === 1 && (
@@ -309,7 +307,8 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
             )}
           </form>
         </Form>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
+
+    

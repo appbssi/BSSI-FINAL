@@ -21,11 +21,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -196,13 +191,15 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
 }
 
 export default function MissionsPage() {
-  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [isCreateMissionOpen, setCreateMissionOpen] = useState(false);
   const [editingMission, setEditingMission] = useState<Mission | null>(null);
   const [missionToCancel, setMissionToCancel] = useState<Mission | null>(null);
   const [missionToDelete, setMissionToDelete] = useState<Mission | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'Planification' | 'En cours' | 'Terminée' | 'Annulée'>('all');
   
   const missionsQuery = useMemoFirebase(
     () => (firestore && user ? collection(firestore, 'missions') : null),
@@ -224,6 +221,18 @@ export default function MissionsPage() {
         return acc;
     }, {} as Record<string, Agent>);
   }, [agents]);
+
+  const sortedMissions = useMemo(() => {
+    return missions ? [...missions].sort((a, b) => b.startDate.toMillis() - a.startDate.toMillis()) : [];
+  }, [missions]);
+
+  const filteredMissions = useMemo(() => {
+    return sortedMissions.filter(mission => {
+      const matchesSearch = mission.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesFilter = statusFilter === 'all' || mission.status === statusFilter;
+      return matchesSearch && matchesFilter;
+    });
+  }, [sortedMissions, searchQuery, statusFilter]);
 
 
   const getBadgeVariant = (
@@ -268,17 +277,41 @@ export default function MissionsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Missions</h1>
-        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-          <PopoverTrigger asChild>
+        <Dialog open={isCreateMissionOpen} onOpenChange={setCreateMissionOpen}>
+          <DialogTrigger asChild>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" /> Créer une mission
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-full max-w-2xl" align="end">
-            <CreateMissionForm onMissionCreated={() => setPopoverOpen(false)}/>
-          </PopoverContent>
-        </Popover>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+             <DialogHeader>
+                <DialogTitle>Créer une nouvelle mission</DialogTitle>
+             </DialogHeader>
+            <CreateMissionForm onMissionCreated={() => setCreateMissionOpen(false)}/>
+          </DialogContent>
+        </Dialog>
       </div>
+
+       <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-1 items-center gap-2">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher une mission..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+             <div className="flex items-center gap-2">
+                <Button size="sm" variant={statusFilter === 'all' ? 'default' : 'outline'} onClick={() => setStatusFilter('all')}>Toutes</Button>
+                <Button size="sm" variant={statusFilter === 'Planification' ? 'default' : 'outline'} onClick={() => setStatusFilter('Planification')}>Planifiées</Button>
+                <Button size="sm" variant={statusFilter === 'En cours' ? 'default' : 'outline'} onClick={() => setStatusFilter('En cours')}>En cours</Button>
+                <Button size="sm" variant={statusFilter === 'Terminée' ? 'default' : 'outline'} onClick={() => setStatusFilter('Terminée')}>Terminées</Button>
+                <Button size="sm" variant={statusFilter === 'Annulée' ? 'default' : 'outline'} onClick={() => setStatusFilter('Annulée')}>Annulées</Button>
+            </div>
+          </div>
+        </div>
 
       <div className="border rounded-lg">
         <Table>
@@ -300,7 +333,7 @@ export default function MissionsPage() {
                     <TableCell colSpan={6} className="text-center">Chargement des missions...</TableCell>
                 </TableRow>
             ) : (
-            missions?.map((mission) => {
+            filteredMissions.map((mission) => {
               const assignedAgents = (mission.assignedAgentIds || [])
                 .map(id => agentsById[id])
                 .filter(Boolean)
@@ -364,7 +397,7 @@ export default function MissionsPage() {
               </TableRow>
             )})
             )}
-             {!missionsLoading && missions?.length === 0 && (
+             {!missionsLoading && filteredMissions.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground">
                         Aucune mission trouvée.
@@ -429,3 +462,5 @@ export default function MissionsPage() {
     </div>
   );
 }
+
+    
