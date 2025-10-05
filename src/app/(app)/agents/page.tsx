@@ -120,7 +120,7 @@ export default function AgentsPage() {
                       <div className="font-medium">
                         {agent.name}
                         <div className="text-sm text-muted-foreground">
-                          {agent.email}
+                          {agent.matricule}
                         </div>
                       </div>
                     </div>

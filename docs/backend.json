@@ -10,11 +10,6 @@
           "type": "string",
           "description": "The agent's full name."
         },
-        "email": {
-          "type": "string",
-          "description": "The agent's email address.",
-          "format": "email"
-        },
         "matricule": {
             "type": "string",
             "description": "The agent's service number."
@@ -51,7 +46,6 @@
       },
       "required": [
         "name",
-        "email",
         "matricule",
         "grade",
         "contact",

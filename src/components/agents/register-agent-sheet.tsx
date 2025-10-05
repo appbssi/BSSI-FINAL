@@ -31,7 +31,6 @@ const agentSchema = z.object({
   grade: z.string().min(3, 'Le grade est requis'),
   contact: z.string().min(3, 'Le contact est requis'),
   address: z.string().min(3, 'L\'adresse est requise'),
-  email: z.string().email('Email invalide'),
   skills: z.string(),
   availability: z.string(),
   avatarUrl: z.string().url("L'URL de l'avatar doit être une URL valide"),
@@ -51,7 +50,6 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
       grade: '',
       contact: '',
       address: '',
-      email: '',
       skills: '',
       availability: 'Disponible',
       avatarUrl: '',
@@ -91,19 +89,6 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
                   <FormLabel>Nom et Prénom</FormLabel>
                   <FormControl>
                     <Input placeholder="Alex Johnson" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="agent@e-brigade.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

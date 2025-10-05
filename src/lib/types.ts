@@ -3,7 +3,6 @@ import { Timestamp } from 'firebase/firestore';
 export type Agent = {
   id: string;
   name: string;
-  email: string;
   matricule: string;
   grade: string;
   contact: string;
