@@ -10,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { FileUp, MoreHorizontal, PlusCircle, Search, Trash2, Loader2, FileDown } from 'lucide-react';
 import {
@@ -317,17 +316,10 @@ export default function AgentsPage() {
                 return (
                   <TableRow key={agent.id} onClick={() => setSelectedAgent(agent)} className="cursor-pointer">
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarFallback>
-                            {(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="font-medium">
-                          {fullName}
-                          <div className="text-sm text-muted-foreground">
-                            {agent.registrationNumber}
-                          </div>
+                      <div className="font-medium">
+                        {fullName}
+                        <div className="text-sm text-muted-foreground">
+                          {agent.registrationNumber}
                         </div>
                       </div>
                     </TableCell>

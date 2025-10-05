@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -9,23 +9,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { User } from 'lucide-react';
 
 export function UserNav() {
-  const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar className="h-10 w-10">
-            <AvatarImage
-              src={userAvatar?.imageUrl}
-              alt="Admin"
-              data-ai-hint={userAvatar?.imageHint}
-            />
-            <AvatarFallback>AD</AvatarFallback>
-          </Avatar>
+          <div className="h-10 w-10 rounded-full flex items-center justify-center bg-muted">
+            <User className="h-5 w-5" />
+          </div>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>

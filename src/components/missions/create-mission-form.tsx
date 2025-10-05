@@ -28,7 +28,6 @@ import { useState } from 'react';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { Agent, Mission } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
-import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 
 const missionSchema = z.object({
@@ -275,9 +274,6 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                                 <div className={cn("h-5 w-5 flex items-center justify-center rounded border", isChecked ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground/50")}>
                                                   {isChecked && <Check className="h-4 w-4" />}
                                                 </div>
-                                                 <Avatar>
-                                                    <AvatarFallback>{agent.firstName?.[0] ?? ''}{agent.lastName?.[0] ?? ''}</AvatarFallback>
-                                                </Avatar>
                                                 <div className="font-medium flex-1">
                                                     {agent.firstName} {agent.lastName}
                                                     <div className="text-sm text-muted-foreground">
@@ -310,5 +306,3 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     </div>
   );
 }
-
-    

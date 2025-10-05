@@ -8,7 +8,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { Agent } from '@/lib/types';
 import { useFirestore } from '@/firebase';
@@ -45,11 +44,6 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsS
         </SheetHeader>
         <div className="py-6 space-y-6">
             <div className="flex items-center gap-4">
-                 <Avatar className="h-16 w-16">
-                    <AvatarFallback className="text-2xl">
-                        {(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}
-                    </AvatarFallback>
-                </Avatar>
                 <div>
                     <h2 className="text-2xl font-bold">{agent.firstName} {agent.lastName}</h2>
                      <p className="text-muted-foreground">{agent.registrationNumber}</p>
