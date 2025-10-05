@@ -281,7 +281,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                                 <div className="font-medium flex-1">
                                                     {agent.firstName} {agent.lastName}
                                                     <div className="text-sm text-muted-foreground">
-                                                        {agent.rank} | {agent.registrationNumber}
+                                                        {agent.rank} | {agent.registrationNumber} | {agent.contact}
                                                     </div>
                                                 </div>
                                                 <Badge variant={agent.availability === 'Disponible' ? 'outline' : 'secondary'}>{agent.availability}</Badge>

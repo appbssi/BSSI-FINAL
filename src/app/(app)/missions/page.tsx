@@ -259,11 +259,11 @@ export default function MissionsPage() {
   ) => {
     switch (status) {
       case 'En cours':
-        return 'bg-blue-500/20 text-blue-700 border-blue-500/30 hover:bg-blue-500/30';
+        return 'default';
       case 'Terminée':
-        return 'bg-green-500/20 text-green-700 border-green-500/30 hover:bg-green-500/30';
+        return 'outline';
       case 'Annulée':
-        return 'bg-red-500/20 text-red-700 border-red-500/30 hover:bg-red-500/30';
+        return 'destructive';
       case 'Planification':
       default:
         return 'secondary';
@@ -382,8 +382,7 @@ export default function MissionsPage() {
                 </TableCell>
                 <TableCell>
                   <Badge
-                    variant="secondary"
-                    className={getBadgeVariant(mission.status)}
+                    variant={getBadgeVariant(mission.status)}
                   >
                     {mission.status}
                   </Badge>

@@ -331,7 +331,7 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                                             <div className="font-medium flex-1">
                                                 {agent.firstName} {agent.lastName}
                                                 <div className="text-sm text-muted-foreground">
-                                                    {agent.rank} | {agent.registrationNumber}
+                                                   {agent.rank} | {agent.registrationNumber} | {agent.contact}
                                                 </div>
                                             </div>
                                             <Badge variant={!isAvailable && !isChecked ? "destructive" : (agent.availability === 'Disponible' ? 'outline' : 'secondary')}>{isDisabled && !isChecked ? 'Indisponible' : agent.availability}</Badge>
