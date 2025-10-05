@@ -40,7 +40,7 @@ const agentSchema = z.object({
   rank: z.string().min(3, 'Le grade est requis'),
   contact: z.string().min(3, 'Le contact est requis'),
   address: z.string().min(3, "L'adresse est requise"),
-  availability: z.enum(['Disponible', 'En mission', 'En congé']),
+  availability: z.enum(['Disponible', 'En congé']),
 });
 
 type AgentFormValues = z.infer<typeof agentSchema>;
@@ -64,7 +64,7 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
       rank: agent.rank,
       contact: agent.contact,
       address: agent.address,
-      availability: agent.availability,
+      availability: agent.availability === 'En congé' ? 'En congé' : 'Disponible',
     },
   });
 

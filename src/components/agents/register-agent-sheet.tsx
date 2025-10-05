@@ -24,13 +24,6 @@ import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useState } from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
 
 const agentSchema = z.object({
   firstName: z.string().min(2, 'Le prénom est requis'),
@@ -39,7 +32,6 @@ const agentSchema = z.object({
   rank: z.string().min(3, 'Le grade est requis'),
   contact: z.string().min(3, 'Le contact est requis'),
   address: z.string().min(3, "L'adresse est requise"),
-  availability: z.enum(['Disponible', 'En mission', 'En congé']),
 });
 
 type AgentFormValues = z.infer<typeof agentSchema>;
@@ -58,14 +50,16 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
       rank: '',
       contact: '',
       address: '',
-      availability: 'Disponible',
     },
   });
 
   const onSubmit = (data: AgentFormValues) => {
     if (!firestore) return;
     const agentsCollection = collection(firestore, 'agents');
-    addDocumentNonBlocking(agentsCollection, data);
+    addDocumentNonBlocking(agentsCollection, {
+      ...data,
+      availability: 'Disponible', // Default availability
+    });
     toast({
       title: 'Agent enregistré !',
       description: `L'agent ${data.firstName} ${data.lastName} a été ajouté avec succès.`,
@@ -160,27 +154,6 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
                   <FormControl>
                     <Input placeholder="123 Rue de la Mission, Paris" {...field} />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="availability"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Disponibilité (Manuelle)</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selectionner une disponibilité" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Disponible">Disponible</SelectItem>
-                      <SelectItem value="En congé">En congé</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
