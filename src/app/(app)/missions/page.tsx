@@ -124,7 +124,7 @@ export default function MissionsPage() {
                         className="border-2 border-background"
                       >
                         <AvatarFallback>
-                          {agent.name.substring(0, 1)}
+                          {(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}
                         </AvatarFallback>
                       </Avatar>
                     )})}

@@ -6,15 +6,19 @@
       "type": "object",
       "description": "Represents an agent who can be assigned to missions.",
       "properties": {
-        "name": {
+        "firstName": {
           "type": "string",
-          "description": "The agent's full name."
+          "description": "The agent's first name."
         },
-        "matricule": {
+        "lastName": {
+          "type": "string",
+          "description": "The agent's last name."
+        },
+        "registrationNumber": {
             "type": "string",
             "description": "The agent's service number."
         },
-        "grade": {
+        "rank": {
             "type": "string",
             "description": "The agent's rank."
         },
@@ -33,9 +37,10 @@
         }
       },
       "required": [
-        "name",
-        "matricule",
-        "grade",
+        "firstName",
+        "lastName",
+        "registrationNumber",
+        "rank",
         "contact",
         "address",
         "availability"

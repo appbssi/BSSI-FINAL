@@ -115,25 +115,26 @@ export default function AgentsPage() {
             ) : (
             agents?.map((agent) => {
               const availability = getAgentAvailability(agent);
+              const fullName = `${agent.firstName} ${agent.lastName}`;
               return (
                 <TableRow key={agent.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar>
                         <AvatarFallback>
-                          {agent.name.substring(0, 2).toUpperCase()}
+                          {(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}
                         </AvatarFallback>
                       </Avatar>
                       <div className="font-medium">
-                        {agent.name}
+                        {fullName}
                         <div className="text-sm text-muted-foreground">
-                          {agent.matricule}
+                          {agent.registrationNumber}
                         </div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    {agent.grade}
+                    {agent.rank}
                   </TableCell>
                   <TableCell>
                     <Badge variant={getBadgeVariant(availability)}>

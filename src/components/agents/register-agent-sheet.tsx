@@ -26,11 +26,12 @@ import { useFirestore } from '@/firebase';
 import { useState } from 'react';
 
 const agentSchema = z.object({
-  name: z.string().min(3, 'Le nom est requis'),
-  matricule: z.string().min(3, 'Le matricule est requis'),
-  grade: z.string().min(3, 'Le grade est requis'),
+  firstName: z.string().min(2, 'Le prénom est requis'),
+  lastName: z.string().min(2, 'Le nom est requis'),
+  registrationNumber: z.string().min(3, 'Le matricule est requis'),
+  rank: z.string().min(3, 'Le grade est requis'),
   contact: z.string().min(3, 'Le contact est requis'),
-  address: z.string().min(3, 'L\'adresse est requise'),
+  address: z.string().min(3, "L'adresse est requise"),
   availability: z.string(),
 });
 
@@ -44,9 +45,10 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
   const form = useForm<AgentFormValues>({
     resolver: zodResolver(agentSchema),
     defaultValues: {
-      name: '',
-      matricule: '',
-      grade: '',
+      firstName: '',
+      lastName: '',
+      registrationNumber: '',
+      rank: '',
       contact: '',
       address: '',
       availability: 'Disponible',
@@ -59,7 +61,7 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
     addDocumentNonBlocking(agentsCollection, data);
     toast({
       title: 'Agent enregistré !',
-      description: `L'agent ${data.name} a été ajouté avec succès.`,
+      description: `L'agent ${data.firstName} ${data.lastName} a été ajouté avec succès.`,
     });
     form.reset();
     setIsOpen(false);
@@ -79,12 +81,25 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-6">
             <FormField
               control={form.control}
-              name="name"
+              name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nom et Prénom</FormLabel>
+                  <FormLabel>Nom</FormLabel>
                   <FormControl>
-                    <Input placeholder="Alex Johnson" {...field} />
+                    <Input placeholder="Johnson" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Prénom</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Alex" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -92,7 +107,7 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
             />
             <FormField
               control={form.control}
-              name="matricule"
+              name="registrationNumber"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Matricule</FormLabel>
@@ -105,7 +120,7 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
             />
             <FormField
               control={form.control}
-              name="grade"
+              name="rank"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Grade</FormLabel>

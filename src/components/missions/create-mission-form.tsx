@@ -121,7 +121,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
       const missionDetails = `Nom: ${formData.name}\nLieu: ${formData.location}\nDate de début: ${formData.startDate}\nDate de fin: ${formData.endDate}`;
       
       const agentsForAI = availableAgents.map((a) => ({
-          name: a.name,
+          name: `${a.firstName} ${a.lastName}`,
           skills: [],
           availability: 'Disponible',
           pastPerformance: '',
@@ -191,7 +191,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     }
   };
   
-  const getAgentByName = (name: string) => allAgents?.find(a => a.name === name);
+  const getAgentByName = (name: string) => allAgents?.find(a => `${a.firstName} ${a.lastName}` === name);
 
   return (
     <Card className="border-0 shadow-none">
@@ -337,6 +337,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                           {suggestedAgents.map((agentSugg) => {
                             const agent = getAgentByName(agentSugg.name);
                             if (!agent) return null;
+                            const fullName = `${agent.firstName} ${agent.lastName}`;
                             return (
                               <div key={`sugg-${agent.id}`} className="flex items-start gap-4 p-3 rounded-md border bg-background">
                                 <Checkbox 
@@ -356,11 +357,11 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                   <Label htmlFor={`sugg-${agent.id}`} className="flex items-center justify-between w-full cursor-pointer">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="h-9 w-9">
-                                            <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                            <AvatarFallback>{(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <div className="font-semibold">{agent.name}</div>
-                                            <div className="text-xs text-muted-foreground">{agent.grade}</div>
+                                            <div className="font-semibold">{fullName}</div>
+                                            <div className="text-xs text-muted-foreground">{agent.rank}</div>
                                         </div>
                                     </div>
                                   </Label>
@@ -376,8 +377,10 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                     <h4 className="font-semibold pt-4">Autres agents disponibles</h4>
                     <div className="space-y-2">
                         {availableAgentsForMission
-                          .filter(a => !suggestedAgents.some(sa => sa.name === a.name))
-                          .map(agent => (
+                          .filter(a => !suggestedAgents.some(sa => sa.name === `${a.firstName} ${a.lastName}`))
+                          .map(agent => {
+                            const fullName = `${agent.firstName} ${agent.lastName}`;
+                            return (
                             <div key={`avail-${agent.id}`} className="flex items-center space-x-3 p-3 rounded-md border">
                                 <Checkbox 
                                   id={`avail-${agent.id}`}
@@ -394,15 +397,15 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                 />
                                 <Label htmlFor={`avail-${agent.id}`} className="flex items-center gap-3 font-normal flex-1 cursor-pointer">
                                     <Avatar className="h-9 w-9">
-                                        <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                        <AvatarFallback>{(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}</AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <div className="font-semibold">{agent.name}</div>
-                                        <div className="text-xs text-muted-foreground">{agent.grade}</div>
+                                        <div className="font-semibold">{fullName}</div>
+                                        <div className="text-xs text-muted-foreground">{agent.rank}</div>
                                     </div>
                                 </Label>
                             </div>
-                        ))}
+                          )})}
                          {availableAgentsForMission.length === 0 && !isSuggesting && (
                             <p className="text-sm text-muted-foreground text-center p-4 border rounded-md">
                                 Aucun agent n'est disponible pour ces dates.
@@ -434,9 +437,9 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                         return (
                           <Badge key={agent.id} variant="outline" className="flex items-center gap-2 p-2">
                             <Avatar className="h-6 w-6">
-                              <AvatarFallback>{agent.name[0]}</AvatarFallback>
+                              <AvatarFallback>{(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}</AvatarFallback>
                             </Avatar>
-                            {agent.name}
+                            {agent.firstName} {agent.lastName}
                           </Badge>
                         )
                       })}

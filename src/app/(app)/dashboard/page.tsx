@@ -173,7 +173,7 @@ export default function DashboardPage() {
                             className="border-2 border-background"
                           >
                             <AvatarFallback>
-                              {agent.name.charAt(0)}
+                              {(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}
                             </AvatarFallback>
                           </Avatar>
                         )

@@ -52,26 +52,26 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
-        // Use sheet_to_json with a specific header configuration
         const json = XLSX.utils.sheet_to_json(worksheet, {
-            header: ["name", "matricule", "grade", "contact", "address"],
-            range: 1 // This will skip the first row (the header)
+            header: ["lastName", "firstName", "registrationNumber", "rank", "contact", "address"],
+            range: 1
         }) as any[];
 
 
         const parsedAgents: AgentImportData[] = json.map((row) => ({
-            name: String(row.name || ''),
-            matricule: String(row.matricule || ''),
-            grade: String(row.grade || ''),
+            lastName: String(row.lastName || ''),
+            firstName: String(row.firstName || ''),
+            registrationNumber: String(row.registrationNumber || ''),
+            rank: String(row.rank || ''),
             contact: String(row.contact || ''),
             address: String(row.address || ''),
-        })).filter(agent => agent.name && agent.matricule); // Filter out empty rows
+        })).filter(agent => agent.firstName && agent.lastName && agent.registrationNumber);
 
         if(parsedAgents.length === 0){
             toast({
                 variant: 'destructive',
                 title: 'Fichier invalide ou vide',
-                description: 'Le fichier ne contient aucun agent valide ou les colonnes ne sont pas correctes. Attendu: name, matricule, grade, contact, address',
+                description: "Le fichier ne contient aucun agent valide ou les colonnes ne sont pas correctes. Attendu: lastName, firstName, registrationNumber, rank, contact, address",
             });
             return;
         }
@@ -81,7 +81,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         toast({
             variant: 'destructive',
             title: 'Erreur de lecture',
-            description: 'Impossible de lire le fichier Excel. Assurez-vous qu\'il est au bon format.',
+            description: "Impossible de lire le fichier Excel. Assurez-vous qu'il est au bon format.",
         });
       }
     };
@@ -133,7 +133,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         <DialogHeader>
           <DialogTitle>Importer des agents depuis Excel</DialogTitle>
           <DialogDescription>
-            Sélectionnez un fichier .xlsx ou .csv. Assurez-vous que le fichier a les colonnes : name, matricule, grade, contact, address. La première ligne sera ignorée.
+            Sélectionnez un fichier .xlsx ou .csv. Assurez-vous que le fichier a les colonnes : lastName, firstName, registrationNumber, rank, contact, address. La première ligne sera ignorée.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -145,6 +145,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Nom</TableHead>
+                                <TableHead>Prénom</TableHead>
                                 <TableHead>Matricule</TableHead>
                                 <TableHead>Grade</TableHead>
                                 <TableHead>Contact</TableHead>
@@ -154,9 +155,10 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
                         <TableBody>
                             {agentsToImport.map((agent, index) => (
                                 <TableRow key={index}>
-                                    <TableCell>{agent.name}</TableCell>
-                                    <TableCell>{agent.matricule}</TableCell>
-                                    <TableCell>{agent.grade}</TableCell>
+                                    <TableCell>{agent.lastName}</TableCell>
+                                    <TableCell>{agent.firstName}</TableCell>
+                                    <TableCell>{agent.registrationNumber}</TableCell>
+                                    <TableCell>{agent.rank}</TableCell>
                                     <TableCell>{agent.contact}</TableCell>
                                     <TableCell>{agent.address}</TableCell>
                                 </TableRow>
