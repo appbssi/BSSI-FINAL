@@ -32,6 +32,7 @@ import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Label } from '../ui/label';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
