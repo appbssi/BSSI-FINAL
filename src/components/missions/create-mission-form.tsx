@@ -34,6 +34,7 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, Timestamp } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { Badge } from '../ui/badge';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
