@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -295,7 +295,7 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
             <FormField
                 control={form.control}
                 name="assignedAgentIds"
-                render={() => (
+                render={({ field }) => (
                 <FormItem>
                     <FormLabel>Agents assignés</FormLabel>
                     <div className="rounded-lg border">
@@ -306,33 +306,28 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                                     <Loader2 className="animate-spin h-8 w-8 text-muted-foreground"/>
                                 </div>
                             ) : combinedAgentList.length > 0 ? (
-                                combinedAgentList.map((agent) => (
-                                <FormField
-                                    key={agent.id}
-                                    control={form.control}
-                                    name="assignedAgentIds"
-                                    render={({ field }) => {
-                                      const isChecked = field.value?.includes(agent.id);
-                                      const isAvailable = availableAgents.some(a => a.id === agent.id);
-                                      const isDisabled = !isChecked && !isAvailable;
+                                combinedAgentList.map((agent) => {
+                                    const isChecked = field.value?.includes(agent.id);
+                                    const isAvailable = availableAgents.some(a => a.id === agent.id);
+                                    const isDisabled = !isChecked && !isAvailable;
                                     return (
-                                        <FormItem
+                                        <div
                                             key={agent.id}
-                                            className={cn("flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 hover:bg-accent hover:text-accent-foreground", isDisabled && "opacity-50 cursor-not-allowed")}
-                                            onClick={() => !isDisabled && (
-                                                 field.onChange(
-                                                   isChecked
-                                                     ? field.value?.filter((id) => id !== agent.id)
-                                                     : [...field.value || [], agent.id]
-                                                 )
-                                             )}
+                                            className={cn("flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 hover:bg-accent hover:text-accent-foreground", isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer")}
+                                            onClick={() => {
+                                                if(isDisabled) return;
+                                                const currentValues = field.value || [];
+                                                const newValue = isChecked
+                                                    ? currentValues.filter((id) => id !== agent.id)
+                                                    : [...currentValues, agent.id];
+                                                form.setValue('assignedAgentIds', newValue, { shouldValidate: true });
+                                            }}
                                         >
-                                            <FormControl>
-                                                <Checkbox
-                                                    checked={isChecked}
-                                                     disabled={isDisabled}
-                                                />
-                                            </FormControl>
+                                            <Checkbox
+                                                checked={isChecked}
+                                                disabled={isDisabled}
+                                                readOnly
+                                            />
                                              <Avatar>
                                                 <AvatarFallback>{agent.firstName?.[0] ?? ''}{agent.lastName?.[0] ?? ''}</AvatarFallback>
                                             </Avatar>
@@ -343,11 +338,9 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                                                 </div>
                                             </div>
                                             <Badge variant={!isAvailable && !isChecked ? "destructive" : (agent.availability === 'Disponible' ? 'outline' : 'secondary')}>{isDisabled && !isChecked ? 'Indisponible' : agent.availability}</Badge>
-                                        </FormItem>
+                                        </div>
                                     );
-                                    }}
-                                />
-                                ))
+                                })
                             ) : (
                                 <p className="text-center text-muted-foreground p-8">Aucun agent disponible.</p>
                             )}

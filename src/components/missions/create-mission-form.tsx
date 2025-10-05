@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
@@ -114,6 +114,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   
   const startDate = form.watch('startDate');
   const endDate = form.watch('endDate');
+  const assignedAgentIds = form.watch('assignedAgentIds');
 
   const availableAgents = allAgents?.filter(agent => 
       startDate && endDate ? isAgentAvailable(agent, allMissions || [], startDate, endDate) : false
@@ -251,7 +252,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                 <FormField
                     control={form.control}
                     name="assignedAgentIds"
-                    render={() => (
+                    render={({ field }) => (
                     <FormItem>
                         <div className="rounded-lg border">
                              <ScrollArea className="h-72">
@@ -261,38 +262,24 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                         <Loader2 className="animate-spin h-8 w-8 text-muted-foreground"/>
                                     </div>
                                 ) : availableAgents.length > 0 ? (
-                                    availableAgents.map((agent) => (
-                                    <FormField
-                                        key={agent.id}
-                                        control={form.control}
-                                        name="assignedAgentIds"
-                                        render={({ field }) => {
+                                    availableAgents.map((agent) => {
+                                        const isChecked = field.value?.includes(agent.id);
                                         return (
-                                            <FormItem
+                                            <div
                                                 key={agent.id}
                                                 className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 hover:bg-accent hover:text-accent-foreground cursor-pointer"
                                                 onClick={() => {
                                                      const currentValues = field.value || [];
-                                                     const newValue = currentValues.includes(agent.id)
+                                                     const newValue = isChecked
                                                          ? currentValues.filter((id) => id !== agent.id)
                                                          : [...currentValues, agent.id];
-                                                     field.onChange(newValue);
+                                                     form.setValue('assignedAgentIds', newValue, { shouldValidate: true });
                                                  }}
                                             >
-                                                <FormControl>
-                                                    <Checkbox
-                                                        checked={field.value?.includes(agent.id)}
-                                                        onCheckedChange={(checked) => {
-                                                            return checked
-                                                            ? field.onChange([...field.value || [], agent.id])
-                                                            : field.onChange(
-                                                                field.value?.filter(
-                                                                    (value) => value !== agent.id
-                                                                )
-                                                                );
-                                                        }}
-                                                    />
-                                                </FormControl>
+                                                <Checkbox
+                                                    checked={isChecked}
+                                                    readOnly
+                                                />
                                                  <Avatar>
                                                     <AvatarFallback>{agent.firstName?.[0] ?? ''}{agent.lastName?.[0] ?? ''}</AvatarFallback>
                                                 </Avatar>
@@ -303,11 +290,9 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                                     </div>
                                                 </div>
                                                 <Badge variant={agent.availability === 'Disponible' ? 'outline' : 'secondary'}>{agent.availability}</Badge>
-                                            </FormItem>
+                                            </div>
                                         );
-                                        }}
-                                    />
-                                    ))
+                                    })
                                 ) : (
                                     <p className="text-center text-muted-foreground p-8">Aucun agent disponible pour ces dates.</p>
                                 )}
