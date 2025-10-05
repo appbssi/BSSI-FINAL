@@ -104,14 +104,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         batch.set(newAgentRef, newAgent);
     });
 
-    batch.commit().then(() => {
-        toast({
-            title: 'Importation réussie !',
-            description: `${agentsToImport.length} agents ont été importés avec succès.`,
-        });
-        setAgentsToImport([]);
-        setIsOpen(false);
-    }).catch(error => {
+    batch.commit().catch(error => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: agentsCollection.path,
         operation: 'write',
@@ -119,6 +112,12 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
       }));
     }).finally(() => {
         setIsImporting(false);
+        toast({
+            title: 'Importation réussie !',
+            description: `${agentsToImport.length} agents ont été importés avec succès.`,
+        });
+        setAgentsToImport([]);
+        setIsOpen(false);
     });
   };
 
