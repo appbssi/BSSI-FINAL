@@ -22,6 +22,8 @@ import { useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Loader2, Rocket } from 'lucide-react';
 import { FirebaseError } from 'firebase/app';
+import { useLogo } from '@/context/logo-context';
+import Image from 'next/image';
 
 const loginSchema = z.object({
   email: z.string().email('Veuillez saisir une adresse e-mail valide.'),
@@ -35,6 +37,7 @@ export default function LoginPage() {
   const auth = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { logo } = useLogo();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -81,8 +84,12 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20">
-                    <Rocket className="h-6 w-6 text-primary" />
+                <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-primary/20">
+                    {logo ? (
+                      <Image src={logo} alt="Logo" fill className="rounded-full object-cover" />
+                    ) : (
+                      <Rocket className="h-6 w-6 text-primary" />
+                    )}
                 </div>
             </div>
           <CardTitle>sBSSI</CardTitle>
