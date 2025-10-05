@@ -40,7 +40,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -53,6 +52,7 @@ export default function AgentsPage() {
   const firestore = useFirestore();
   const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isRegisterOpen, setRegisterOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
@@ -61,19 +61,19 @@ export default function AgentsPage() {
   const { toast } = useToast();
 
   const agentsQuery = useMemoFirebase(
-    () => (firestore && user ? collection(firestore, 'agents') : null),
-    [firestore, user]
+    () => (firestore ? collection(firestore, 'agents') : null),
+    [firestore]
   );
 
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
 
   const sortedAgents = agents
     ? [...agents].sort((a, b) => {
-        const firstNameComparison = a.firstName.localeCompare(b.firstName);
-        if (firstNameComparison !== 0) {
-          return firstNameComparison;
+        const lastNameComparison = a.lastName.localeCompare(b.lastName);
+        if (lastNameComparison !== 0) {
+          return lastNameComparison;
         }
-        return a.lastName.localeCompare(b.lastName);
+        return a.firstName.localeCompare(b.firstName);
       })
     : [];
 
@@ -293,11 +293,9 @@ export default function AgentsPage() {
               <FileUp className="mr-2 h-4 w-4" /> Importer
             </Button>
           </ImportAgentsDialog>
-          <RegisterAgentSheet>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
-            </Button>
-          </RegisterAgentSheet>
+          <Button onClick={() => setRegisterOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
+          </Button>
         </div>
       </div>
 
@@ -321,7 +319,7 @@ export default function AgentsPage() {
               </TableRow>
             ) : (
               filteredAgents.map((agent) => {
-                const fullName = `${agent.firstName} ${agent.lastName}`;
+                const fullName = `${agent.lastName} ${agent.firstName}`;
                 return (
                   <TableRow key={agent.id} onClick={() => setSelectedAgent(agent)} className="cursor-pointer">
                     <TableCell>
@@ -358,9 +356,9 @@ export default function AgentsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onSelect={() => setEditingAgent(agent)}>Modifier</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={(e) => { e.stopPropagation(); setEditingAgent(agent)}}>Modifier</DropdownMenuItem>
                           <DropdownMenuItem 
-                            onSelect={() => setAgentToDelete(agent)}
+                            onSelect={(e) => { e.stopPropagation(); setAgentToDelete(agent)}}
                             className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                           >
                             Supprimer
@@ -382,6 +380,11 @@ export default function AgentsPage() {
           </TableBody>
         </Table>
       </div>
+      
+      <RegisterAgentSheet 
+        isOpen={isRegisterOpen} 
+        onOpenChange={setRegisterOpen}
+      />
 
       {editingAgent && (
         <EditAgentSheet
@@ -411,7 +414,7 @@ export default function AgentsPage() {
         <AlertDialog open={!!agentToDelete} onOpenChange={(open) => !open && setAgentToDelete(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Êtes-vous absolutely sûr?</AlertDialogTitle>
+              <AlertDialogTitle>Êtes-vous absolument sûr?</AlertDialogTitle>
               <AlertDialogDescription>
                 Cette action est irréversible. L'agent{' '}
                 <span className="font-semibold">{`${agentToDelete.firstName} ${agentToDelete.lastName}`}</span> sera définitivement supprimé.

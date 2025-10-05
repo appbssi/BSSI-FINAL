@@ -75,6 +75,8 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
       assignedAgentIds: [],
     },
   });
+  
+  const { isSubmitting } = form.formState;
 
   const agentsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'agents') : null, [firestore]);
   const missionsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'missions') : null, [firestore]);
@@ -305,7 +307,10 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                 
                 <div className="flex justify-between pt-4">
                   <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>Précédent</Button>
-                  <Button type="submit">Créer la mission</Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Créer la mission
+                  </Button>
                 </div>
               </div>
             )}

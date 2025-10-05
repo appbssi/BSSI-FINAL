@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import type { Agent } from '@/lib/types';
 import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { User } from 'lucide-react';
 
 interface AgentDetailsSheetProps {
   agent: Agent;
@@ -44,8 +45,11 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsS
         </SheetHeader>
         <div className="py-6 space-y-6">
             <div className="flex items-center gap-4">
+                <div className="h-16 w-16 rounded-full flex items-center justify-center bg-muted text-muted-foreground">
+                    <User className="h-8 w-8" />
+                </div>
                 <div>
-                    <h2 className="text-2xl font-bold">{agent.firstName} {agent.lastName}</h2>
+                    <h2 className="text-2xl font-bold">{agent.lastName} {agent.firstName}</h2>
                      <p className="text-muted-foreground">{agent.registrationNumber}</p>
                 </div>
             </div>

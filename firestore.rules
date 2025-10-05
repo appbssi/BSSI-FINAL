@@ -1,65 +1,71 @@
 /**
- * @fileoverview Firestore Security Rules for the application.
+ * @file Firestore Security Rules
+ * @version 2
  *
- * Core Philosophy:
- * This ruleset prioritizes security by enforcing a strict authorization model.
- * Agents and Missions are accessible to all authenticated users. The Activity Logs are writeable by all authenticated users
+ * @Core Philosophy
+ * This ruleset implements a role-based access control system.
+ * Agents can only manage their own profile, while missions are publicly readable but only modifiable by agents.
  *
- * Data Structure:
- * The database consists of three top-level collections: /agents/{agentId}, /missions/{missionId}, and /activity_logs/{logId}.
+ * @Data Structure
+ * - /agents/{agentId}: Stores agent profile information. Accessible only to the agent themselves.
+ * - /missions/{missionId}: Stores mission details. Publicly readable, writable only by agents.
  *
- * Key Security Decisions:
- * - All authenticated users can read all Agents.
- * - All authenticated users can read all Missions.
- * - All authenticated users can create activity logs.
+ * @Key Security Decisions
+ * - Agents can only manage their own agent profile.
+ * - Missions are publicly readable, but agent-only writable.
+ *
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows any authenticated user to read agent profiles.
+     * @description Controls access to individual agent documents.
      * @path /agents/{agentId}
-     * @allow (get, list) - Any authenticated user can read agent data.
-     * @deny (create, update, delete) - No one can create, update, or delete agent data through the client.
-     * @principle Public read, no writes.
+     * @allow (get, update, delete) if the request is made by the agent with matching ID.
+     * @allow (create) if the request is made by the agent creating their own profile.
+     * @deny (get, list) if the request is not made by the agent.
+     * @deny (create, update, delete) if the request is not made by the agent or if they are trying to modify another agent's profile.
+     * @principle Enforces document ownership for agents; each agent can only access their own data.
      */
     match /agents/{agentId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if false;
+      allow get: if isSignedIn() && isOwner(agentId);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(agentId);
+      allow update: if isSignedIn() && isExistingOwner(agentId);
+      allow delete: if isSignedIn() && isExistingOwner(agentId);
     }
 
     /**
-     * @description Allows any authenticated user to read mission details.
+     * @description Controls access to mission documents.
      * @path /missions/{missionId}
-     * @allow (get, list) - Any authenticated user can read mission data.
-     * @deny (create, update, delete) - No one can create, update, or delete mission data through the client.
-     * @principle Public read, no writes.
+     * @allow (get, list) to all users.
+     * @allow (create, update, delete) only to authenticated agents.
+     * @deny (create, update, delete) if the request is not made by an authenticated agent.
+     * @principle Allows public read access to missions, but restricts modifications to authenticated agents.
      */
     match /missions/{missionId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if false;
-    }
-
-    /**
-     * @description Allows authenticated users to create activity logs.
-     * @path /activity_logs/{logId}
-     * @allow (create) - Any authenticated user can create a log entry.
-     * @deny (get, list, update, delete) - No one can get, list, update, or delete log entries through the client.
-     */
-    match /activity_logs/{logId} {
+      allow get, list: if true;
       allow create: if isSignedIn();
-      allow get, list, update, delete: if false;
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
     }
 
-    // ----- Helper Functions -----
+    // --- Helper functions ---
 
-    /**
-     * @description Checks if the user is signed in.
-     * @return {bool} True if the user is signed in, false otherwise.
-     */
+    // Checks if the user is signed in.
     function isSignedIn() {
       return request.auth != null;
+    }
+
+    // Checks if the request is made by the owner of the document.
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Checks if the request is made by the owner of an existing document.
+    function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
     }
   }
 }

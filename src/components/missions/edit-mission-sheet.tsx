@@ -102,6 +102,8 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
       assignedAgentIds: mission.assignedAgentIds || [],
     },
   });
+  
+  const { isSubmitting } = form.formState;
 
   const agentsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'agents') : null, [firestore]);
   const missionsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'missions') : null, [firestore]);
@@ -354,7 +356,10 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
             />
 
             <div className="flex justify-end pt-4">
-              <Button type="submit">Sauvegarder les modifications</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Sauvegarder les modifications
+              </Button>
             </div>
           </form>
         </Form>

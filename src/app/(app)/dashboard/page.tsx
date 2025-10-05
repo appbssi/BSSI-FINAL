@@ -24,26 +24,25 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, where, limit } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { useFirestore, useMemoFirebase } from '@/firebase';
 import type { Agent, Mission } from '@/lib/types';
 
 export default function DashboardPage() {
   const firestore = useFirestore();
-  const { user } = useUser();
 
   const agentsQuery = useMemoFirebase(
-    () => (firestore && user ? collection(firestore, 'agents') : null),
-    [firestore, user]
+    () => (firestore ? collection(firestore, 'agents') : null),
+    [firestore]
   );
   
   const activeMissionsQuery = useMemoFirebase(
-    () => (firestore && user ? query(collection(firestore, 'missions'), where('status', '==', 'En cours'), limit(5)) : null),
-    [firestore, user]
+    () => (firestore ? query(collection(firestore, 'missions'), where('status', '==', 'En cours'), limit(5)) : null),
+    [firestore]
   );
 
    const missionsQuery = useMemoFirebase(
-    () => (firestore && user ? collection(firestore, 'missions') : null),
-    [firestore, user]
+    () => (firestore ? collection(firestore, 'missions') : null),
+    [firestore]
   );
 
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
@@ -104,7 +103,7 @@ export default function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Aperçu des missions</CardTitle>
+          <CardTitle>Aperçu des missions en cours</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -145,7 +144,7 @@ export default function DashboardPage() {
                {!activeMissionsLoading && activeMissions?.length === 0 && (
                  <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">
-                        Aucune mission active.
+                        Aucune mission en cours.
                     </TableCell>
                 </TableRow>
             )}

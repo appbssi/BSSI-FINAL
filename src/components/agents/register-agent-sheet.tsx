@@ -1,10 +1,12 @@
+
+'use client';
+
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +24,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
-import { useState } from 'react';
 import {
   Select,
   SelectContent,
@@ -30,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import { Loader2 } from 'lucide-react';
 
 const agentSchema = z.object({
   firstName: z.string().min(2, 'Le prénom est requis'),
@@ -43,8 +45,13 @@ const agentSchema = z.object({
 
 type AgentFormValues = z.infer<typeof agentSchema>;
 
-export function RegisterAgentSheet({ children }: { children: React.ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
+interface RegisterAgentSheetProps {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+}
+
+
+export function RegisterAgentSheet({ isOpen, onOpenChange }: RegisterAgentSheetProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -71,7 +78,7 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
         description: `L'agent ${data.firstName} ${data.lastName} a été ajouté avec succès.`,
       });
       form.reset();
-      setIsOpen(false);
+      onOpenChange(false);
     } catch (error) {
       console.error("Erreur lors de l'enregistrement de l'agent: ", error);
       toast({
@@ -82,9 +89,10 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
     }
   };
 
+  const { isSubmitting } = form.formState;
+
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>{children}</SheetTrigger>
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Enregistrer un nouvel agent</SheetTitle>
@@ -195,7 +203,10 @@ export function RegisterAgentSheet({ children }: { children: React.ReactNode }) 
               )}
             />
             <div className="flex justify-end pt-4">
-              <Button type="submit">Sauvegarder l'agent</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Sauvegarder l'agent
+              </Button>
             </div>
           </form>
         </Form>

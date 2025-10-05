@@ -1,9 +1,10 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, signInAnonymously } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 // This variable will hold the singleton instance of the Firebase app.
 let firebaseApp: FirebaseApp;
@@ -21,22 +22,23 @@ export function initializeFirebase() {
     firebaseApp = getApp();
   }
 
-  // Always get the auth instance from the singleton app.
   const auth = getAuth(firebaseApp);
+  const firestore = getFirestore(firebaseApp);
   
-  // Automatically sign in the user anonymously if they are not already signed in.
-  // This is crucial for consistent auth state.
-  if (!auth.currentUser) {
-    signInAnonymously(auth).catch((error) => {
+  // This listener ensures we sign in anonymously as soon as auth is available.
+  // It only attempts to sign in if there's no current user.
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      signInAnonymously(auth).catch((error) => {
         console.error("Anonymous sign-in failed:", error);
-    });
-  }
-  
-  // Return the singleton app and its services.
+      });
+    }
+  });
+
   return {
     firebaseApp,
     auth,
-    firestore: getFirestore(firebaseApp)
+    firestore,
   };
 }
 

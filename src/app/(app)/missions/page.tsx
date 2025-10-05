@@ -196,18 +196,17 @@ export default function MissionsPage() {
   const [missionToDelete, setMissionToDelete] = useState<Mission | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'Planification' | 'En cours' | 'Terminée' | 'Annulée'>('all');
   
   const missionsQuery = useMemoFirebase(
-    () => (firestore && user ? collection(firestore, 'missions') : null),
-    [firestore, user]
+    () => (firestore ? collection(firestore, 'missions') : null),
+    [firestore]
   );
   
   const agentsQuery = useMemoFirebase(
-    () => (firestore && user ? collection(firestore, 'agents') : null),
-    [firestore, user]
+    () => (firestore ? collection(firestore, 'agents') : null),
+    [firestore]
   );
 
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
@@ -486,7 +485,7 @@ export default function MissionsPage() {
         <AlertDialog open={!!missionToDelete} onOpenChange={(open) => !open && setMissionToDelete(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Êtes-vous absolutely sûr?</AlertDialogTitle>
+              <AlertDialogTitle>Êtes-vous absolument sûr?</AlertDialogTitle>
               <AlertDialogDescription>
                 Cette action est irréversible. La mission{' '}
                 <span className="font-semibold">{missionToDelete.name}</span> sera définitivement supprimée.
