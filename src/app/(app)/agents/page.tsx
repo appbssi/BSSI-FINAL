@@ -11,13 +11,14 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { FileUp, MoreHorizontal, PlusCircle, Search, Trash2, Loader2 } from 'lucide-react';
+import { FileUp, MoreHorizontal, PlusCircle, Search, Trash2, Loader2, FileDown } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { RegisterAgentSheet } from '@/components/agents/register-agent-sheet';
@@ -39,9 +40,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 
 export default function AgentsPage() {
@@ -150,6 +153,39 @@ export default function AgentsPage() {
     }
   };
 
+  const handleExportXLSX = () => {
+    const dataToExport = filteredAgents.map(agent => ({
+        'Prénom': agent.firstName,
+        'Nom': agent.lastName,
+        'Matricule': agent.registrationNumber,
+        'Grade': agent.rank,
+        'Contact': agent.contact,
+        'Disponibilité': getAgentAvailability(agent),
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Agents');
+    XLSX.writeFile(workbook, 'liste_agents.xlsx');
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.text('Liste des Agents', 14, 16);
+    autoTable(doc, {
+        head: [['Prénom', 'Nom', 'Matricule', 'Grade', 'Contact', 'Disponibilité']],
+        body: filteredAgents.map(agent => [
+            agent.firstName,
+            agent.lastName,
+            agent.registrationNumber,
+            agent.rank,
+            agent.contact,
+            getAgentAvailability(agent),
+        ]),
+        startY: 20,
+    });
+    doc.save('liste_agents.pdf');
+  };
+
 
   return (
     <div className="space-y-4">
@@ -167,6 +203,20 @@ export default function AgentsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+           <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <FileDown className="mr-2 h-4 w-4" /> Exporter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>Choisir un format</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={handleExportPDF}>Exporter en PDF</DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleExportXLSX}>Exporter en XLSX</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
           <AlertDialog>
               <AlertDialogTrigger asChild>
                   <Button variant="outline" disabled={isDeleting}>
