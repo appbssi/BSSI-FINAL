@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -46,6 +47,7 @@ import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 export default function AgentsPage() {
@@ -223,14 +225,23 @@ export default function AgentsPage() {
 
           <AlertDialog>
               <AlertDialogTrigger asChild>
-                  <Button variant="outline" disabled={isDeleting}>
-                      {isDeleting ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                          <Trash2 className="mr-2 h-4 w-4" />
-                      )}
-                      Supprimer les doublons
-                  </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="outline" size="icon" disabled={isDeleting}>
+                            {isDeleting ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Trash2 className="h-4 w-4" />
+                            )}
+                            <span className="sr-only">Supprimer les doublons</span>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Supprimer les doublons</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </AlertDialogTrigger>
               <AlertDialogContent>
                   <AlertDialogHeader>
@@ -373,4 +384,5 @@ export default function AgentsPage() {
       )}
     </div>
   );
-}
+
+    
