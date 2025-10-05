@@ -49,6 +49,7 @@ export default function MissionsPage() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [editingMission, setEditingMission] = useState<Mission | null>(null);
   const [missionToCancel, setMissionToCancel] = useState<Mission | null>(null);
+  const [missionToDelete, setMissionToDelete] = useState<Mission | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
@@ -101,6 +102,17 @@ export default function MissionsPage() {
     });
     setMissionToCancel(null);
   }
+
+  const handleDeleteMission = () => {
+    if (!firestore || !missionToDelete) return;
+    const missionRef = doc(firestore, 'missions', missionToDelete.id);
+    deleteDocumentNonBlocking(missionRef);
+    toast({
+      title: 'Mission supprimée',
+      description: `La mission "${missionToDelete.name}" a été supprimée.`,
+    });
+    setMissionToDelete(null);
+  };
 
   return (
     <div className="space-y-4">
@@ -180,6 +192,7 @@ export default function MissionsPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Modifier</DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Prolonger</DropdownMenuItem>
                       {mission.status !== 'Annulée' && mission.status !== 'Terminée' && (
                         <DropdownMenuItem 
                             onSelect={() => setMissionToCancel(mission)}
@@ -187,6 +200,9 @@ export default function MissionsPage() {
                             Annuler la mission
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem onSelect={() => setMissionToDelete(mission)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                        Supprimer
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -229,6 +245,26 @@ export default function MissionsPage() {
               <AlertDialogCancel onClick={() => setMissionToCancel(null)}>Retour</AlertDialogCancel>
               <AlertDialogAction onClick={handleCancelMission} className="bg-destructive hover:bg-destructive/90">
                 Annuler la mission
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      {missionToDelete && (
+        <AlertDialog open={!!missionToDelete} onOpenChange={(open) => !open && setMissionToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Êtes-vous absolument sûr?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette action est irréversible. La mission{' '}
+                <span className="font-semibold">{missionToDelete.name}</span> sera définitivement supprimée.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setMissionToDelete(null)}>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteMission} className="bg-destructive hover:bg-destructive/90">
+                Supprimer
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
