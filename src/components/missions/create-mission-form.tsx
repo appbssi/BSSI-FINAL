@@ -23,16 +23,26 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, Bot, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bot, CalendarIcon, Loader2, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
   location: z.string().min(3, 'Le lieu est requis'),
-  requiredSkills: z.string().min(3, 'Au moins une compétence est requise'),
+  startDate: z.date({
+    required_error: "La date de début est requise.",
+  }),
+  endDate: z.date({
+    required_error: "La date de fin est requise.",
+  }),
   assignedAgents: z.array(z.string()),
 });
 
@@ -50,7 +60,6 @@ export function CreateMissionForm() {
     defaultValues: {
       name: '',
       location: '',
-      requiredSkills: '',
       assignedAgents: [],
     },
   });
@@ -65,7 +74,7 @@ export function CreateMissionForm() {
   const handleSuggestAgents = async () => {
     setIsSuggesting(true);
     try {
-      const missionDetails = `Nom: ${formData.name}\nLieu: ${formData.location}\nCompétences requises: ${formData.requiredSkills}`;
+      const missionDetails = `Nom: ${formData.name}\nLieu: ${formData.location}\nDate de début: ${formData.startDate}\nDate de fin: ${formData.endDate}`;
       const availableAgents = allAgents
         .filter((a) => a.availability === 'Disponible')
         .map((a) => ({
@@ -96,7 +105,7 @@ export function CreateMissionForm() {
   };
 
   const nextStep = async () => {
-    const isStep1Valid = await form.trigger(['name', 'location', 'requiredSkills']);
+    const isStep1Valid = await form.trigger(['name', 'location', 'startDate', 'endDate']);
     if (step === 1 && isStep1Valid) {
       setStep(2);
       await handleSuggestAgents();
@@ -151,22 +160,90 @@ export function CreateMissionForm() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="requiredSkills"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Compétences requises</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Piratage, Surveillance, Combat (séparées par des virgules)"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Date de début</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP", { locale: fr })
+                                ) : (
+                                  <span>Choisissez une date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) =>
+                                date < new Date(new Date().setHours(0,0,0,0))
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Date de fin</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP", { locale: fr })
+                                ) : (
+                                  <span>Choisissez une date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) =>
+                                date < (form.getValues("startDate") || new Date(new Date().setHours(0,0,0,0)))
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             )}
 
@@ -261,7 +338,8 @@ export function CreateMissionForm() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <p><span className="font-semibold">Lieu:</span> {formData.location}</p>
-                    <p><span className="font-semibold">Compétences requises:</span> {formData.requiredSkills}</p>
+                    {formData.startDate && <p><span className="font-semibold">Date de début:</span> {format(formData.startDate, "PPP", { locale: fr })}</p>}
+                    {formData.endDate && <p><span className="font-semibold">Date de fin:</span> {format(formData.endDate, "PPP", { locale: fr })}</p>}
                     <div>
                       <h4 className="font-semibold">Agents assignés:</h4>
                       <div className="mt-2 flex flex-wrap gap-2">
@@ -307,5 +385,3 @@ export function CreateMissionForm() {
     </Card>
   );
 }
-
-    
