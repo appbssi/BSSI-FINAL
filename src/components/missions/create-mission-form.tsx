@@ -29,7 +29,6 @@ import { useState } from 'react';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { Agent, Mission } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
-import { Checkbox } from '../ui/checkbox';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 
@@ -248,7 +247,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                 <h3 className="text-xl font-semibold">2. Assigner les agents</h3>
                 <p className="text-sm text-muted-foreground">Sélectionnez les agents à assigner à cette mission. Seuls les agents disponibles pour les dates choisies sont affichés.</p>
                 
-                <FormField
+                <Controller
                   control={form.control}
                   name="assignedAgentIds"
                   render={({ field }) => (
@@ -275,16 +274,9 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                                      field.onChange(newValue);
                                                  }}
                                             >
-                                                <Checkbox
-                                                    checked={isChecked}
-                                                    onCheckedChange={(checked) => {
-                                                        const currentValues = field.value || [];
-                                                        const newValue = checked
-                                                            ? [...currentValues, agent.id]
-                                                            : currentValues.filter((id) => id !== agent.id);
-                                                        field.onChange(newValue);
-                                                    }}
-                                                />
+                                                <div className="w-5 h-5 flex items-center justify-center font-mono text-lg text-muted-foreground">
+                                                  {isChecked ? '[x]' : '[ ]'}
+                                                </div>
                                                  <Avatar>
                                                     <AvatarFallback>{agent.firstName?.[0] ?? ''}{agent.lastName?.[0] ?? ''}</AvatarFallback>
                                                 </Avatar>

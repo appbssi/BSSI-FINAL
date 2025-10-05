@@ -42,7 +42,6 @@ import {
 } from '../ui/select';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { ScrollArea } from '../ui/scroll-area';
-import { Checkbox } from '../ui/checkbox';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 
@@ -323,18 +322,9 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                                                 field.onChange(newValue);
                                             }}
                                         >
-                                            <Checkbox
-                                                checked={isChecked}
-                                                disabled={isDisabled}
-                                                onCheckedChange={(checked) => {
-                                                  if(isDisabled) return;
-                                                  const currentValues = field.value || [];
-                                                  const newValue = checked
-                                                      ? [...currentValues, agent.id]
-                                                      : currentValues.filter((id) => id !== agent.id);
-                                                  field.onChange(newValue);
-                                                }}
-                                            />
+                                            <div className="w-5 h-5 flex items-center justify-center font-mono text-lg text-muted-foreground">
+                                                {isChecked ? '[x]' : '[ ]'}
+                                            </div>
                                              <Avatar>
                                                 <AvatarFallback>{agent.firstName?.[0] ?? ''}{agent.lastName?.[0] ?? ''}</AvatarFallback>
                                             </Avatar>
