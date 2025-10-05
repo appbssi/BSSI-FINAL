@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -24,7 +25,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { Agent } from '@/lib/types';
 import { useFirestore } from '@/firebase';
-import { collection, doc, writeBatch } from 'firebase/firestore';
+import { collection, doc, writeBatch, getDocs } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 
 type AgentImportData = Omit<Agent, 'id' | 'availability'>;
@@ -38,9 +39,16 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || !firestore) return;
 
-    setAgentsToImport([]); // Reset on new file selection
+    setAgentsToImport([]); 
+
+    // Fetch existing agents to check for duplicates
+    const agentsRef = collection(firestore, 'agents');
+    const querySnapshot = await getDocs(agentsRef);
+    const existingAgents = querySnapshot.docs.map(doc => doc.data() as Omit<Agent, 'id'>);
+    const existingRegNumbers = new Set(existingAgents.map(a => a.registrationNumber));
+    const existingContacts = new Set(existingAgents.map(a => a.contact));
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -56,6 +64,11 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         }) as any[];
 
 
+        const seenInFileReg = new Set<string>();
+        const seenInFileContact = new Set<string>();
+        let duplicatesInFile = 0;
+        let duplicatesInDb = 0;
+
         const parsedAgents: AgentImportData[] = json.map((row) => ({
             firstName: String(row.firstName || '').trim(),
             lastName: String(row.lastName || '').trim(),
@@ -63,14 +76,43 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             rank: String(row.rank || '').trim(),
             contact: String(row.contact || '').trim(),
             address: String(row.address || '').trim(),
-        })).filter(agent => agent.firstName && agent.lastName && agent.registrationNumber);
+        })).filter(agent => {
+            if (!agent.firstName || !agent.lastName || !agent.registrationNumber || !agent.contact) {
+                return false;
+            }
+            // Check for duplicates in DB
+            if (existingRegNumbers.has(agent.registrationNumber) || existingContacts.has(agent.contact)) {
+                duplicatesInDb++;
+                return false;
+            }
+            // Check for duplicates within the file
+            if (seenInFileReg.has(agent.registrationNumber) || seenInFileContact.has(agent.contact)) {
+                duplicatesInFile++;
+                return false;
+            }
+            seenInFileReg.add(agent.registrationNumber);
+            seenInFileContact.add(agent.contact);
+            return true;
+        });
+
+        if (duplicatesInDb > 0 || duplicatesInFile > 0) {
+            let message = '';
+            if (duplicatesInDb > 0) message += `${duplicatesInDb} agent(s) existant(s) déjà dans la base de données ont été ignoré(s). `;
+            if (duplicatesInFile > 0) message += `${duplicatesInFile} doublon(s) dans le fichier ont été ignoré(s).`;
+            toast({
+                title: 'Doublons ignorés',
+                description: message,
+            });
+        }
 
         if(parsedAgents.length === 0){
-            toast({
-                variant: 'destructive',
-                title: 'Fichier invalide ou vide',
-                description: "Le fichier ne contient aucun agent valide ou les colonnes ne sont pas correctes. Attendu: firstName, lastName, registrationNumber, rank, contact, address",
-            });
+            if(duplicatesInDb === 0 && duplicatesInFile === 0) {
+              toast({
+                  variant: 'destructive',
+                  title: 'Fichier invalide ou vide',
+                  description: "Le fichier ne contient aucun agent valide ou les colonnes ne sont pas correctes. Attendu: firstName, lastName, registrationNumber, rank, contact, address",
+              });
+            }
             return;
         }
 
