@@ -1,57 +1,76 @@
 /**
- * @file Overview
- * This ruleset enforces a security model where agents and missions are managed with authorization checks.
+ * @description This ruleset enforces a strict security model where only authenticated users can access data.
+ * All data is organized in top-level collections: 'agents', 'missions', and 'activity_logs'.
  *
- * Data Structure:
- * - /agents/{agentId}: Stores information about agents.
- * - /missions/{missionId}: Stores information about missions.
- *
- * Key Security Decisions:
- * - Agents and missions are NOT owned by specific users.  Anyone authenticated can read and write.
+ * @keySecurityDecision All write operations require authentication. Listing of `activity_logs` is denied to all users.
+ * @keySecurityDecision The rules do not enforce data validation beyond requiring user authentication.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Manages access to agent documents.
+     * @description Allows authenticated users to read agent data and create, update, or delete agent documents.
      * @path /agents/{agentId}
-     * @allow (create) Signed-in user can create an agent.
-     * @allow (get) Anyone can read agent data.
-     * @allow (list) Anyone can list agents.
-     * @allow (update) Signed-in user can update an agent.
-     * @allow (delete) Signed-in user can delete an agent.
-     * @deny (create) Unauthenticated users cannot create agents.
-     * @principle Allows any signed-in user to manage agents.
+     * @allow (get) Signed-in user can retrieve agent data.
+     * @allow (create) Signed-in user can create a new agent document.
+     * @allow (update) Signed-in user can update an existing agent document.
+     * @allow (delete) Signed-in user can delete an existing agent document.
+     * @deny (create) Request without authentication.
+     * @deny (update) Request without authentication.
+     * @deny (delete) Request without authentication.
+     * @principle Requires authentication for all operations.
      */
     match /agents/{agentId} {
-      allow get, list: if true;
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
-     * @description Manages access to mission documents.
+     * @description Allows authenticated users to read mission data and create, update, or delete mission documents.
      * @path /missions/{missionId}
-     * @allow (create) Signed-in user can create a mission.
-     * @allow (get) Anyone can read mission data.
-     * @allow (list) Anyone can list missions.
-     * @allow (update) Signed-in user can update a mission.
-     * @allow (delete) Signed-in user can delete a mission.
-     * @deny (create) Unauthenticated users cannot create missions.
-     * @principle Allows any signed-in user to manage missions.
+     * @allow (get) Signed-in user can retrieve mission data.
+     * @allow (create) Signed-in user can create a new mission document.
+     * @allow (update) Signed-in user can update an existing mission document.
+     * @allow (delete) Signed-in user can delete an existing mission document.
+     * @deny (create) Request without authentication.
+     * @deny (update) Request without authentication.
+     * @deny (delete) Request without authentication.
+     * @principle Requires authentication for all operations.
      */
     match /missions/{missionId} {
-      allow get, list: if true;
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
-  }
 
-  // Helper function to determine if a user is signed in.
-  function isSignedIn() {
-    return request.auth != null;
+     /**
+      * @description Denies listing of activity logs to all users. Only authenticated users can create, update, and delete activity log entries.
+      * @path /activity_logs/{logId}
+      * @deny (list) Any user attempting to list activity logs.
+      * @allow (create) Signed-in user can create a new activity log entry.
+      * @allow (update) Signed-in user can update an existing activity log entry.
+      * @allow (delete) Signed-in user can delete an existing activity log entry.
+      * @deny (create) Request without authentication.
+      * @deny (update) Request without authentication.
+      * @deny (delete) Request without authentication.
+      * @principle Denies listing of activity logs. Requires authentication for all write operations.
+      */
+    match /activity_logs/{logId} {
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
   }
 }
