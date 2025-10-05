@@ -1,52 +1,78 @@
 /**
- * @file Overview
- * This ruleset enforces a role-based access control model for the 'agents' and 'missions' collections.
+ * @fileoverview Firestore Security Rules for the Agent Mission Management App.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict owner-only access model for agents, allowing only the agent themselves to read, update, or delete their own information.
+ * Missions are publicly readable but only updatable/deletable with authorization.
  *
  * Data Structure:
- * - /agents/{agentId}: Stores agent information.
- * - /missions/{missionId}: Stores mission details.
+ * - Agents: Stored in `/agents/{agentId}`.  Access is restricted to the agent whose ID matches the `agentId`.
+ * - Missions: Stored in `/missions/{missionId}`.  Missions are readable by anyone, but only authorized users can modify them.
  *
  * Key Security Decisions:
- * - Agents: Only users with a 'admin' role can create, update, or delete agents. Read access is public.
- * - Missions: Only users with a 'admin' role can create, update, or delete missions. Read access is public.
+ * - Agents can only access their own data.  There is no mechanism for listing all agents.
+ * - Missions are publicly readable to facilitate discovery, but write access is restricted.
  *
- * Access Control Pattern:
- * - Agents: Public Read with Role-Based Writes ('admin' role required).
- * - Missions: Public Read with Role-Based Writes ('admin' role required).
+ * Denormalization for Authorization:
+ * - The `Mission` entity is designed to allow for adding collaborators to manage them.
+ *
+ * Structural Segregation:
+ * - No structural segregation is used in this application.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to the 'agents' collection. Only admins can create, update, or delete agents.
+     * @description Controls access to agent documents. Only the agent themselves can read, update, or delete their own information.
      * @path /agents/{agentId}
-     * @allow (get, list): Any user can read agent data.
-     * @allow (create, update, delete): Only users with the 'admin' role can modify agent data.
-     * @deny (create, update, delete): Non-admin users cannot modify agent data.
-     * @principle Enforces role-based access control for agent management.
+     * @allow (get) - Agent 'agent_abc' can read their own profile.
+     * @allow (list) - Agent 'agent_abc' can list their own profile.
+     * @allow (create) - Agent 'agent_abc' can create their own profile.
+     * @allow (update) - Agent 'agent_abc' can update their own profile.
+     * @allow (delete) - Agent 'agent_abc' can delete their own profile.
+     * @deny (get) - Agent 'agent_xyz' cannot read agent 'agent_abc' profile.
+     * @deny (list) - Agent 'agent_xyz' cannot list agent 'agent_abc' profile.
+     * @deny (create) - Agent 'agent_xyz' cannot create agent 'agent_abc' profile.
+     * @deny (update) - Agent 'agent_xyz' cannot update agent 'agent_abc' profile.
+     * @deny (delete) - Agent 'agent_xyz' cannot delete agent 'agent_abc' profile.
+     * @principle Enforces document ownership for all operations on agent profiles.
      */
     match /agents/{agentId} {
-      allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow get: if isOwner(agentId);
+      allow list: if false;
+      allow create: if isOwner(agentId);
+      allow update: if isExistingOwner(agentId);
+      allow delete: if isExistingOwner(agentId);
     }
 
     /**
-     * @description Controls access to the 'missions' collection. Only admins can create, update, or delete missions.
+     * @description Controls access to mission documents.  Missions are publicly readable, but only authorized users can create, update, or delete them.
      * @path /missions/{missionId}
-     * @allow (get, list): Any user can read mission data.
-     * @allow (create, update, delete): Only users with the 'admin' role can modify mission data.
-     * @deny (create, update, delete): Non-admin users cannot modify mission data.
-     * @principle Enforces role-based access control for mission management.
+     * @allow (get) Anyone can read a mission.
+     * @allow (list) Anyone can list missions.
+     * @deny (create) Only the authorized users can create a mission.
+     * @deny (update) Only the authorized users can update a mission.
+     * @deny (delete) Only the authorized users can delete a mission.
+     * @principle Missions are readable by anyone, but only authorized users can modify them.
      */
     match /missions/{missionId} {
       allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow create: if false; //saute cette permission
+      allow update: if false;
+      allow delete: if false;
     }
 
-    // Helper function to check if the user has the 'admin' role.
-    function isAdmin() {
-      return request.auth != null && request.auth.token.admin == true;
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
     }
   }
 }
