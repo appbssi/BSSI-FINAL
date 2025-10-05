@@ -1,0 +1,460 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import {
+  suggestAgentsForMission,
+  type SuggestAgentsForMissionOutput,
+} from '@/ai/flows/suggest-agents-for-mission';
+import type { Agent, Mission } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, Sparkles, Loader2, CalendarIcon } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarFallback } from '../ui/avatar';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Label } from '../ui/label';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, Timestamp, doc } from 'firebase/firestore';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
+
+const missionSchema = z.object({
+  name: z.string().min(3, 'Le nom de la mission est requis'),
+  location: z.string().min(3, 'Le lieu est requis'),
+  startDate: z.date({
+    required_error: "La date de début est requise.",
+  }),
+  endDate: z.date({
+    required_error: "La date de fin est requise.",
+  }),
+  assignedAgentIds: z.array(z.string()).default([]),
+});
+
+type MissionFormValues = z.infer<typeof missionSchema>;
+
+interface EditMissionSheetProps {
+  mission: Mission;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+}
+
+export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionSheetProps) {
+  const [step, setStep] = useState(1);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [suggestedAgents, setSuggestedAgents] = useState<SuggestAgentsForMissionOutput>([]);
+  const [availableAgentsForMission, setAvailableAgentsForMission] = useState<Agent[]>([]);
+  const { toast } = useToast();
+  const firestore = useFirestore();
+  const { user } = useUser();
+
+  const agentsQuery = useMemoFirebase(
+    () => (firestore && user ? collection(firestore, 'agents') : null),
+    [firestore, user]
+  );
+  const missionsQuery = useMemoFirebase(
+    () => (firestore && user ? collection(firestore, 'missions') : null),
+    [firestore, user]
+  );
+
+  const { data: allAgents } = useCollection<Agent>(agentsQuery);
+  const { data: allMissions } = useCollection<Mission>(missionsQuery);
+
+  const isAgentAvailable = (agent: Agent, newMission: { startDate: Date, endDate: Date }): boolean => {
+    if (!newMission.startDate || !newMission.endDate || !allMissions) return true;
+  
+    // Exclude the current mission being edited from the check
+    const agentMissions = allMissions.filter(m => 
+      m.id !== mission.id &&
+      m.assignedAgentIds.includes(agent.id) &&
+      (m.status === 'En cours' || m.status === 'Planification')
+    );
+  
+    const newMissionStart = newMission.startDate.getTime();
+    const newMissionEnd = newMission.endDate.getTime();
+  
+    const isOverlapping = agentMissions.some(m => {
+      const existingMissionStart = m.startDate.toDate().getTime();
+      const existingMissionEnd = m.endDate.toDate().getTime();
+      
+      return newMissionStart <= existingMissionEnd && newMissionEnd >= existingMissionStart;
+    });
+
+    return !isOverlapping;
+  };
+
+  const form = useForm<MissionFormValues>({
+    resolver: zodResolver(missionSchema),
+    defaultValues: {
+      name: mission.name,
+      location: mission.location,
+      startDate: mission.startDate.toDate(),
+      endDate: mission.endDate.toDate(),
+      assignedAgentIds: mission.assignedAgentIds || [],
+    },
+  });
+
+  useEffect(() => {
+    form.reset({
+      name: mission.name,
+      location: mission.location,
+      startDate: mission.startDate.toDate(),
+      endDate: mission.endDate.toDate(),
+      assignedAgentIds: mission.assignedAgentIds || [],
+    });
+  }, [mission, form]);
+
+
+  const formData = form.watch();
+
+  const handleSuggestAgents = async () => {
+    if (!allAgents || !allMissions) return;
+    setIsSuggesting(true);
+    setSuggestedAgents([]);
+    
+    const missionDates = {
+      startDate: form.getValues("startDate"),
+      endDate: form.getValues("endDate")
+    }
+    const availableAgents = allAgents.filter(agent => isAgentAvailable(agent, missionDates));
+    setAvailableAgentsForMission(availableAgents);
+
+    try {
+      const missionDetails = `Nom: ${formData.name}\nLieu: ${formData.location}\nDate de début: ${formData.startDate}\nDate de fin: ${formData.endDate}`;
+      
+      const agentsForAI = availableAgents.map((a) => {
+        const completedMissions = allMissions.filter(m => m.assignedAgentIds.includes(a.id) && m.status === 'Terminée').length;
+        return {
+          name: `${a.firstName} ${a.lastName}`,
+          skills: [],
+          availability: 'Disponible',
+          completedMissions,
+        }
+      });
+
+      if(agentsForAI.length > 0) {
+        const result = await suggestAgentsForMission({
+          missionDetails,
+          availableAgents: agentsForAI,
+        });
+        setSuggestedAgents(result);
+      } else {
+        toast({
+          variant: 'default',
+          title: 'Aucun agent disponible',
+          description: 'Aucun agent n\'est disponible pour les dates sélectionnées.',
+        });
+      }
+
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: "Impossible d'obtenir des suggestions d'agents.",
+      });
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
+
+  const nextStep = async () => {
+    const isStep1Valid = await form.trigger(['name', 'location', 'startDate', 'endDate']);
+    if (isStep1Valid) {
+      setStep(2);
+      await handleSuggestAgents();
+    }
+  };
+
+  const prevStep = () => setStep((s) => s - 1);
+
+  const onSubmit = (data: MissionFormValues) => {
+    if (!firestore) return;
+    const missionRef = doc(firestore, 'missions', mission.id);
+    updateDocumentNonBlocking(missionRef, {
+      ...data,
+      startDate: Timestamp.fromDate(data.startDate),
+      endDate: Timestamp.fromDate(data.endDate),
+    });
+    toast({
+        title: "Mission mise à jour !",
+        description: `La mission "${data.name}" a été mise à jour.`,
+    });
+    onOpenChange(false);
+  };
+  
+  const getAgentByName = (name: string) => allAgents?.find(a => `${a.firstName} ${a.lastName}` === name);
+  const getCompletedMissionsCount = (agentId: string) => {
+    if (!allMissions) return 0;
+    return allMissions.filter(m => m.assignedAgentIds.includes(agentId) && m.status === 'Terminée').length;
+  }
+
+  return (
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
+      <SheetContent className="overflow-y-auto w-full max-w-2xl sm:max-w-2xl">
+        <SheetHeader>
+          <SheetTitle>Modifier la mission</SheetTitle>
+          <SheetDescription>
+            Mettez à jour les détails de la mission et réassignez des agents si nécessaire.
+          </SheetDescription>
+        </SheetHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 py-6">
+            {step === 1 && (
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold">1. Détails de la mission</h3>
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nom de la mission</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Opération Crépuscule" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lieu</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Genève, Suisse" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Date de début</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP", { locale: fr })
+                                ) : (
+                                  <span>Choisissez une date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Date de fin</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP", { locale: fr })
+                                ) : (
+                                  <span>Choisissez une date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) =>
+                                date < (form.getValues("startDate") || new Date(new Date().setHours(0,0,0,0)))
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold">2. Assigner des agents</h3>
+                {isSuggesting && (
+                  <div className="flex items-center justify-center rounded-lg border border-dashed p-8">
+                    <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                    <p>Recherche d'agents disponibles...</p>
+                  </div>
+                )}
+                {!isSuggesting && (
+                  <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+                    {suggestedAgents.length > 0 && (
+                       <Card className="bg-primary/5 border-primary/20">
+                        <CardHeader className="p-4">
+                          <CardTitle className="flex items-center gap-2 text-lg">
+                            <Sparkles className="h-5 w-5 text-primary" />
+                            Agents suggérés par l'IA
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3 p-4 pt-0">
+                          {suggestedAgents.map((agentSugg) => {
+                            const agent = getAgentByName(agentSugg.name);
+                            if (!agent) return null;
+                            const fullName = `${agent.firstName} ${agent.lastName}`;
+                            const completedMissions = getCompletedMissionsCount(agent.id);
+                            return (
+                              <div key={`sugg-${agent.id}`} className="flex items-start gap-4 p-3 rounded-md border bg-background">
+                                <Checkbox 
+                                  id={`sugg-${agent.id}`}
+                                  onCheckedChange={(checked) => {
+                                    const currentIds = form.getValues('assignedAgentIds');
+                                    if (checked) {
+                                      form.setValue('assignedAgentIds', [...currentIds, agent.id]);
+                                    } else {
+                                      form.setValue('assignedAgentIds', currentIds.filter(id => id !== agent.id));
+                                    }
+                                  }}
+                                  checked={form.getValues('assignedAgentIds').includes(agent.id)}
+                                />
+                                <Label htmlFor={`sugg-${agent.id}`} className="grid gap-1.5 w-full cursor-pointer">
+                                    <div className="flex items-center justify-between w-full">
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-9 w-9">
+                                                <AvatarFallback>{(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <div className="font-semibold">{fullName}</div>
+                                                <div className="text-xs text-muted-foreground">{agent.rank} | {agent.contact}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                  <p className="text-sm text-muted-foreground pl-12"><span className="font-semibold">Missions terminées:</span> {completedMissions}</p>
+                                </Label>
+                              </div>
+                            );
+                          })}
+                        </CardContent>
+                      </Card>
+                    )}
+                   
+                    <h4 className="font-semibold pt-4">Autres agents disponibles</h4>
+                    <div className="space-y-2">
+                        {availableAgentsForMission
+                          .filter(a => !suggestedAgents.some(sa => sa.name === `${a.firstName} ${a.lastName}`))
+                          .map(agent => {
+                            const fullName = `${agent.firstName} ${agent.lastName}`;
+                            return (
+                            <div key={`avail-${agent.id}`} className="flex items-center space-x-3 p-3 rounded-md border">
+                                <Checkbox 
+                                  id={`avail-${agent.id}`}
+                                  onCheckedChange={(checked) => {
+                                    const currentIds = form.getValues('assignedAgentIds');
+                                    if (checked) {
+                                      form.setValue('assignedAgentIds', [...currentIds, agent.id]);
+                                    } else {
+                                      form.setValue('assignedAgentIds', currentIds.filter(id => id !== agent.id));
+                                    }
+                                  }}
+                                  checked={form.getValues('assignedAgentIds').includes(agent.id)}
+                                />
+                                <Label htmlFor={`avail-${agent.id}`} className="flex items-center gap-3 font-normal flex-1 cursor-pointer">
+                                    <Avatar className="h-9 w-9">
+                                        <AvatarFallback>{(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <div className="font-semibold">{fullName}</div>
+                                        <div className="text-xs text-muted-foreground">{agent.rank} | {agent.contact}</div>
+                                    </div>
+                                </Label>
+                            </div>
+                          )})}
+                         {availableAgentsForMission.length === 0 && !isSuggesting && (
+                            <p className="text-sm text-muted-foreground text-center p-4 border rounded-md">
+                                Aucun agent n'est disponible pour ces dates.
+                            </p>
+                        )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-between pt-4">
+              {step > 1 ? (
+                <Button type="button" variant="outline" onClick={prevStep}>
+                  <ArrowLeft className="mr-2 h-4 w-4" /> Précédent
+                </Button>
+              ) : <div />}
+               <div className="flex-1" />
+              {step === 1 ? (
+                <Button type="button" onClick={nextStep}>
+                  Suivant
+                </Button>
+              ) : (
+                <Button type="submit">Sauvegarder les modifications</Button>
+              )}
+            </div>
+          </form>
+        </Form>
+      </SheetContent>
+    </Sheet>
+  );
+}

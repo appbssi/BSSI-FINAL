@@ -30,9 +30,11 @@ import { collection } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import type { Agent, Mission } from '@/lib/types';
 import { useState } from 'react';
+import { EditMissionSheet } from '@/components/missions/edit-mission-sheet';
 
 export default function MissionsPage() {
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [editingMission, setEditingMission] = useState<Mission | null>(null);
   const firestore = useFirestore();
   const { user } = useUser();
   
@@ -145,7 +147,7 @@ export default function MissionsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Modifier</DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Modifier</DropdownMenuItem>
                       <DropdownMenuItem>Voir les détails</DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                         Annuler la mission
@@ -159,6 +161,18 @@ export default function MissionsPage() {
           </TableBody>
         </Table>
       </div>
+
+      {editingMission && (
+        <EditMissionSheet
+          mission={editingMission}
+          isOpen={!!editingMission}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEditingMission(null);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
