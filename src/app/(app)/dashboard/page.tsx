@@ -26,6 +26,7 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, where, limit } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import type { Agent, Mission } from '@/lib/types';
+import { useMemo } from 'react';
 
 export default function DashboardPage() {
   const firestore = useFirestore();
@@ -35,8 +36,8 @@ export default function DashboardPage() {
     [firestore]
   );
   
-  const activeMissionsQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'missions'), where('status', '==', 'En cours'), limit(5)) : null),
+  const potentiallyActiveMissionsQuery = useMemoFirebase(
+    () => (firestore ? query(collection(firestore, 'missions'), where('status', 'in', ['En cours', 'Planification']), limit(10)) : null),
     [firestore]
   );
 
@@ -46,12 +47,29 @@ export default function DashboardPage() {
   );
 
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
-  const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
-  const { data: activeMissions, isLoading: activeMissionsLoading } = useCollection<Mission>(activeMissionsQuery);
+  const { data: allMissions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
+  const { data: potentiallyActiveMissions, isLoading: activeMissionsLoading } = useCollection<Mission>(potentiallyActiveMissionsQuery);
+
+  const activeMissions = useMemo(() => {
+    if (!potentiallyActiveMissions) return [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return potentiallyActiveMissions.filter(mission => {
+        if (mission.status === 'En cours') return true;
+        if (mission.status === 'Planification' && mission.startDate.toDate() <= today) return true;
+        return false;
+    }).slice(0, 5);
+  }, [potentiallyActiveMissions]);
+
 
   const totalAgents = agents?.length ?? 0;
   const activeMissionsCount =
-    missions?.filter((m) => m.status === 'En cours').length ?? 0;
+    allMissions?.filter((m) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return m.status === 'En cours' || (m.status === 'Planification' && m.startDate.toDate() <= today)
+    }).length ?? 0;
     
   const agentsOnMission = agents?.filter(a => a.availability === 'En mission').length ?? 0;
   const availableAgents = agents?.filter(a => a.availability === 'Disponible').length ?? 0;
@@ -119,19 +137,15 @@ export default function DashboardPage() {
                   <TableCell colSpan={4} className="text-center">Chargement...</TableCell>
                 </TableRow>
               )}
-              {activeMissions?.map((mission) => (
+              {!activeMissionsLoading && activeMissions.map((mission) => (
                 <TableRow key={mission.id}>
                   <TableCell className="font-medium">{mission.name}</TableCell>
                    <TableCell>{mission.location}</TableCell>
                   <TableCell>
                     <Badge
-                      variant={
-                        mission.status === 'En cours'
-                          ? 'default'
-                          : 'secondary'
-                      }
+                      variant='default'
                     >
-                      {mission.status}
+                      En cours
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -139,7 +153,7 @@ export default function DashboardPage() {
                   </TableCell>
                 </TableRow>
               ))}
-               {!activeMissionsLoading && activeMissions?.length === 0 && (
+               {!activeMissionsLoading && activeMissions.length === 0 && (
                  <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">
                         Aucune mission en cours.
