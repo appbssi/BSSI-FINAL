@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { FileUp, MoreHorizontal, PlusCircle, Search } from 'lucide-react';
+import { FileUp, MoreHorizontal, PlusCircle, Search, Trash2, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,12 +28,27 @@ import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
 import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
+import { deleteDuplicateAgents } from '@/lib/firestore-utils';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function AgentsPage() {
   const firestore = useFirestore();
   const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { toast } = useToast();
 
   const agentsQuery = useMemoFirebase(
     () => (firestore && user ? collection(firestore, 'agents') : null),
@@ -55,8 +70,8 @@ export default function AgentsPage() {
         return a.firstName.localeCompare(b.firstName);
       })
     : [];
-  
-  const filteredAgents = sortedAgents.filter(agent => 
+
+  const filteredAgents = sortedAgents.filter(agent =>
     `${agent.firstName} ${agent.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -90,22 +105,75 @@ export default function AgentsPage() {
     }
   };
 
+  const handleDeduplicate = async () => {
+    if (!firestore) return;
+    setIsDeleting(true);
+    try {
+      const deletedCount = await deleteDuplicateAgents(firestore);
+      if (deletedCount > 0) {
+        toast({
+          title: 'Doublons supprimés',
+          description: `${deletedCount} agent(s) en double ont été supprimé(s).`,
+        });
+      } else {
+        toast({
+          title: 'Aucun doublon trouvé',
+          description: "Votre liste d'agents ne contient aucun doublon.",
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression des doublons: ", error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de la suppression des doublons.',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
         <div className="flex flex-1 items-center gap-2">
-            <div className="relative w-full max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                    placeholder="Rechercher un agent..."
-                    className="pl-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-            </div>
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher un agent..."
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
         <div className="flex items-center gap-2">
+          <AlertDialog>
+              <AlertDialogTrigger asChild>
+                  <Button variant="outline" disabled={isDeleting}>
+                      {isDeleting ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                          <Trash2 className="mr-2 h-4 w-4" />
+                      )}
+                      Supprimer les doublons
+                  </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                  <AlertDialogHeader>
+                      <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                          Cette action va rechercher tous les agents avec le même matricule et supprimer les doublons. Cette action est irréversible.
+                      </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeduplicate}>Continuer</AlertDialogAction>
+                  </AlertDialogFooter>
+              </AlertDialogContent>
+          </AlertDialog>
           <ImportAgentsDialog>
             <Button variant="outline">
               <FileUp className="mr-2 h-4 w-4" /> Importer
@@ -134,71 +202,71 @@ export default function AgentsPage() {
           </TableHeader>
           <TableBody>
             {agentsLoading || missionsLoading ? (
-               <TableRow>
-                  <TableCell colSpan={5} className="text-center">Chargement des agents...</TableCell>
-                </TableRow>
+              <TableRow>
+                <TableCell colSpan={5} className="text-center">Chargement des agents...</TableCell>
+              </TableRow>
             ) : (
-            filteredAgents.map((agent) => {
-              const availability = getAgentAvailability(agent);
-              const fullName = `${agent.firstName} ${agent.lastName}`;
-              return (
-                <TableRow key={agent.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarFallback>
-                          {(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="font-medium">
-                        {fullName}
-                        <div className="text-sm text-muted-foreground">
-                          {agent.registrationNumber}
+              filteredAgents.map((agent) => {
+                const availability = getAgentAvailability(agent);
+                const fullName = `${agent.firstName} ${agent.lastName}`;
+                return (
+                  <TableRow key={agent.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarFallback>
+                            {(agent.firstName?.[0] ?? '') + (agent.lastName?.[0] ?? '')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="font-medium">
+                          {fullName}
+                          <div className="text-sm text-muted-foreground">
+                            {agent.registrationNumber}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {agent.rank}
-                  </TableCell>
-                  <TableCell>
-                    {agent.contact}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getBadgeVariant(availability)}>
-                      {availability}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-haspopup="true"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onSelect={() => setEditingAgent(agent)}>Modifier</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                          Supprimer
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              );
-            })
+                    </TableCell>
+                    <TableCell>
+                      {agent.rank}
+                    </TableCell>
+                    <TableCell>
+                      {agent.contact}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getBadgeVariant(availability)}>
+                        {availability}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            aria-haspopup="true"
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onSelect={() => setEditingAgent(agent)}>Modifier</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                            Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
       </div>
 
-       {editingAgent && (
+      {editingAgent && (
         <EditAgentSheet
           agent={editingAgent}
           isOpen={!!editingAgent}
