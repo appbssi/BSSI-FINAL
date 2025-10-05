@@ -50,7 +50,6 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { MissionDetailsSheet } from '@/components/missions/mission-details-sheet';
 
 const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missionName: string }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -193,7 +192,6 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
 export default function MissionsPage() {
   const [isCreateMissionOpen, setCreateMissionOpen] = useState(false);
   const [editingMission, setEditingMission] = useState<Mission | null>(null);
-  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [missionToCancel, setMissionToCancel] = useState<Mission | null>(null);
   const [missionToDelete, setMissionToDelete] = useState<Mission | null>(null);
   const { toast } = useToast();
@@ -386,7 +384,7 @@ export default function MissionsPage() {
               }
 
               return (
-              <TableRow key={mission.id} onClick={() => setSelectedMission(mission)} className="cursor-pointer">
+              <TableRow key={mission.id}>
                 <TableCell className="font-medium">{mission.name}</TableCell>
                 <TableCell>{mission.location}</TableCell>
                 <TableCell>{mission.startDate.toDate().toLocaleDateString('fr-FR')}</TableCell>
@@ -465,19 +463,6 @@ export default function MissionsPage() {
         />
       )}
 
-      {selectedMission && (
-        <MissionDetailsSheet
-          mission={selectedMission}
-          agents={agents || []}
-          isOpen={!!selectedMission}
-          onOpenChange={(open) => {
-            if (!open) {
-              setSelectedMission(null);
-            }
-          }}
-        />
-      )}
-
       {missionToCancel && (
          <AlertDialog open={!!missionToCancel} onOpenChange={(open) => !open && setMissionToCancel(null)}>
           <AlertDialogContent>
@@ -520,13 +505,3 @@ export default function MissionsPage() {
     </div>
   );
 }
-
-    
-
-    
-
-
-
-
-
-
