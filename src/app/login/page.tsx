@@ -77,7 +77,7 @@ export default function LoginPage() {
          toast({
             variant: 'destructive',
             title: 'Erreur de connexion',
-            description: 'Les identifiants fournis sont invalides. Veuillez vérifier votre login et votre mot de passe.',
+            description: "Les identifiants fournis sont invalides. Veuillez vérifier votre login et votre mot de passe.",
         });
       }
 
@@ -101,12 +101,12 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-primary/20">
+            <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary/20">
                     {logo ? (
                       <Image src={logo} alt="Logo" fill className="rounded-full object-cover" />
                     ) : (
-                      <Rocket className="h-8 w-8 text-primary" />
+                      <Rocket className="h-10 w-10 text-primary" />
                     )}
                 </div>
             </div>
