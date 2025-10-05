@@ -223,7 +223,26 @@ export default function MissionsPage() {
   }, [agents]);
 
   const sortedMissions = useMemo(() => {
-    return missions ? [...missions].sort((a, b) => b.startDate.toMillis() - a.startDate.toMillis()) : [];
+    if (!missions) return [];
+    
+    const statusOrder: Record<Mission['status'], number> = {
+      'En cours': 1,
+      'Planification': 2,
+      'Terminée': 3,
+      'Annulée': 4,
+    };
+
+    return [...missions].sort((a, b) => {
+      const orderA = statusOrder[a.status] || 5;
+      const orderB = statusOrder[b.status] || 5;
+
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+      
+      // If statuses are the same, sort by start date (most recent first)
+      return b.startDate.toMillis() - a.startDate.toMillis();
+    });
   }, [missions]);
 
   const filteredMissions = useMemo(() => {
@@ -462,5 +481,7 @@ export default function MissionsPage() {
     </div>
   );
 }
+
+    
 
     
