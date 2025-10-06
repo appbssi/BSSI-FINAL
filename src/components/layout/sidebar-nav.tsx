@@ -63,7 +63,7 @@ export function SidebarNav() {
             className="absolute inset-0 bg-cover bg-center"
             style={{
               backgroundImage: `url(${logo})`,
-              opacity: 0.1, // Corresponds to 90% transparency
+              opacity: 0.05, // Corresponds to 95% transparency
             }}
           />
         )}
