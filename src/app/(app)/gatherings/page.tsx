@@ -28,7 +28,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, deleteDoc, doc, writeBatch } from 'firebase/firestore';
+import { collection, deleteDoc, doc, writeBatch, query } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent, Gathering } from '@/lib/types';
@@ -58,7 +58,7 @@ export default function GatheringsPage() {
   const firestore = useFirestore();
 
   const gatheringsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'gatherings') : null),
+    () => (firestore ? query(collection(firestore, 'gatherings')) : null),
     [firestore]
   );
   const agentsQuery = useMemoFirebase(
