@@ -6,7 +6,8 @@ import {
   LucideIcon,
   Rocket,
   Users,
-  CalendarClock
+  CalendarClock,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -39,18 +40,20 @@ const navItems: NavItem[] = [
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const { logo } = useLogo();
+  const { logo, isLogoLoading } = useLogo();
 
   return (
     <>
       <SidebarHeader>
         <div className="flex items-center gap-2">
           <div className="bg-primary rounded-md p-1 flex items-center justify-center h-14 w-14 relative">
-            {logo ? (
-              <Image src={logo} alt="Logo" fill className="rounded-md object-cover" />
-            ) : (
-              <Rocket className="w-8 h-8 text-primary-foreground" />
-            )}
+             {isLogoLoading ? (
+                <Loader2 className="w-8 h-8 animate-spin text-primary-foreground" />
+              ) : logo ? (
+                <Image src={logo} alt="Logo" fill className="rounded-md object-cover" />
+              ) : (
+                <Rocket className="w-8 h-8 text-primary-foreground" />
+              )}
           </div>
           <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">
             sBSSI

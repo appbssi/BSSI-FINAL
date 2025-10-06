@@ -44,7 +44,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { logo } = useLogo();
+  const { logo, isLogoLoading } = useLogo();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -112,7 +112,9 @@ export default function LoginPage() {
         <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
                 <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary/20">
-                    {logo ? (
+                    {isLogoLoading ? (
+                      <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                    ) : logo ? (
                       <Image src={logo} alt="Logo" fill className="rounded-full object-cover" />
                     ) : (
                       <Rocket className="h-10 w-10 text-primary" />

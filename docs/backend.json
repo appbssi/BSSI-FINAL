@@ -128,6 +128,18 @@
         "assignedAgentIds",
         "absentAgentIds"
       ]
+    },
+    "AppSettings": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "AppSettings",
+        "type": "object",
+        "description": "Stores global application settings.",
+        "properties": {
+            "logo": {
+                "type": "string",
+                "description": "The application logo, stored as a base64 data URI."
+            }
+        }
     }
   },
   "auth": {
@@ -154,6 +166,12 @@
             "$ref": "#/entities/Gathering"
         },
         "description": "Stores details about individual gatherings."
+      },
+      "/settings/app": {
+        "schema": {
+          "$ref": "#/entities/AppSettings"
+        },
+        "description": "Stores global application settings like the logo."
       }
   }
 }
