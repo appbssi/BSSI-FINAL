@@ -1,53 +1,57 @@
 /**
  * @file Firestore Security Rules
- * @description This ruleset defines access control for the 'agents' and 'missions' collections.
- *
- * Core Philosophy:
- * The security model allows public read access to both 'agents' and 'missions' collections, but restricts write access to authenticated users.
- * This allows for open listing and viewing of agents and missions while requiring authentication for any modifications.
- *
- * Data Structure:
- * The database consists of two top-level collections: 'agents' and 'missions'.
- *  - /agents/{agentId}: Stores agent profiles.
- *  - /missions/{missionId}: Stores mission details.
- *
- * Key Security Decisions:
- * - Public Read Access: Both 'agents' and 'missions' are readable by anyone.
- * - Authenticated Writes: Only authenticated users can create, update, or delete agents or missions. No role-based access control is implemented.
- * - No User Listing: Listing all users is not permitted.
- *
+ * @core-philosophy This ruleset enforces a shared access model.
+ * @data-structure The database stores data about agents, missions, and gatherings. Agents and missions are not linked to a specific user. Gatherings are public to everyone.
+ * @key-security-decisions
+ *   - Listing of agents and missions is allowed.
+ *   - Gatherings are publicly readable.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows public read access to the agents collection, but requires authentication for writes.
+     * @description Allows read access to all agents.
      * @path /agents/{agentId}
-     * @allow (get, list) Anyone can read agent data.
-     * @allow (create, update, delete) An authenticated user can modify agent data.
-     * @deny (create, update, delete) An unauthenticated user cannot modify agent data.
-     * @principle Allows open read access while restricting writes to authenticated users.
+     * @allow (get, list) Any signed-in user can read agent data.
+     * @deny (create, update, delete) No one can create, update, or delete agent documents.
+     * @principle Public read access to agent data.
      */
     match /agents/{agentId} {
-      allow get, list: if true;
-      allow create, update, delete: if isSignedIn();
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Allows public read access to the missions collection, but requires authentication for writes.
+     * @description Allows read access to all missions.
      * @path /missions/{missionId}
-     * @allow (get, list) Anyone can read mission data.
-     * @allow (create, update, delete) An authenticated user can modify mission data.
-     * @deny (create, update, delete) An unauthenticated user cannot modify mission data.
-     * @principle Allows open read access while restricting writes to authenticated users.
+     * @allow (get, list) Any signed-in user can read mission data.
+     * @deny (create, update, delete) No one can create, update, or delete mission documents.
+     * @principle Public read access to mission data.
      */
     match /missions/{missionId} {
-      allow get, list: if true;
-      allow create, update, delete: if isSignedIn();
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if false;
     }
 
-    // Helper function to check if a user is signed in
+    /**
+     * @description Allows public read access to gatherings.
+     * @path /gatherings/{gatheringId}
+     * @allow (get, list) Any user (signed in or not) can read gathering data.
+     * @deny (create, update, delete) No one can create, update, or delete gathering documents.
+     * @principle Public read access to gathering data.
+     */
+    match /gatherings/{gatheringId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    // ----- Helper functions -----
+
+    /**
+     * @description Checks if the user is signed in.
+     * @return {bool} True if the user is signed in, false otherwise.
+     */
     function isSignedIn() {
       return request.auth != null;
     }
