@@ -58,7 +58,7 @@ export default function GatheringsPage() {
   const firestore = useFirestore();
 
   const gatheringsQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'gatherings')) : null),
+    () => (firestore ? collection(firestore, 'gatherings') : null),
     [firestore]
   );
   const agentsQuery = useMemoFirebase(
