@@ -1,54 +1,71 @@
 /**
- * @description This ruleset enforces a basic security model.
- *   It allows read access to all documents but restricts write access.
- *   Write access (create, update, delete) is disallowed for all users.
- * @dataStructure
- *   /agents/{agentId} - Stores information about individual agents.
- *   /missions/{missionId} - Stores details about individual missions.
- *   /gatherings/{gatheringId} - Stores details about individual gatherings.
- * @keySecurityDecisions
- *   - Read access is public for all collections.
- *   - Write access is denied for all users.
- *   - No data validation is performed in this prototype.
+ * @fileoverview Firestore Security Rules for the application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a shared access model, where authenticated users can create, read, update, and delete data.
+ * The documents store the `assignedAgentIds` to enable this shared access.
+ *
+ * Data Structure:
+ * - /agents/{agentId}: Stores information about individual agents.
+ * - /missions/{missionId}: Stores details about individual missions.
+ * - /gatherings/{gatheringId}: Stores details about individual gatherings.
+ *
+ * Key Security Decisions:
+ * - All read and write operations require authentication.
+ * - Data validation is relaxed in this prototyping phase but should be tightened later.
+ * - Listing operations are public.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Grants read access to agent documents, but denies write access.
+     * @description Controls access to the /agents/{agentId} collection.
      * @path /agents/{agentId}
-     * @allow (get, list): Any user can read agent information.
-     * @deny (create, update, delete): No one can create, update, or delete agent information.
-     * @principle Allows public reads, restricts all writes.
+     * @allow (create) authenticated user can create agents.
+     * @deny (create) unauthenticated user cannot create agents.
+     * @principle Requires the user to be signed in to create agents.
      */
     match /agents/{agentId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;
+      allow get: if isSignedIn();
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
     }
 
     /**
-     * @description Grants read access to mission documents, but denies write access.
+     * @description Controls access to the /missions/{missionId} collection.
      * @path /missions/{missionId}
-     * @allow (get, list): Any user can read mission information.
-     * @deny (create, update, delete): No one can create, update, or delete mission information.
-     * @principle Allows public reads, restricts all writes.
+     * @allow (create) authenticated user can create missions.
+     * @deny (create) unauthenticated user cannot create missions.
+     * @principle Requires the user to be signed in to create missions.
      */
     match /missions/{missionId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;
+      allow get: if isSignedIn();
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
     }
 
     /**
-     * @description Grants read access to gathering documents, but denies write access.
+     * @description Controls access to the /gatherings/{gatheringId} collection.
      * @path /gatherings/{gatheringId}
-     * @allow (get, list): Any user can read gathering information.
-     * @deny (create, update, delete): No one can create, update, or delete gathering information.
-     * @principle Allows public reads, restricts all writes.
+     * @allow (create) authenticated user can create gatherings.
+     * @deny (create) unauthenticated user cannot create gatherings.
+     * @principle Requires the user to be signed in to create gatherings.
      */
     match /gatherings/{gatheringId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;
+      allow get: if isSignedIn();
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
     }
   }
 }
