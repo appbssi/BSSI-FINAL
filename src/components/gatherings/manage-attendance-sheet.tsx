@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -25,7 +25,6 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent, Gathering } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { useMemo } from 'react';
 
 const attendanceSchema = z.object({
   absentAgentIds: z.array(z.string()),
