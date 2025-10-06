@@ -116,6 +116,18 @@ export function CreateGatheringSheet({ isOpen, onOpenChange }: CreateGatheringSh
     }
   };
 
+  const assignedAgentIds = form.watch('assignedAgentIds');
+  const allAvailableAgentIds = availableAgents.map(agent => agent.id);
+  const areAllSelected = allAvailableAgentIds.length > 0 && allAvailableAgentIds.every(id => assignedAgentIds.includes(id));
+
+  const handleToggleSelectAll = () => {
+    if (areAllSelected) {
+        form.setValue('assignedAgentIds', []);
+    } else {
+        form.setValue('assignedAgentIds', allAvailableAgentIds);
+    }
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="overflow-y-auto w-full max-w-lg sm:max-w-lg">
@@ -178,6 +190,11 @@ export function CreateGatheringSheet({ isOpen, onOpenChange }: CreateGatheringSh
                 
                 <Controller control={form.control} name="assignedAgentIds" render={({ field }) => (
                     <FormItem>
+                        <div className="flex justify-end mb-2">
+                            <Button type="button" variant="link" onClick={handleToggleSelectAll} disabled={availableAgents.length === 0}>
+                                {areAllSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
+                            </Button>
+                        </div>
                         <div className="rounded-lg border">
                              <ScrollArea className="h-72">
                                 <div className="p-4 space-y-2">
