@@ -137,6 +137,11 @@ export default function GatheringsPage() {
                 const presentCount = assignedCount - absentCount;
                 const status = getStatus(gathering);
 
+                const now = new Date();
+                const gatheringTime = gathering.dateTime.toDate();
+                const sixHoursAfter = new Date(gatheringTime.getTime() + 6 * 60 * 60 * 1000);
+                const isAttendanceManagementLocked = now > sixHoursAfter;
+
                 return (
                   <TableRow key={gathering.id}>
                     <TableCell className="font-medium">{gathering.name}</TableCell>
@@ -177,7 +182,7 @@ export default function GatheringsPage() {
                           </DropdownMenuItem>
                           {!isObserver && (
                             <>
-                              <DropdownMenuItem onSelect={() => setSelectedGathering(gathering)} disabled={status === 'Passé'}>
+                              <DropdownMenuItem onSelect={() => setSelectedGathering(gathering)} disabled={isAttendanceManagementLocked}>
                                 Gérer les présences
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
