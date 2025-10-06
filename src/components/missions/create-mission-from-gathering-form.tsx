@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
@@ -27,9 +27,11 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { collection, Timestamp, addDoc, writeBatch, doc } from 'firebase/firestore';
-import { useFirestore, errorEmitter } from '@/firebase';
+import { useFirestore, errorEmitter, useMemoFirebase } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
-import type { Agent } from '@/lib/types';
+import type { Agent, Mission } from '@/lib/types';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { ScrollArea } from '../ui/scroll-area';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
@@ -40,6 +42,7 @@ const missionSchema = z.object({
   endDate: z.date({
     required_error: "La date de fin est requise.",
   }),
+  additionalAgentIds: z.array(z.string()).optional(),
 }).refine(data => data.endDate >= data.startDate, {
   message: "La date de fin ne peut pas être antérieure à la date de début.",
   path: ["endDate"],
@@ -54,6 +57,20 @@ interface CreateMissionFromGatheringFormProps {
     onCancel: () => void;
 }
 
+const isAgentAvailable = (agent: Agent, missions: Mission[], newMissionStart: Date, newMissionEnd: Date): boolean => {
+    if (agent.availability === 'En congé' || agent.availability === 'En mission') {
+        return false;
+    }
+    const agentMissions = missions.filter(mission => mission.assignedAgentIds.includes(agent.id) && mission.status !== 'Annulée' && mission.status !== 'Terminée');
+
+    return !agentMissions.some(mission => {
+        const missionStart = mission.startDate.toDate();
+        const missionEnd = mission.endDate.toDate();
+        return newMissionStart < missionEnd && newMissionEnd > missionStart;
+    });
+};
+
+
 export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCancel }: CreateMissionFromGatheringFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -63,10 +80,17 @@ export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCan
     defaultValues: {
       name: '',
       location: '',
+      additionalAgentIds: [],
     },
   });
   
   const { isSubmitting } = form.formState;
+
+  const agentsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'agents') : null, [firestore]);
+  const missionsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'missions') : null, [firestore]);
+  
+  const { data: allAgents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
+  const { data: allMissions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
 
   const onSubmit = async (data: MissionFormValues) => {
     if (!firestore) return;
@@ -75,18 +99,20 @@ export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCan
     const missionsCollection = collection(firestore, 'missions');
     const newMissionRef = doc(missionsCollection);
     
-    const agentIds = agents.map(agent => agent.id);
+    const preselectedAgentIds = agents.map(agent => agent.id);
+    const finalAgentIds = [...new Set([...preselectedAgentIds, ...(data.additionalAgentIds || [])])];
 
     const newMissionData = {
-        ...data,
+        name: data.name,
+        location: data.location,
         startDate: Timestamp.fromDate(data.startDate),
         endDate: Timestamp.fromDate(data.endDate),
         status: 'Planification',
-        assignedAgentIds: agentIds,
+        assignedAgentIds: finalAgentIds,
     };
     batch.set(newMissionRef, newMissionData);
 
-    agentIds.forEach(agentId => {
+    finalAgentIds.forEach(agentId => {
         const agentRef = doc(firestore, 'agents', agentId);
         batch.update(agentRef, { availability: 'En mission' });
     });
@@ -107,13 +133,27 @@ export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCan
         errorEmitter.emit('permission-error', permissionError);
     });
   };
+  
+  const startDate = form.watch('startDate');
+  const endDate = form.watch('endDate');
+
+  const additionalAvailableAgents = allAgents
+    ? allAgents
+        .filter(agent => {
+            const isPreselected = agents.some(a => a.id === agent.id);
+            if(isPreselected) return false;
+            return startDate && endDate ? isAgentAvailable(agent, allMissions || [], startDate, endDate) : false
+        })
+        .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName))
+    : [];
+
 
   return (
     <>
       <DialogHeader>
         <DialogTitle>Créer une mission</DialogTitle>
         <DialogDescription>
-          Remplissez les détails pour la nouvelle mission. {agents.length} agent(s) seront assignés.
+          Remplissez les détails pour la nouvelle mission. {agents.length} agent(s) sont présélectionnés.
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
@@ -228,6 +268,53 @@ export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCan
                 )}
             />
             </div>
+
+            <Controller
+                control={form.control}
+                name="additionalAgentIds"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Agents supplémentaires</FormLabel>
+                     <p className="text-sm text-muted-foreground">Ajoutez d'autres agents disponibles à la mission.</p>
+                    <div className="rounded-lg border">
+                        <ScrollArea className="h-48">
+                            <div className="p-4 space-y-2">
+                            {agentsLoading || missionsLoading ? (
+                                <div className="flex items-center justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-muted-foreground"/></div>
+                            ) : additionalAvailableAgents.length > 0 ? (
+                                additionalAvailableAgents.map((agent) => {
+                                    const isChecked = field.value?.includes(agent.id);
+                                    return (
+                                        <div
+                                            key={agent.id}
+                                            className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                                            onClick={() => {
+                                                    const currentValues = field.value || [];
+                                                    const newValue = isChecked ? currentValues.filter((id) => id !== agent.id) : [...currentValues, agent.id];
+                                                    field.onChange(newValue);
+                                                }}
+                                        >
+                                            <div className={cn("h-5 w-5 flex items-center justify-center rounded border", isChecked ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground/50")}>
+                                                {isChecked && <Check className="h-4 w-4" />}
+                                            </div>
+                                            <div className="font-medium flex-1">
+                                                {agent.firstName} {agent.lastName}
+                                                <div className="text-sm text-muted-foreground">{agent.rank} | {agent.registrationNumber}</div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <p className="text-center text-muted-foreground p-8">Aucun autre agent disponible pour ces dates.</p>
+                            )}
+                            </div>
+                        </ScrollArea>
+                    </div>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+
             <div className="flex justify-between pt-4">
                 <Button type="button" variant="outline" onClick={onCancel}>Annuler</Button>
                 <Button type="submit" disabled={isSubmitting}>
