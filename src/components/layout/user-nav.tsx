@@ -1,7 +1,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,14 +12,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { User, LogOut } from 'lucide-react';
-import { SettingsSheet } from '@/components/settings/settings-sheet';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useRole, clearRole } from '@/hooks/use-role';
 
 export function UserNav() {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { user } = useUser();
   const { role } = useRole();
   const auth = useAuth();
@@ -55,19 +52,12 @@ export function UserNav() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-             <DropdownMenuItem onSelect={() => setIsSettingsOpen(true)}>
-              Paramètres
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             Se déconnecter
             </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <SettingsSheet isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </>
   );
 }
