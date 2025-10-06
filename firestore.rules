@@ -1,105 +1,54 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces role-based access control for the application.
- *
- * Core Philosophy:
- *   This ruleset implements a role-based access control system. Access to documents is determined by the user's role.
- *
- * Data Structure:
- *   - /agents/{agentId}: Stores information about agents.
- *   - /missions/{missionId}: Stores information about missions.
- *   - /gatherings/{gatheringId}: Stores information about gatherings.
- *
- * Key Security Decisions:
- *   - All authenticated users can read all data.
- *   - Only users with appropriate roles can create, update or delete data.
+ * @description This ruleset enforces a basic security model.
+ *   It allows read access to all documents but restricts write access.
+ *   Write access (create, update, delete) is disallowed for all users.
+ * @dataStructure
+ *   /agents/{agentId} - Stores information about individual agents.
+ *   /missions/{missionId} - Stores details about individual missions.
+ *   /gatherings/{gatheringId} - Stores details about individual gatherings.
+ * @keySecurityDecisions
+ *   - Read access is public for all collections.
+ *   - Write access is denied for all users.
+ *   - No data validation is performed in this prototype.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Defines a function to check if the user is signed in.
-     * @returns {boolean} True if the user is signed in, false otherwise.
-     */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /**
-     * @description Defines a function to check if the user is the owner of the document.
-     * @param {string} userId - The user ID to compare against.
-     * @returns {boolean} True if the user is the owner, false otherwise.
-     */
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    /**
-     * @description Defines a function to check if the user is an existing owner of the document.
-     * @param {string} userId - The user ID to compare against.
-     * @returns {boolean} True if the user is the owner and the document exists, false otherwise.
-     */
-    function isExistingOwner(agentId) {
-      return get(/databases/$(database)/documents/agents/$(agentId)).data.userId == request.auth.uid;
-    }
-
-    /**
-     * @description Rules for the /agents collection.
+     * @description Grants read access to agent documents, but denies write access.
      * @path /agents/{agentId}
-     * @allow (get, list): Any signed-in user can read agent information.
-     * @allow (create, update, delete): Only authorized users can modify agent information.
-     * @deny (create): if false.
-     * @principle Role-based access control for agents.
+     * @allow (get, list): Any user can read agent information.
+     * @deny (create, update, delete): No one can create, update, or delete agent information.
+     * @principle Allows public reads, restricts all writes.
      */
     match /agents/{agentId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update, delete: if isExistingOwner(agentId);
-
-      // Example: Only allow create if the user is an admin
-      // allow create: if request.auth.token.admin == true;
-
-      // Example: Only allow update/delete if the user owns the agent document
-      // allow update, delete: if isOwner(resource.data.userId);
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Rules for the /missions collection.
+     * @description Grants read access to mission documents, but denies write access.
      * @path /missions/{missionId}
-     * @allow (get, list): Any signed-in user can read mission information.
-     * @allow (create, update, delete): Only authorized users can modify mission information.
-     * @deny (create): if false.
-     * @principle Role-based access control for missions.
+     * @allow (get, list): Any user can read mission information.
+     * @deny (create, update, delete): No one can create, update, or delete mission information.
+     * @principle Allows public reads, restricts all writes.
      */
     match /missions/{missionId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isSignedIn();
-
-      // Example: Only allow create if the user is an admin
-      // allow create: if request.auth.token.admin == true;
-
-      // Example: Only allow update/delete if the user owns the mission document
-      // allow update, delete: if isOwner(resource.data.userId);
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Rules for the /gatherings collection.
+     * @description Grants read access to gathering documents, but denies write access.
      * @path /gatherings/{gatheringId}
-     * @allow (get, list): Any signed-in user can read gathering information.
-     * @allow (create, update, delete): Only authorized users can modify gathering information.
-     * @deny (create): if false.
-     * @principle Role-based access control for gatherings.
+     * @allow (get, list): Any user can read gathering information.
+     * @deny (create, update, delete): No one can create, update, or delete gathering information.
+     * @principle Allows public reads, restricts all writes.
      */
     match /gatherings/{gatheringId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isSignedIn();
-
-      // Example: Only allow create if the user is an admin
-      // allow create: if request.auth.token.admin == true;
-
-      // Example: Only allow update/delete if the user owns the gathering document
-      // allow update, delete: if isOwner(resource.data.userId);
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
   }
 }
