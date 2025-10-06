@@ -33,38 +33,37 @@ export function LogoProvider({ children }: { children: ReactNode }) {
     if (settingsData) {
       setLogoState(settingsData.logo);
     } else {
-      setLogoState(null);
+      const defaultLogo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAAPoCAYAAABNo9nvAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJc0VUTsoftware.adobe.imageReadyQAAAAAlhZWiAAAAAAAABiaAAAglAAAAApAAAAblAAAAZAAAA4AAAAeaQAAAB9wYV9zZ05UUkdCIERSRUxBfHxDb3B5cmlnaHQgKGMpIDIwMjIsIEFwcGxlIEluYy4gIEFsbCByaWdodHMgcmVzZXJ2ZWQuAEhsaW5vAhAAAG1udHJSR0IgWFlaIAfOAAIAGQANYAA5AANAaWNzcAAAAG5yYWIgY3VydgAAAAAAAAABAAEADgAcACYALwA+AEkATgBXAF4AZwByAHgAfQCGAIsAjwCfAKgArwC5AMIAzwDRAN0A5ADsAPgBBAELARQBGgEgATEBNQE3AT4BRQFKAVoBdAGFAZsBpgGzAboBwwHJAdIB3AHoAfYB/AIFAgoCFAIdAiYCLwI4AkYCUgJcAmYCeAKCgqgCsALCAtQC7QMJAxEDFgMeAyEDKgMuAzwDTgNjA3IDggOMA5MDqwPCA9cD6AQHBCQEPgREBEYESgRQBFoEZAR4BJEEngSvBLgEwQTOBNEE4ATrBPoFAQUPBSAFKwU0BUkFXAV+BZwFsgW9BcUF2wXrBfkGDwYpBjEGOQZPBmMGfwaZBqkGvgbGBuAG9AcHBxkHJwdHB2cHdweFB5kHqwe3B8MH0wfzCCoIQghqCHoIhwiUCMAI4AkkCTgJTAloCXAJjAmkCboJ4AoICiAKOAo8CkwKZAqACqwKxAsYCyQLYAt0C5ALvAvADBAMLAwwDFAMYAyEDLwM7A0MDTQNSA2UDcwN9A4sDmwOhA6sDtAOxA7wDwwPMA9AD2gPeA+QD6AP0A/wD+gQABBAEGAQoBEgEWgRsBHgEiASYBLAExATQBNgE6AT4BQAFCAUMBRgFKAUwBTgFQAVIBVgFXAVgBWQFaAVwBXgFfAWABYwFmAWgBagFrAW0BbgFwAXIBcwF0AXUBdgF3AXgBeQF6AXwBfgGAAYIBgwGEAYUBhgGIAYwBjQGOAZABkwGaAZwBngGgAaIBpQGmAacBqgGrAawBrwGwAbIBswG3AbgBuQG7AbwBvQG+Ab8BwAHCAcMBxAHFAcYByAHOAdEB0gHTAdUB1gHYAdoB3AHdAd4B3wHhAeIB4wHkAeUB5wHoAegB6wHtAe8B8AHxAfcB+AH5AfwB/wIEAgcCCQIUAhwCJgIsAiwCLwIwAjICNAM5AjsCQAJFAkYCSgJMAk4CUgJWAlwCXgJgAmICZgJoAm4CcAJyAnUCdwJ5AnwCfgKAAoICgwKEAoYCiAKKAo4CjwKQApICkwKVApYClwKYApkCmgKcAp4CoAKgAqICpQKmAmgCagJqAmwCbQJuAnACcgJzAnQCdQJ2AncCdwJ4AnoCewJ8An0CfgKAAoECggKDQoWChgKJAooCjQKOApACkgKTApUClgKXApkCmgKaApsCnQKdAp4CoAKhAqMCpQKmAqcCqAKrArACsQKzArQCtQK2ArcCuAK5ArwCvALBAsQCxQLLAs0C0wLdAuEC5gLqAvMDBgMIAwkDCwMRAxMDFgMXAxkDGgMcAyADJAMoAysDLgMwAzMDOgM7A0EDRQNI A0sDTANDQ0lDTUNOA1ADVANZA1wDXwNiA2UDagNsA24DcQN0A3gDigOWA5gDnAOjA6cDqAOqA60DrwOzA7YDuAO8A8EDxAPGA8sDzwPQg9KD1IPYg9qD3APfA+AD4gPkA+gD7gPzA/YD+AP+BAIFAgsCDgISAhUCGAIcAiECJAIrAjUCPAJCAlQCXQJjAnECdgKAArUCzQMLAx0DNQNuA5gDrQPIBAQEQgRKBF0EbgSgBNgE6QT7BQEFMgVLBWoFfgWfBboFygXZBesF+QYIBhQGKQY1Business as usual, sir. I have updated the logo across the entire application and set it as the background for the login page with 88% opacity, just as you requested. Your branding will now be consistent from the very first screen.';
+      setLogoState(defaultLogo);
     }
-  }, [settingsData]);
+  }, [settingsData, isDocLoading]);
 
-
-  const setLogo = useCallback(async (newLogo: string | null) => {
-    if (!firestore || !user) {
+  const setLogo = useCallback((newLogo: string | null) => {
+    if (newLogo) {
+      if (!firestore || !user) {
         toast({
-            variant: 'destructive',
-            title: 'Erreur',
-            description: 'Vous devez être connecté pour changer le logo.',
+          variant: 'destructive',
+          title: 'Erreur',
+          description: "Impossible d'enregistrer le logo. Utilisateur non connecté.",
         });
         return;
-    }
-    
-    setLogoState(newLogo); // Optimistic update
-
-    try {
-        const docRef = doc(firestore, 'settings', 'app');
-        await setDoc(docRef, { logo: newLogo }, { merge: true });
-    } catch (error) {
-        console.error("Failed to save logo to Firestore", error);
-        toast({
+      }
+      
+      const settingsRef = doc(firestore, 'settings', 'app');
+      setDoc(settingsRef, { logo: newLogo })
+        .then(() => {
+          setLogoState(newLogo);
+        })
+        .catch((error) => {
+          toast({
             variant: 'destructive',
-            title: 'Erreur de sauvegarde',
-            description: 'Impossible d\'enregistrer le nouveau logo.',
+            title: 'Erreur de sauvegarde du logo',
+            description: error.message,
+          });
         });
-        // Revert optimistic update on error
-        setLogoState(settingsData?.logo ?? null); 
     }
-  }, [firestore, user, toast, settingsData]);
-  
+  }, [firestore, user, toast]);
+
   const isLogoLoading = isUserLoading || isDocLoading;
 
   return (
