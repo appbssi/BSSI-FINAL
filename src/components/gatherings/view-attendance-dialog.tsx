@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Agent, Gathering } from '@/lib/types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { CreateMissionFromGatheringForm } from '../missions/create-mission-from-gathering-form';
+import { Rocket } from 'lucide-react';
 
 interface ViewAttendanceDialogProps {
   isOpen: boolean;
@@ -33,6 +35,8 @@ interface ViewAttendanceDialogProps {
 }
 
 export function ViewAttendanceDialog({ isOpen, onOpenChange, gathering, agentsById }: ViewAttendanceDialogProps) {
+  const [showCreateMissionForm, setShowCreateMissionForm] = useState(false);
+  const [agentsForMission, setAgentsForMission] = useState<Agent[]>([]);
 
   const { presentAgents, absentAgents } = useMemo(() => {
     const present: Agent[] = [];
@@ -56,6 +60,16 @@ export function ViewAttendanceDialog({ isOpen, onOpenChange, gathering, agentsBy
       absentAgents: absent.sort(sortFn),
     };
   }, [gathering, agentsById]);
+
+  const handleCreateMission = (agents: Agent[]) => {
+      setAgentsForMission(agents);
+      setShowCreateMissionForm(true);
+  };
+  
+  const handleBackToList = () => {
+    setShowCreateMissionForm(false);
+    setAgentsForMission([]);
+  }
 
   const handleExportPDF = (listType: 'present' | 'absent' | 'all') => {
     const doc = new jsPDF();
@@ -111,70 +125,96 @@ export function ViewAttendanceDialog({ isOpen, onOpenChange, gathering, agentsBy
     doc.save(`liste_${listType}_${gathering.name.replace(/ /g, '_')}.pdf`);
   };
 
-  const AgentList = ({ agents }: { agents: Agent[] }) => (
-     <ScrollArea className="h-72">
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Nom Complet</TableHead>
-                    <TableHead>Matricule</TableHead>
-                    <TableHead>Grade</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {agents.length > 0 ? (
-                    agents.map(agent => (
-                        <TableRow key={agent.id}>
-                            <TableCell>{agent.firstName} {agent.lastName}</TableCell>
-                            <TableCell>{agent.registrationNumber}</TableCell>
-                            <TableCell>{agent.rank}</TableCell>
-                        </TableRow>
-                    ))
-                ) : (
+  const AgentList = ({ agents, onStartMission }: { agents: Agent[], onStartMission: (agents: Agent[]) => void }) => (
+     <>
+        <ScrollArea className="h-72">
+            <Table>
+                <TableHeader>
                     <TableRow>
-                        <TableCell colSpan={3} className="text-center h-24">
-                            Aucun agent dans cette liste.
-                        </TableCell>
+                        <TableHead>Nom Complet</TableHead>
+                        <TableHead>Matricule</TableHead>
+                        <TableHead>Grade</TableHead>
                     </TableRow>
-                )}
-            </TableBody>
-        </Table>
-    </ScrollArea>
+                </TableHeader>
+                <TableBody>
+                    {agents.length > 0 ? (
+                        agents.map(agent => (
+                            <TableRow key={agent.id}>
+                                <TableCell>{agent.firstName} {agent.lastName}</TableCell>
+                                <TableCell>{agent.registrationNumber}</TableCell>
+                                <TableCell>{agent.rank}</TableCell>
+                            </TableRow>
+                        ))
+                    ) : (
+                        <TableRow>
+                            <TableCell colSpan={3} className="text-center h-24">
+                                Aucun agent dans cette liste.
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+        </ScrollArea>
+        <div className="flex justify-end mt-4">
+             <Button onClick={() => onStartMission(agents)} disabled={agents.length === 0}>
+                <Rocket className="mr-2 h-4 w-4" />
+                Créer une mission avec ces agents
+             </Button>
+        </div>
+     </>
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+        if (!open) {
+            setShowCreateMissionForm(false);
+        }
+        onOpenChange(open);
+    }}>
       <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Liste de présence pour "{gathering.name}"</DialogTitle>
-          <DialogDescription>
-            {gathering.dateTime.toDate().toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' })}
-          </DialogDescription>
-        </DialogHeader>
-        
-        <Tabs defaultValue="present">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="present">Présents ({presentAgents.length})</TabsTrigger>
-                <TabsTrigger value="absent">Absents ({absentAgents.length})</TabsTrigger>
-            </TabsList>
-            <TabsContent value="present">
-                <AgentList agents={presentAgents} />
-                <div className="flex justify-end mt-4">
-                    <Button variant="outline" onClick={() => handleExportPDF('present')}>Exporter la liste des présents (PDF)</Button>
-                </div>
-            </TabsContent>
-            <TabsContent value="absent">
-                <AgentList agents={absentAgents} />
-                 <div className="flex justify-end mt-4">
-                    <Button variant="outline" onClick={() => handleExportPDF('absent')}>Exporter la liste des absents (PDF)</Button>
-                </div>
-            </TabsContent>
-        </Tabs>
-        
-        <DialogFooter className="sm:justify-between items-center pt-4 border-t">
-            <Button onClick={() => handleExportPDF('all')}>Exporter la liste complète (PDF)</Button>
-            <Button variant="secondary" onClick={() => onOpenChange(false)}>Fermer</Button>
-        </DialogFooter>
+        {showCreateMissionForm ? (
+             <CreateMissionFromGatheringForm 
+                agents={agentsForMission}
+                onMissionCreated={() => {
+                    setShowCreateMissionForm(false);
+                    onOpenChange(false);
+                }}
+                onCancel={handleBackToList}
+             />
+        ) : (
+        <>
+            <DialogHeader>
+                <DialogTitle>Liste de présence pour "{gathering.name}"</DialogTitle>
+                <DialogDescription>
+                    {gathering.dateTime.toDate().toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' })}
+                </DialogDescription>
+            </DialogHeader>
+            
+            <Tabs defaultValue="present">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="present">Présents ({presentAgents.length})</TabsTrigger>
+                    <TabsTrigger value="absent">Absents ({absentAgents.length})</TabsTrigger>
+                </TabsList>
+                <TabsContent value="present">
+                    <AgentList agents={presentAgents} onStartMission={handleCreateMission} />
+                    <div className="flex justify-end mt-4">
+                        <Button variant="outline" onClick={() => handleExportPDF('present')}>Exporter la liste des présents (PDF)</Button>
+                    </div>
+                </TabsContent>
+                <TabsContent value="absent">
+                    <AgentList agents={absentAgents} onStartMission={handleCreateMission}/>
+                    <div className="flex justify-end mt-4">
+                        <Button variant="outline" onClick={() => handleExportPDF('absent')}>Exporter la liste des absents (PDF)</Button>
+                    </div>
+                </TabsContent>
+            </Tabs>
+            
+            <DialogFooter className="sm:justify-between items-center pt-4 border-t">
+                <Button onClick={() => handleExportPDF('all')}>Exporter la liste complète (PDF)</Button>
+                <Button variant="secondary" onClick={() => onOpenChange(false)}>Fermer</Button>
+            </DialogFooter>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );
