@@ -45,13 +45,13 @@ body {
     
     --radius: 0.75rem;
 
-    --sidebar-background: 215 28% 17%; /* Dark sidebar */
-    --sidebar-foreground: 0 0% 98%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 25% 27%;
     --sidebar-primary: 30 95% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 28% 22%;
-    --sidebar-accent-foreground: 30 95% 55%;
-    --sidebar-border: 215 28% 25%;
+    --sidebar-accent: 30 95% 95%;
+    --sidebar-accent-foreground: 30 95% 45%;
+    --sidebar-border: 210 20% 90%;
     --sidebar-ring: 30 95% 55%;
   }
 
