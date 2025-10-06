@@ -6,6 +6,7 @@ import {
   LucideIcon,
   Rocket,
   Users,
+  CalendarClock
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -33,6 +34,7 @@ const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
   { href: '/agents', label: 'Agents', icon: Users },
   { href: '/missions', label: 'Missions', icon: Rocket },
+  { href: '/gatherings', label: 'Rassemblements', icon: CalendarClock },
 ];
 
 export function SidebarNav() {

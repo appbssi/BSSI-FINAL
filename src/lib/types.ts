@@ -20,3 +20,11 @@ export type Mission = {
   status: 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
   assignedAgentIds: string[];
 };
+
+export type Gathering = {
+  id: string;
+  name: string;
+  dateTime: Timestamp;
+  assignedAgentIds: string[];
+  absentAgentIds: string[];
+}

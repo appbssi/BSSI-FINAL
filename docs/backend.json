@@ -91,6 +91,43 @@
         "status",
         "assignedAgentIds"
       ]
+    },
+    "Gathering": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Gathering",
+      "type": "object",
+      "description": "Represents a gathering or muster for agents.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name or topic of the gathering."
+        },
+        "dateTime": {
+          "type": "string",
+          "description": "The date and time of the gathering.",
+          "format": "date-time"
+        },
+        "assignedAgentIds": {
+          "type": "array",
+          "description": "A list of agent IDs assigned to the gathering.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "absentAgentIds": {
+            "type": "array",
+            "description": "A list of agent IDs marked as absent for the gathering.",
+            "items": {
+                "type": "string"
+            }
+        }
+      },
+      "required": [
+        "name",
+        "dateTime",
+        "assignedAgentIds",
+        "absentAgentIds"
+      ]
     }
   },
   "auth": {
@@ -111,6 +148,12 @@
           "$ref": "#/entities/Mission"
         },
         "description": "Stores details about individual missions."
+      },
+      "/gatherings/{gatheringId}": {
+        "schema": {
+            "$ref": "#/entities/Gathering"
+        },
+        "description": "Stores details about individual gatherings."
       }
   }
 }
