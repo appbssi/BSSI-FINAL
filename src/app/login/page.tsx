@@ -98,8 +98,17 @@ export default function LoginPage() {
   };
   
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm">
+    <div className="relative flex min-h-screen items-center justify-center bg-background p-4">
+      {logo && (
+        <>
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${logo})` }}
+          />
+          <div className="absolute inset-0 bg-background opacity-80" />
+        </>
+      )}
+      <Card className="z-10 w-full max-w-sm bg-card/80 backdrop-blur-sm">
         <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
                 <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary/20">
