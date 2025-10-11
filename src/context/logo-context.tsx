@@ -33,7 +33,7 @@ export function LogoProvider({ children }: { children: ReactNode }) {
     if (settingsData) {
       setLogoState(settingsData.logo);
     } else {
-      const defaultLogo = 'https://github.com/appbssi/image/blob/main/dd.png';
+      const defaultLogo = 'https://imgur.com/kT9dC0d';
       setLogoState(defaultLogo);
     }
   }, [settingsData, isDocLoading]);
