@@ -33,7 +33,7 @@ export function LogoProvider({ children }: { children: ReactNode }) {
     if (settingsData) {
       setLogoState(settingsData.logo);
     } else {
-      const defaultLogo = 'https://i.ytimg.com/vi/wZqY5zp3fd4/hqdefault.jpg?sqp=-oaymwEmCOADEOgC8quKqQMa8AEB-AHOBYAC0AWKAgwIABABGHIgYig9MA8=&rs=AOn4CLDb20xitLVHhpg30aO1LXiZV_7NOg';
+      const defaultLogo = 'https://ibb.co/whV9nv27';
       setLogoState(defaultLogo);
     }
   }, [settingsData, isDocLoading]);

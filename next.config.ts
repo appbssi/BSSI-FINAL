@@ -34,6 +34,12 @@ const nextConfig: NextConfig = {
         hostname: 'i.ytimg.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ibb.co',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
