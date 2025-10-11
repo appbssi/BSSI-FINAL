@@ -40,6 +40,12 @@ const nextConfig: NextConfig = {
         hostname: 'ibb.co',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'github.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
