@@ -26,6 +26,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { CreateMissionFromGatheringForm } from '../missions/create-mission-from-gathering-form';
 import { Rocket } from 'lucide-react';
+import { useLogo } from '@/context/logo-context';
 
 interface ViewAttendanceDialogProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ interface ViewAttendanceDialogProps {
 export function ViewAttendanceDialog({ isOpen, onOpenChange, gathering, agentsById }: ViewAttendanceDialogProps) {
   const [showCreateMissionForm, setShowCreateMissionForm] = useState(false);
   const [agentsForMission, setAgentsForMission] = useState<Agent[]>([]);
+  const { logo } = useLogo();
 
   const { presentAgents, absentAgents } = useMemo(() => {
     const present: Agent[] = [];
@@ -91,15 +93,37 @@ export function ViewAttendanceDialog({ isOpen, onOpenChange, gathering, agentsBy
     }
     
     const pageWidth = doc.internal.pageSize.getWidth();
+    let currentY = 15;
+
+    // Add Logo
+    if (logo) {
+        try {
+            const img = new Image();
+            img.src = logo;
+            const aspectRatio = img.width / img.height;
+            const logoWidth = 25;
+            const logoHeight = logoWidth / aspectRatio;
+            doc.addImage(logo, 'PNG', (pageWidth - logoWidth) / 2, currentY, logoWidth, logoHeight);
+            currentY += logoHeight + 10;
+        } catch (e) {
+            console.error("Erreur lors de l'ajout du logo au PDF", e);
+        }
+    }
+
 
     // Header
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text("BRIGADE SPECIALE DE SURVEILLANCE ET D'INTERVENTION", pageWidth / 2, 15, { align: 'center' });
+    doc.text("BRIGADE SPECIALE DE SURVEILLANCE ET D'INTERVENTION", pageWidth / 2, currentY, { align: 'center' });
+    currentY += 15;
+
     doc.setFontSize(18);
-    doc.text(mainTitle, pageWidth / 2, 35, { align: 'center' });
+    doc.text(mainTitle, pageWidth / 2, currentY, { align: 'center' });
+    currentY += 7;
+    
     doc.setFontSize(12);
-    doc.text(`${listTitle} - ${dateTime}`, pageWidth / 2, 42, { align: 'center' });
+    doc.text(`${listTitle} - ${dateTime}`, pageWidth / 2, currentY, { align: 'center' });
+    currentY += 10;
 
     const body = agents.map(agent => [
         agent.firstName,
@@ -117,7 +141,7 @@ export function ViewAttendanceDialog({ isOpen, onOpenChange, gathering, agentsBy
     autoTable(doc, {
         head: [head],
         body,
-        startY: 50,
+        startY: currentY,
         theme: 'striped',
         headStyles: { fillColor: [39, 55, 70] },
     });
