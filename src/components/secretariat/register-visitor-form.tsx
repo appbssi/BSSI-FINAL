@@ -77,11 +77,7 @@ export function RegisterVisitorForm({ onVisitorRegistered }: RegisterVisitorForm
   const { isSubmitting } = form.formState;
 
   return (
-    <div className="space-y-4">
-        <div className="text-center">
-            <h3 className="text-lg font-medium">Enregistrer un visiteur</h3>
-            <p className="text-sm text-muted-foreground">Remplissez les détails du visiteur.</p>
-        </div>
+    <div className="space-y-4 pt-4">
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -138,7 +134,7 @@ export function RegisterVisitorForm({ onVisitorRegistered }: RegisterVisitorForm
                     </FormItem>
                 )}
                 />
-                <div className="flex justify-end pt-2">
+                <div className="flex justify-end pt-4">
                 <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Enregistrer

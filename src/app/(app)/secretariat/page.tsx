@@ -42,8 +42,16 @@ import { useLogo } from '@/context/logo-context';
 import type { Visitor } from '@/lib/types';
 import { EditVisitorSheet } from '@/components/secretariat/edit-visitor-sheet';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { RegisterVisitorForm } from '@/components/secretariat/register-visitor-form';
+
 
 export default function SecretariatPage() {
   const firestore = useFirestore();
@@ -194,16 +202,22 @@ export default function SecretariatPage() {
             </DropdownMenu>
 
           {!isObserver && (
-             <Popover open={isRegisterOpen} onOpenChange={setRegisterOpen}>
-                <PopoverTrigger asChild>
+             <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
+                <DialogTrigger asChild>
                     <Button>
                         <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer un visiteur
                     </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-96">
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Enregistrer un nouveau visiteur</DialogTitle>
+                        <DialogDescription>
+                            Remplissez les détails du visiteur ci-dessous.
+                        </DialogDescription>
+                    </DialogHeader>
                     <RegisterVisitorForm onVisitorRegistered={() => setRegisterOpen(false)} />
-                </PopoverContent>
-            </Popover>
+                </DialogContent>
+            </Dialog>
           )}
         </div>
       </div>
