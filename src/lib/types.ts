@@ -8,8 +8,10 @@ export type Agent = {
   rank: string;
   contact: string;
   address: string;
-  availability: 'Disponible' | 'En mission' | 'En congé';
+  onLeave: boolean;
 };
+
+export type Availability = 'Disponible' | 'En mission' | 'En congé';
 
 export type Mission = {
   id: string;

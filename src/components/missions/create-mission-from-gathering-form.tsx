@@ -32,6 +32,8 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent, Mission } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { ScrollArea } from '../ui/scroll-area';
+import { useMemo } from 'react';
+import { getAgentAvailability } from '@/lib/agents';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
@@ -56,20 +58,6 @@ interface CreateMissionFromGatheringFormProps {
     onMissionCreated: () => void;
     onCancel: () => void;
 }
-
-const isAgentAvailable = (agent: Agent, missions: Mission[], newMissionStart: Date, newMissionEnd: Date): boolean => {
-    if (agent.availability === 'En congé' || agent.availability === 'En mission') {
-        return false;
-    }
-    const agentMissions = missions.filter(mission => mission.assignedAgentIds.includes(agent.id) && mission.status !== 'Annulée' && mission.status !== 'Terminée');
-
-    return !agentMissions.some(mission => {
-        const missionStart = mission.startDate.toDate();
-        const missionEnd = mission.endDate.toDate();
-        return newMissionStart < missionEnd && newMissionEnd > missionStart;
-    });
-};
-
 
 export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCancel }: CreateMissionFromGatheringFormProps) {
   const { toast } = useToast();
@@ -112,10 +100,7 @@ export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCan
     };
     batch.set(newMissionRef, newMissionData);
 
-    finalAgentIds.forEach(agentId => {
-        const agentRef = doc(firestore, 'agents', agentId);
-        batch.update(agentRef, { availability: 'En mission' });
-    });
+    // No need to manually update agent availability
 
     batch.commit().then(() => {
         toast({
@@ -137,15 +122,33 @@ export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCan
   const startDate = form.watch('startDate');
   const endDate = form.watch('endDate');
 
-  const additionalAvailableAgents = allAgents
-    ? allAgents
+  const additionalAvailableAgents = useMemo(() => {
+    if (!allAgents || !allMissions || !startDate || !endDate) return [];
+    
+    const preselectedAgentIds = new Set(agents.map(a => a.id));
+
+    return allAgents
         .filter(agent => {
-            const isPreselected = agents.some(a => a.id === agent.id);
-            if(isPreselected) return false;
-            return startDate && endDate ? isAgentAvailable(agent, allMissions || [], startDate, endDate) : false
+            if (preselectedAgentIds.has(agent.id) || agent.onLeave) {
+                return false;
+            }
+
+            const agentMissions = allMissions.filter(m => 
+                m.assignedAgentIds.includes(agent.id) && 
+                m.status !== 'Annulée' && 
+                m.status !== 'Terminée'
+            );
+
+            const isOverlapping = agentMissions.some(mission => {
+                const missionStart = mission.startDate.toDate();
+                const missionEnd = mission.endDate.toDate();
+                return startDate < missionEnd && endDate > missionStart;
+            });
+
+            return !isOverlapping;
         })
-        .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName))
-    : [];
+        .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
+  }, [allAgents, allMissions, startDate, endDate, agents]);
 
 
   return (

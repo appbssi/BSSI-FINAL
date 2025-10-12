@@ -92,7 +92,7 @@ export function RegisterAgentSheet({ isOpen, onOpenChange }: RegisterAgentSheetP
       
       const agentData = {
         ...data,
-        availability: 'Disponible',
+        onLeave: false,
       };
 
       addDoc(agentsRef, agentData)

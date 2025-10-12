@@ -25,8 +25,9 @@ import { Badge } from '@/components/ui/badge';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, where, limit } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
-import type { Agent, Mission } from '@/lib/types';
+import type { Agent, Mission, Availability } from '@/lib/types';
 import { useMemo } from 'react';
+import { getAgentAvailability } from '@/lib/agents';
 
 export default function DashboardPage() {
   const firestore = useFirestore();
@@ -36,30 +37,37 @@ export default function DashboardPage() {
     [firestore]
   );
   
-  const potentiallyActiveMissionsQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'missions'), where('status', 'in', ['En cours', 'Planification']), limit(10)) : null),
+  const missionsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'missions') : null),
     [firestore]
   );
 
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
-  const { data: potentiallyActiveMissions, isLoading: activeMissionsLoading } = useCollection<Mission>(potentiallyActiveMissionsQuery);
+  const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
+
+  const agentsWithAvailability = useMemo(() => {
+    if (!agents || !missions) return [];
+    return agents.map(agent => ({
+      ...agent,
+      availability: getAgentAvailability(agent, missions)
+    }));
+  }, [agents, missions]);
+
 
   const activeMissions = useMemo(() => {
-    if (!potentiallyActiveMissions) return [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return potentiallyActiveMissions.filter(mission => {
-        if (mission.status === 'En cours') return true;
-        if (mission.status === 'Planification' && mission.startDate.toDate() <= today) return true;
-        return false;
+    if (!missions) return [];
+    
+    return missions.filter(mission => {
+        return mission.status === 'En cours' || mission.status === 'Planification';
     }).slice(0, 5);
-  }, [potentiallyActiveMissions]);
+  }, [missions]);
 
 
   const totalAgents = agents?.length ?? 0;
-  const agentsOnMission = agents?.filter(a => a.availability === 'En mission').length ?? 0;
-  const availableAgents = agents?.filter(a => a.availability === 'Disponible').length ?? 0;
+  const agentsOnMission = agentsWithAvailability?.filter(a => a.availability === 'En mission').length ?? 0;
+  const availableAgents = agentsWithAvailability?.filter(a => a.availability === 'Disponible').length ?? 0;
+
+  const isLoading = agentsLoading || missionsLoading;
 
   return (
     <div className="space-y-8">
@@ -70,7 +78,7 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{agentsLoading ? '...' : totalAgents}</div>
+            <div className="text-2xl font-bold">{isLoading ? '...' : totalAgents}</div>
           </CardContent>
         </Card>
         <Card>
@@ -79,7 +87,7 @@ export default function DashboardPage() {
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{agentsLoading ? '...' : availableAgents}</div>
+            <div className="text-2xl font-bold">{isLoading ? '...' : availableAgents}</div>
           </CardContent>
         </Card>
         <Card>
@@ -90,7 +98,7 @@ export default function DashboardPage() {
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{agentsLoading ? '...' : agentsOnMission}</div>
+            <div className="text-2xl font-bold">{isLoading ? '...' : agentsOnMission}</div>
           </CardContent>
         </Card>
       </div>
@@ -98,7 +106,7 @@ export default function DashboardPage() {
       <Card>
         <CardHeader>
           <CardTitle>
-            Aperçu des missions en cours ({activeMissionsLoading ? '...' : activeMissions.length})
+            Aperçu des missions en cours ({isLoading ? '...' : activeMissions.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -112,20 +120,20 @@ export default function DashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {activeMissionsLoading && (
+              {isLoading && (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center">Chargement...</TableCell>
                 </TableRow>
               )}
-              {!activeMissionsLoading && activeMissions.map((mission) => (
+              {!isLoading && activeMissions.map((mission) => (
                 <TableRow key={mission.id}>
                   <TableCell className="font-medium">{mission.name}</TableCell>
                    <TableCell>{mission.location}</TableCell>
                   <TableCell>
                     <Badge
-                      variant='default'
+                      variant={mission.status === 'En cours' ? 'default' : 'secondary'}
                     >
-                      En cours
+                      {mission.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -133,7 +141,7 @@ export default function DashboardPage() {
                   </TableCell>
                 </TableRow>
               ))}
-               {!activeMissionsLoading && activeMissions.length === 0 && (
+               {!isLoading && activeMissions.length === 0 && (
                  <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">
                         Aucune mission en cours.

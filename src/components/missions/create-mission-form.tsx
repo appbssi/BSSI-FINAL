@@ -24,11 +24,12 @@ import { fr } from 'date-fns/locale';
 import { collection, Timestamp, addDoc, writeBatch, doc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import type { Agent, Mission } from '@/lib/types';
+import type { Agent, Mission, Availability } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
+import { getAgentAvailability } from '@/lib/agents';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
@@ -47,21 +48,6 @@ const missionSchema = z.object({
 
 
 type MissionFormValues = z.infer<typeof missionSchema>;
-
-const isAgentAvailable = (agent: Agent, missions: Mission[], newMissionStart: Date, newMissionEnd: Date): boolean => {
-    if (agent.availability === 'En congé' || agent.availability === 'En mission') {
-        return false;
-    }
-    const agentMissions = missions.filter(mission => mission.assignedAgentIds.includes(agent.id) && mission.status !== 'Annulée' && mission.status !== 'Terminée');
-
-    return !agentMissions.some(mission => {
-        const missionStart = mission.startDate.toDate();
-        const missionEnd = mission.endDate.toDate();
-        // Check for overlap
-        return newMissionStart < missionEnd && newMissionEnd > missionStart;
-    });
-};
-
 
 export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () => void }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -100,10 +86,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     };
     batch.set(newMissionRef, newMissionData);
 
-    data.assignedAgentIds.forEach(agentId => {
-        const agentRef = doc(firestore, 'agents', agentId);
-        batch.update(agentRef, { availability: 'En mission' });
-    });
+    // No need to update agent availability manually anymore
 
     batch.commit().then(() => {
         toast({
@@ -134,11 +117,36 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   const startDate = form.watch('startDate');
   const endDate = form.watch('endDate');
 
-  const availableAgents = allAgents
-    ? allAgents
-        .filter(agent => startDate && endDate ? isAgentAvailable(agent, allMissions || [], startDate, endDate) : false)
-        .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName))
-    : [];
+  const agentsWithAvailability = useMemo(() => {
+    if (!allAgents || !allMissions) return [];
+    return allAgents.map(agent => ({
+        ...agent,
+        availability: getAgentAvailability(agent, allMissions)
+    }));
+  }, [allAgents, allMissions]);
+  
+  const availableAgents = useMemo(() => {
+    if (!startDate || !endDate) return [];
+    return agentsWithAvailability
+      .filter(agent => {
+        if (agent.onLeave) return false;
+
+        const agentMissions = allMissions?.filter(m => 
+            m.assignedAgentIds.includes(agent.id) && 
+            m.status !== 'Annulée' && 
+            m.status !== 'Terminée'
+        ) ?? [];
+
+        const isOverlapping = agentMissions.some(mission => {
+            const missionStart = mission.startDate.toDate();
+            const missionEnd = mission.endDate.toDate();
+            return startDate < missionEnd && endDate > missionStart;
+        });
+
+        return !isOverlapping;
+      })
+      .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
+  }, [agentsWithAvailability, allMissions, startDate, endDate]);
 
   return (
     <div className="p-0 sm:p-6">

@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import type { Agent, Mission } from '@/lib/types';
+import type { Agent, Mission, Availability } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -36,13 +36,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { getAgentAvailability } from '@/lib/agents';
 
 
 const missionSchema = z.object({
@@ -61,33 +55,6 @@ const missionSchema = z.object({
 });
 
 type MissionFormValues = z.infer<typeof missionSchema>;
-
-const isAgentAvailable = (agent: Agent, missions: Mission[], newMissionStart: Date, newMissionEnd: Date, currentMissionId?: string): boolean => {
-    if (agent.availability === 'En congé') {
-        return false;
-    }
-     // If the agent is on the current mission, they are considered "available" for re-assignment.
-    if (agent.availability === 'En mission' && missions.some(m => m.id === currentMissionId && m.assignedAgentIds.includes(agent.id))) {
-      return true;
-    }
-    if (agent.availability === 'En mission') {
-        return false;
-    }
-
-    const agentMissions = missions.filter(mission => 
-        mission.id !== currentMissionId && 
-        mission.assignedAgentIds.includes(agent.id) && 
-        mission.status !== 'Annulée' && 
-        mission.status !== 'Terminée'
-    );
-
-    return !agentMissions.some(mission => {
-        const missionStart = mission.startDate.toDate();
-        const missionEnd = mission.endDate.toDate();
-        return newMissionStart < missionEnd && newMissionEnd > missionStart;
-    });
-};
-
 
 interface EditMissionSheetProps {
   mission: Mission;
@@ -141,25 +108,6 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
         endDate: Timestamp.fromDate(data.endDate),
     };
     batch.update(missionRef, missionUpdateData);
-
-    const originalAgentIds = new Set(mission.assignedAgentIds || []);
-    const newAgentIds = new Set(data.assignedAgentIds);
-
-    // Agents removed from mission -> set to Disponible
-    for (const agentId of originalAgentIds) {
-        if (!newAgentIds.has(agentId)) {
-            const agentRef = doc(firestore, 'agents', agentId);
-            batch.update(agentRef, { availability: 'Disponible' });
-        }
-    }
-
-    // Agents added to mission -> set to En mission
-    for (const agentId of newAgentIds) {
-        if (!originalAgentIds.has(agentId)) {
-            const agentRef = doc(firestore, 'agents', agentId);
-            batch.update(agentRef, { availability: 'En mission' });
-        }
-    }
     
     batch.commit().then(() => {
         toast({
@@ -180,13 +128,42 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
   const startDate = form.watch('startDate');
   const endDate = form.watch('endDate');
 
-  const currentlyAssignedAgents = allAgents?.filter(agent => (mission.assignedAgentIds || []).includes(agent.id)) || [];
+  const agentsWithAvailability = useMemo(() => {
+    if (!allAgents || !allMissions) return [];
+    return allAgents.map(agent => ({
+        ...agent,
+        availability: getAgentAvailability(agent, allMissions, mission.id)
+    }));
+  }, [allAgents, allMissions, mission.id]);
 
-  const availableAgents = allAgents?.filter(agent => 
-      startDate && endDate ? isAgentAvailable(agent, allMissions || [], startDate, endDate, mission.id) : false
-  ) || [];
+  const combinedAgentList = useMemo(() => {
+    if (!startDate || !endDate) return [];
+    return agentsWithAvailability
+      .filter(agent => {
+        if (agent.onLeave) return false;
 
-  const combinedAgentList = [...new Map([...currentlyAssignedAgents, ...availableAgents].map(agent => [agent.id, agent])).values()].sort((a,b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
+        // If agent is already in this mission, keep them in the list
+        if ((mission.assignedAgentIds || []).includes(agent.id)) {
+            return true;
+        }
+
+        const agentMissions = allMissions?.filter(m => 
+            m.id !== mission.id &&
+            m.assignedAgentIds.includes(agent.id) && 
+            m.status !== 'Annulée' && 
+            m.status !== 'Terminée'
+        ) ?? [];
+
+        const isOverlapping = agentMissions.some(m => {
+            const missionStart = m.startDate.toDate();
+            const missionEnd = m.endDate.toDate();
+            return startDate < missionEnd && endDate > missionStart;
+        });
+
+        return !isOverlapping;
+      })
+      .sort((a,b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
+  }, [startDate, endDate, agentsWithAvailability, allMissions, mission.id, mission.assignedAgentIds]);
 
 
   return (
@@ -325,9 +302,33 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                                 combinedAgentList.map((agent) => {
                                     const isChecked = field.value?.includes(agent.id);
                                     const isOriginallyAssigned = (mission.assignedAgentIds || []).includes(agent.id);
-                                    const isAvailableForSelection = availableAgents.some(a => a.id === agent.id);
                                     
-                                    const isDisabled = !isOriginallyAssigned && !isAvailableForSelection;
+                                    const agentMissions = (allMissions || []).filter(m => 
+                                        m.id !== mission.id &&
+                                        m.assignedAgentIds.includes(agent.id) && 
+                                        m.status !== 'Annulée' && 
+                                        m.status !== 'Terminée'
+                                    );
+                                    const isOverlapping = agentMissions.some(m => {
+                                        const missionStart = m.startDate.toDate();
+                                        const missionEnd = m.endDate.toDate();
+                                        return startDate < missionEnd && endDate > missionStart;
+                                    });
+
+                                    const isDisabled = !isOriginallyAssigned && (agent.onLeave || isOverlapping);
+
+                                    const getBadgeVariant = (availability: Availability) => {
+                                        switch (availability) {
+                                        case 'Disponible':
+                                            return 'outline';
+                                        case 'En mission':
+                                            return 'default';
+                                        case 'En congé':
+                                            return 'destructive';
+                                        default:
+                                            return 'secondary';
+                                        }
+                                    };
 
                                     return (
                                         <div
@@ -351,13 +352,9 @@ export function EditMissionSheet({ mission, isOpen, onOpenChange }: EditMissionS
                                                    {agent.rank} | {agent.registrationNumber}
                                                 </div>
                                             </div>
-                                             <Badge variant={
-                                                isDisabled ? 'destructive' :
-                                                isOriginallyAssigned && agent.availability === 'En mission' ? 'default' :
-                                                agent.availability === 'Disponible' ? 'outline' : 'secondary'
-                                            }>
-                                                {isDisabled ? 'Indisponible' : agent.availability}
-                                            </Badge>
+                                             <Badge variant={getBadgeVariant(agent.availability)}>
+                                                {isDisabled && !agent.onLeave ? 'Conflit' : agent.availability}
+                                             </Badge>
                                         </div>
                                     );
                                 })

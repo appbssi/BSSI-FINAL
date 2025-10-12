@@ -20,12 +20,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useFirestore, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent } from '@/lib/types';
+import { Switch } from '../ui/switch';
 
 const agentSchema = z.object({
   firstName: z.string().min(2, 'Le prénom est requis'),
@@ -34,6 +36,7 @@ const agentSchema = z.object({
   rank: z.string().min(3, 'Le grade est requis'),
   contact: z.string().length(10, 'Le contact doit contenir exactement 10 chiffres.').regex(/^[0-9]+$/, 'Le contact ne doit contenir que des chiffres.'),
   address: z.string().min(3, "L'adresse est requise"),
+  onLeave: z.boolean(),
 });
 
 type AgentFormValues = z.infer<typeof agentSchema>;
@@ -57,6 +60,7 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
       rank: agent.rank,
       contact: agent.contact,
       address: agent.address,
+      onLeave: agent.onLeave,
     },
   });
 
@@ -204,6 +208,28 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
                     <Input {...field} />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="onLeave"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">
+                      En congé
+                    </FormLabel>
+                    <FormDescription>
+                      Marquer cet agent comme étant en congé. Il ne sera pas disponible pour les missions.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />

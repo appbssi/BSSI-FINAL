@@ -9,19 +9,17 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
-import type { Agent } from '@/lib/types';
-import { useFirestore } from '@/firebase';
-import { useToast } from '@/hooks/use-toast';
+import type { Agent, Availability } from '@/lib/types';
 import { User } from 'lucide-react';
 
 interface AgentDetailsSheetProps {
-  agent: Agent;
+  agent: Agent & { availability: Availability };
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
 }
 
 export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsSheetProps) {
-  const getBadgeVariant = (availability: string) => {
+  const getBadgeVariant = (availability: Availability) => {
     switch (availability) {
       case 'Disponible':
         return 'outline';

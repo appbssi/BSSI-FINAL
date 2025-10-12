@@ -330,13 +330,6 @@ export default function MissionsPage() {
     const missionRef = doc(firestore, 'missions', missionToDelete.id);
     batch.delete(missionRef);
     
-    if (missionToDelete.status === 'En cours' || missionToDelete.status === 'Planification') {
-      for (const agentId of missionToDelete.assignedAgentIds) {
-          const agentRef = doc(firestore, 'agents', agentId);
-          batch.update(agentRef, { availability: 'Disponible' });
-      }
-    }
-
     batch.commit().then(() => {
         toast({
             title: 'Mission supprimée',
@@ -557,7 +550,3 @@ export default function MissionsPage() {
     </div>
   );
 }
-
-    
-
-    

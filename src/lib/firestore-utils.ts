@@ -1,8 +1,8 @@
 
 'use client';
 
-import { collection, getDocs, writeBatch, Firestore, doc, deleteDoc } from "firebase/firestore";
-import type { Agent } from "./types";
+import { collection, getDocs, writeBatch, Firestore, doc, deleteDoc, WriteBatch } from "firebase/firestore";
+import type { Agent, Mission } from "./types";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 
@@ -59,11 +59,24 @@ export async function deleteDuplicateAgents(firestore: Firestore): Promise<numbe
   return duplicatesDeleted;
 }
 
-export function deleteAgent(firestore: Firestore, agent: Agent) {
+export function deleteAgent(firestore: Firestore, agent: Agent, missions: Mission[]) {
     if (!agent) return;
+
+    const batch = writeBatch(firestore);
     const agentRef = doc(firestore, 'agents', agent.id);
 
-    deleteDoc(agentRef).catch(async (serverError) => {
+    // Remove agent from all missions they are assigned to
+    missions.forEach(mission => {
+        if (mission.assignedAgentIds.includes(agent.id)) {
+            const missionRef = doc(firestore, 'missions', mission.id);
+            const updatedAgentIds = mission.assignedAgentIds.filter(id => id !== agent.id);
+            batch.update(missionRef, { assignedAgentIds: updatedAgentIds });
+        }
+    });
+    
+    batch.delete(agentRef);
+
+    batch.commit().catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
             path: agentRef.path,
             operation: 'delete',

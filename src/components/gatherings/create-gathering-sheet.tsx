@@ -72,7 +72,7 @@ export function CreateGatheringSheet({ isOpen, onOpenChange }: CreateGatheringSh
 
   const availableAgents = useMemo(() => {
     return (allAgents || [])
-      .filter(agent => agent.availability !== 'En congé')
+      .filter(agent => !agent.onLeave)
       .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
   }, [allAgents]);
 

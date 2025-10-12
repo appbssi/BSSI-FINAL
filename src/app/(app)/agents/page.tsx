@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -22,9 +22,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { RegisterAgentSheet } from '@/components/agents/register-agent-sheet';
-import type { Agent } from '@/lib/types';
+import type { Agent, Mission, Availability } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, deleteDoc, doc } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
@@ -49,6 +49,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { AgentDetailsSheet } from '@/components/agents/agent-details-sheet';
 import { useRole } from '@/hooks/use-role';
 import { useLogo } from '@/context/logo-context';
+import { getAgentAvailability } from '@/lib/agents';
 
 
 export default function AgentsPage() {
@@ -64,22 +65,29 @@ export default function AgentsPage() {
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'Disponible' | 'En mission' | 'En congé'>('all');
   const { toast } = useToast();
 
-  const agentsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'agents') : null),
-    [firestore]
-  );
+  const agentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'agents') : null), [firestore]);
+  const missionsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'missions') : null), [firestore]);
 
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
+  const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
 
-  const sortedAgents = agents
-    ? [...agents].sort((a, b) => {
-        const firstNameComparison = a.firstName.localeCompare(b.firstName);
-        if (firstNameComparison !== 0) {
-          return firstNameComparison;
-        }
-        return a.lastName.localeCompare(b.lastName);
-      })
-    : [];
+  const agentsWithAvailability = useMemo(() => {
+    if (!agents || !missions) return [];
+    return agents.map(agent => ({
+      ...agent,
+      availability: getAgentAvailability(agent, missions)
+    }));
+  }, [agents, missions]);
+
+  const sortedAgents = useMemo(() => {
+    return [...agentsWithAvailability].sort((a, b) => {
+      const firstNameComparison = a.firstName.localeCompare(b.firstName);
+      if (firstNameComparison !== 0) {
+        return firstNameComparison;
+      }
+      return a.lastName.localeCompare(b.lastName);
+    });
+  }, [agentsWithAvailability]);
 
   const filteredAgents = sortedAgents.filter(agent => {
     const matchesSearch = `${agent.firstName} ${agent.lastName}`.toLowerCase().includes(searchQuery.toLowerCase());
@@ -87,7 +95,7 @@ export default function AgentsPage() {
     return matchesSearch && matchesFilter;
   });
 
-  const getBadgeVariant = (availability: string) => {
+  const getBadgeVariant = (availability: Availability) => {
     switch (availability) {
       case 'Disponible':
         return 'outline';
@@ -101,9 +109,10 @@ export default function AgentsPage() {
   };
 
   const handleDeleteAgent = async () => {
-    if (!firestore || !agentToDelete) return;
+    if (!firestore || !agentToDelete || !missions) return;
 
-    if (agentToDelete.availability === 'En mission') {
+    const availability = getAgentAvailability(agentToDelete, missions);
+    if (availability === 'En mission') {
         toast({
             variant: 'destructive',
             title: 'Action non autorisée',
@@ -115,7 +124,7 @@ export default function AgentsPage() {
 
     setIsDeleting(true);
 
-    deleteAgent(firestore, agentToDelete);
+    deleteAgent(firestore, agentToDelete, missions);
     
     toast({
       title: 'Agent supprimé',
@@ -351,7 +360,7 @@ export default function AgentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {agentsLoading ? (
+            {agentsLoading || missionsLoading ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center">Chargement des agents...</TableCell>
               </TableRow>
@@ -445,9 +454,9 @@ export default function AgentsPage() {
         />
       )}
 
-      {selectedAgent && (
+      {selectedAgent && missions && (
         <AgentDetailsSheet
-          agent={selectedAgent}
+          agent={{...selectedAgent, availability: getAgentAvailability(selectedAgent, missions)}}
           isOpen={!!selectedAgent}
           onOpenChange={(open) => {
             if (!open) {

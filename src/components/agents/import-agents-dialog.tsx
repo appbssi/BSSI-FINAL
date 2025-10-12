@@ -30,7 +30,7 @@ import { collection, doc, writeBatch, getDocs } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import * as z from 'zod';
 
-type AgentImportData = Omit<Agent, 'id' | 'availability'>;
+type AgentImportData = Omit<Agent, 'id' | 'onLeave'>;
 
 const contactSchema = z.string().length(10, 'Le contact doit contenir exactement 10 chiffres.').regex(/^[0-9]+$/, 'Le contact ne doit contenir que des chiffres.');
 
@@ -154,7 +154,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         const newAgentRef = doc(collection(firestore, 'agents'));
         const newAgent: Omit<Agent, 'id'> = {
             ...agentData,
-            availability: 'Disponible',
+            onLeave: false,
         };
         batch.set(newAgentRef, newAgent);
         allData.push(newAgent);
