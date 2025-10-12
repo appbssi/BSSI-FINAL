@@ -21,7 +21,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { RegisterAgentForm } from '@/components/agents/register-agent-sheet';
+import { RegisterAgentForm } from '@/components/agents/register-agent-form';
 import type { Agent, Mission, Availability } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection } from 'firebase/firestore';
@@ -349,7 +349,7 @@ export default function AgentsPage() {
                     <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md md:max-w-lg">
+                <DialogContent className="sm:max-w-md">
                   <RegisterAgentForm onAgentRegistered={() => setRegisterOpen(false)} />
                 </DialogContent>
               </Dialog>
