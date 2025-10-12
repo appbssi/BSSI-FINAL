@@ -46,13 +46,13 @@ export function SidebarNav() {
     <>
       <SidebarHeader>
         <div className="flex items-center gap-2">
-          <div className="bg-primary rounded-md p-1 flex items-center justify-center h-14 w-14 relative">
+          <div className="bg-background rounded-md p-1 flex items-center justify-center h-14 w-14 relative">
              {isLogoLoading ? (
-                <Loader2 className="w-8 h-8 animate-spin text-primary-foreground" />
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
               ) : logo ? (
                 <Image src={logo} alt="Logo" fill className="rounded-md object-cover" />
               ) : (
-                <Rocket className="w-8 h-8 text-primary-foreground" />
+                <Rocket className="w-8 h-8 text-primary" />
               )}
           </div>
           <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">
