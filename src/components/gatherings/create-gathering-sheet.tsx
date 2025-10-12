@@ -6,13 +6,10 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@/components/ui/sheet';
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -46,12 +43,11 @@ const gatheringSchema = z.object({
 
 type GatheringFormValues = z.infer<typeof gatheringSchema>;
 
-interface CreateGatheringSheetProps {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
+interface CreateGatheringFormProps {
+  onGatheringCreated: () => void;
 }
 
-export function CreateGatheringSheet({ isOpen, onOpenChange }: CreateGatheringSheetProps) {
+export function CreateGatheringForm({ onGatheringCreated }: CreateGatheringFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -98,7 +94,7 @@ export function CreateGatheringSheet({ isOpen, onOpenChange }: CreateGatheringSh
         });
         form.reset();
         setCurrentStep(1);
-        onOpenChange(false);
+        onGatheringCreated();
     }).catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
             path: 'gatherings',
@@ -129,14 +125,13 @@ export function CreateGatheringSheet({ isOpen, onOpenChange }: CreateGatheringSh
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto w-full max-w-lg sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>Créer un nouveau rassemblement</SheetTitle>
-          <SheetDescription>
+    <>
+        <DialogHeader>
+          <DialogTitle>Créer un nouveau rassemblement</DialogTitle>
+          <DialogDescription>
             Planifiez un rassemblement et assignez-y des agents.
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-6">
             {currentStep === 1 && (
@@ -245,7 +240,6 @@ export function CreateGatheringSheet({ isOpen, onOpenChange }: CreateGatheringSh
             )}
           </form>
         </Form>
-      </SheetContent>
-    </Sheet>
+    </>
   );
 }

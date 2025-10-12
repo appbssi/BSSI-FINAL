@@ -38,13 +38,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useRole } from '@/hooks/use-role';
-import { CreateGatheringSheet } from '@/components/gatherings/create-gathering-sheet';
+import { CreateGatheringForm } from '@/components/gatherings/create-gathering-sheet';
 import { ManageAttendanceSheet } from '@/components/gatherings/manage-attendance-sheet';
 import { ViewAttendanceDialog } from '@/components/gatherings/view-attendance-dialog';
+import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
 
 export default function GatheringsPage() {
   const { isObserver } = useRole();
-  const [isCreateSheetOpen, setCreateSheetOpen] = useState(false);
+  const [isCreateOpen, setCreateOpen] = useState(false);
   const [selectedGathering, setSelectedGathering] = useState<Gathering | null>(null);
   const [viewingAttendance, setViewingAttendance] = useState<Gathering | null>(null);
   const [gatheringToDelete, setGatheringToDelete] = useState<Gathering | null>(null);
@@ -105,9 +106,16 @@ export default function GatheringsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Rassemblements</h1>
         {!isObserver && (
-          <Button onClick={() => setCreateSheetOpen(true)}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Créer un rassemblement
-          </Button>
+          <Dialog open={isCreateOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> Créer un rassemblement
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+                <CreateGatheringForm onGatheringCreated={() => setCreateOpen(false)} />
+            </DialogContent>
+          </Dialog>
         )}
       </div>
 
@@ -208,11 +216,6 @@ export default function GatheringsPage() {
           </TableBody>
         </Table>
       </div>
-
-      <CreateGatheringSheet
-        isOpen={isCreateSheetOpen}
-        onOpenChange={setCreateSheetOpen}
-      />
       
       {selectedGathering && (
         <ManageAttendanceSheet
