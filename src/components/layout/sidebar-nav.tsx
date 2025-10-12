@@ -25,24 +25,32 @@ import {
 import { UserNav } from './user-nav';
 import { useLogo } from '@/context/logo-context';
 import Image from 'next/image';
+import { useRole } from '@/hooks/use-role';
 
 type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
+  roles?: Array<'admin' | 'observer' | 'secretariat'>;
 };
 
 const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-  { href: '/agents', label: 'Agents', icon: Users },
-  { href: '/missions', label: 'Missions', icon: Rocket },
-  { href: '/gatherings', label: 'Rassemblements', icon: CalendarClock },
-  { href: '/secretariat', label: 'Secrétariat', icon: BookUser },
+  { href: '/agents', label: 'Agents', icon: Users, roles: ['admin', 'observer'] },
+  { href: '/missions', label: 'Missions', icon: Rocket, roles: ['admin', 'observer'] },
+  { href: '/gatherings', label: 'Rassemblements', icon: CalendarClock, roles: ['admin', 'observer'] },
+  { href: '/secretariat', label: 'Secrétariat', icon: BookUser, roles: ['admin', 'secretariat'] },
 ];
 
 export function SidebarNav() {
   const pathname = usePathname();
   const { logo, isLogoLoading } = useLogo();
+  const { role } = useRole();
+
+  const filteredNavItems = navItems.filter(item => {
+    if (!item.roles) return true;
+    return role ? item.roles.includes(role) : false;
+  });
 
   return (
     <>
@@ -74,7 +82,7 @@ export function SidebarNav() {
         )}
         <div className="relative z-10">
             <SidebarMenu>
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                 <Link href={item.href}>
                     <SidebarMenuButton

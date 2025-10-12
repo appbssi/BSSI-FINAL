@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 
-type Role = 'admin' | 'observer' | null;
+type Role = 'admin' | 'observer' | 'secretariat' | null;
 
 const ROLE_STORAGE_KEY = 'app-user-role';
 
@@ -49,12 +49,13 @@ interface UseRoleResult {
   isRoleLoading: boolean;
   isAdmin: boolean;
   isObserver: boolean;
+  isSecretariat: boolean;
 }
 
 // Initialize state from localStorage on script load
 try {
     const savedRole = localStorage.getItem(ROLE_STORAGE_KEY);
-    if (savedRole === 'admin' || savedRole === 'observer') {
+    if (savedRole === 'admin' || savedRole === 'observer' || savedRole === 'secretariat') {
         memoryState = savedRole;
     }
 } catch (error) {
@@ -70,8 +71,8 @@ export function useRole(): UseRoleResult {
     // This effect runs once on mount to ensure we have the correct initial value
     // in case it was set from another tab after this script loaded.
     try {
-        const savedRole = localStorage.getItem(ROLE_STORAGE_KEY);
-        if (savedRole === 'admin' || savedRole === 'observer') {
+        const savedRole = localStorage.getItem(ROLE_STORAGE_KEY) as Role;
+        if (['admin', 'observer', 'secretariat'].includes(savedRole as string)) {
             if(memoryState !== savedRole) {
                 memoryState = savedRole;
             }
@@ -93,6 +94,7 @@ export function useRole(): UseRoleResult {
     role, 
     isRoleLoading: !isInitialized,
     isAdmin: role === 'admin',
-    isObserver: role === 'observer'
+    isObserver: role === 'observer',
+    isSecretariat: role === 'secretariat',
   };
 }

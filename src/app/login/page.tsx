@@ -37,6 +37,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const ADMIN_LOGIN = 'bssi';
 const ADMIN_PASS = 'bssiA';
 const OBSERVER_PASS = 'admin';
+const SECRETARIAT_PASS = 'bssiB';
 
 
 export default function LoginPage() {
@@ -62,13 +63,15 @@ export default function LoginPage() {
     try {
       const { email: login, password } = data;
       
-      let userRole: 'admin' | 'observer' | null = null;
+      let userRole: 'admin' | 'observer' | 'secretariat' | null = null;
 
       if (login.toLowerCase() === ADMIN_LOGIN) {
         if (password === ADMIN_PASS) {
             userRole = 'admin';
         } else if (password === OBSERVER_PASS) {
             userRole = 'observer';
+        } else if (password === SECRETARIAT_PASS) {
+            userRole = 'secretariat';
         }
       }
 
