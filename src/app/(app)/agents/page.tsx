@@ -349,7 +349,7 @@ export default function AgentsPage() {
                     <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="sm:max-w-md md:max-w-lg">
                   <RegisterAgentForm onAgentRegistered={() => setRegisterOpen(false)} />
                 </DialogContent>
               </Dialog>
