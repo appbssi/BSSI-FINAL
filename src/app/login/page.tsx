@@ -34,7 +34,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const ADMIN_LOGIN = 'bssi';
-const ADMIN_PASS = 'adminR';
+const ADMIN_PASS = 'bssiA';
 const OBSERVER_PASS = 'admin';
 
 
