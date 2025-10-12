@@ -2,23 +2,23 @@
 'use client';
 
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import type { Agent, Availability } from '@/lib/types';
 import { User } from 'lucide-react';
 
-interface AgentDetailsSheetProps {
+interface AgentDetailsProps {
   agent: Agent & { availability: Availability };
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
 }
 
-export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsSheetProps) {
+export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsProps) {
   const getBadgeVariant = (availability: Availability) => {
     switch (availability) {
       case 'Disponible':
@@ -33,14 +33,14 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsS
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Détails de l'agent</SheetTitle>
-          <SheetDescription>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Détails de l'agent</DialogTitle>
+          <DialogDescription>
             Informations complètes sur l'agent.
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
         <div className="py-6 space-y-6">
             <div className="flex items-center gap-4">
                 <div className="h-16 w-16 rounded-full flex items-center justify-center bg-muted text-muted-foreground">
@@ -74,7 +74,7 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsS
                 </div>
             </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
