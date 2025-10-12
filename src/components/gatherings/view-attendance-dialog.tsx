@@ -73,9 +73,60 @@ export function ViewAttendanceDialog({ isOpen, onOpenChange, gathering, agentsBy
     setAgentsForMission([]);
   }
 
+  const generatePdfWithLogo = (doc: jsPDF, listTitle: string, dateTime: string, head: string[], body: any[][]) => {
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let currentY = 15;
+
+      const addContent = () => {
+          // Header
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.text("BRIGADE SPECIALE DE SURVEILLANCE ET D'INTERVENTION", pageWidth / 2, currentY, { align: 'center' });
+          currentY += 15;
+
+          doc.setFontSize(18);
+          doc.text(`Rassemblement: ${gathering.name}`, pageWidth / 2, currentY, { align: 'center' });
+          currentY += 7;
+          
+          doc.setFontSize(12);
+          doc.text(`${listTitle} - ${dateTime}`, pageWidth / 2, currentY, { align: 'center' });
+          currentY += 10;
+
+          autoTable(doc, {
+              head: [head],
+              body,
+              startY: currentY,
+              theme: 'striped',
+              headStyles: { fillColor: [39, 55, 70] },
+          });
+
+          doc.save(`liste_${listTitle.split(' ')[2].toLowerCase()}_${gathering.name.replace(/ /g, '_')}.pdf`);
+      };
+
+      if (logo) {
+          const img = new Image();
+          img.crossOrigin = 'Anonymous';
+          img.onload = () => {
+              const aspectRatio = img.width / img.height;
+              const logoWidth = 25;
+              const logoHeight = logoWidth / aspectRatio;
+              doc.addImage(img, 'PNG', (pageWidth - logoWidth) / 2, currentY, logoWidth, logoHeight);
+              currentY += logoHeight + 10;
+              addContent();
+          };
+          img.onerror = () => {
+              console.error("Erreur lors du chargement du logo pour le PDF.");
+              addContent(); // Generate PDF without logo if it fails to load
+          };
+          img.src = logo;
+      } else {
+          addContent();
+      }
+  };
+
+
   const handleExportPDF = (listType: 'present' | 'absent' | 'all') => {
     const doc = new jsPDF();
-    const mainTitle = `Rassemblement: ${gathering.name}`;
     const dateTime = gathering.dateTime.toDate().toLocaleString('fr-FR');
     
     let listTitle = '';
@@ -91,62 +142,21 @@ export function ViewAttendanceDialog({ isOpen, onOpenChange, gathering, agentsBy
         listTitle = 'Liste de Présence Complète';
         agents = [...presentAgents, ...absentAgents].sort((a,b) => a.firstName.localeCompare(b.firstName));
     }
-    
-    const pageWidth = doc.internal.pageSize.getWidth();
-    let currentY = 15;
-
-    // Add Logo
-    if (logo) {
-        try {
-            const img = new Image();
-            img.src = logo;
-            const aspectRatio = img.width / img.height;
-            const logoWidth = 25;
-            const logoHeight = logoWidth / aspectRatio;
-            doc.addImage(logo, 'PNG', (pageWidth - logoWidth) / 2, currentY, logoWidth, logoHeight);
-            currentY += logoHeight + 10;
-        } catch (e) {
-            console.error("Erreur lors de l'ajout du logo au PDF", e);
-        }
-    }
-
-
-    // Header
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text("BRIGADE SPECIALE DE SURVEILLANCE ET D'INTERVENTION", pageWidth / 2, currentY, { align: 'center' });
-    currentY += 15;
-
-    doc.setFontSize(18);
-    doc.text(mainTitle, pageWidth / 2, currentY, { align: 'center' });
-    currentY += 7;
-    
-    doc.setFontSize(12);
-    doc.text(`${listTitle} - ${dateTime}`, pageWidth / 2, currentY, { align: 'center' });
-    currentY += 10;
 
     const body = agents.map(agent => [
         agent.firstName,
         agent.lastName,
         agent.registrationNumber,
         agent.rank,
-        listType === 'all' ? (gathering.absentAgentIds.includes(agent.id) ? 'Absent' : 'Présent') : ''
-    ].filter(Boolean));
+        ...(listType === 'all' ? [gathering.absentAgentIds.includes(agent.id) ? 'Absent' : 'Présent'] : [])
+    ]);
 
     const head = ['Prénom', 'Nom', 'Matricule', 'Grade'];
     if (listType === 'all') {
         head.push('Statut');
     }
-
-    autoTable(doc, {
-        head: [head],
-        body,
-        startY: currentY,
-        theme: 'striped',
-        headStyles: { fillColor: [39, 55, 70] },
-    });
-
-    doc.save(`liste_${listType}_${gathering.name.replace(/ /g, '_')}.pdf`);
+    
+    generatePdfWithLogo(doc, listTitle, dateTime, head, body);
   };
 
   const AgentList = ({ agents, onStartMission }: { agents: Agent[], onStartMission: (agents: Agent[]) => void }) => (
