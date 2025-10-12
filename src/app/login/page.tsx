@@ -25,6 +25,7 @@ import { FirebaseError } from 'firebase/app';
 import { useLogo } from '@/context/logo-context';
 import Image from 'next/image';
 import { setRole } from '@/hooks/use-role';
+import { cn } from '@/lib/utils';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Veuillez saisir votre login.'),
@@ -45,6 +46,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { logo, isLogoLoading } = useLogo();
+  const [hasError, setHasError] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -56,6 +58,7 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
+    setHasError(false);
     try {
       const { email: login, password } = data;
       
@@ -74,6 +77,7 @@ export default function LoginPage() {
         await signInAnonymously(auth);
         // AuthGuard will handle redirection
       } else {
+         setHasError(true);
          toast({
             variant: 'destructive',
             title: 'Erreur de connexion',
@@ -82,6 +86,7 @@ export default function LoginPage() {
       }
 
     } catch (error) {
+      setHasError(true);
       console.error('Login Error:', error);
       let description = "Une erreur inconnue est survenue.";
       if (error instanceof FirebaseError) {
@@ -108,7 +113,10 @@ export default function LoginPage() {
           <div className="absolute inset-0 bg-background opacity-[.88]" />
         </>
       )}
-      <Card className="z-10 w-full max-w-sm bg-card/80 backdrop-blur-sm neon-orange-box">
+      <Card className={cn(
+          "z-10 w-full max-w-sm bg-card/80 backdrop-blur-sm",
+          hasError ? "neon-destructive-box" : "neon-orange-box"
+      )}>
         <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
                 <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary/20">
