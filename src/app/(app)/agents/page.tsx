@@ -21,7 +21,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { RegisterAgentSheet } from '@/components/agents/register-agent-sheet';
+import { RegisterAgentForm } from '@/components/agents/register-agent-sheet';
 import type { Agent, Mission, Availability } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection } from 'firebase/firestore';
@@ -50,6 +50,11 @@ import { AgentDetailsSheet } from '@/components/agents/agent-details-sheet';
 import { useRole } from '@/hooks/use-role';
 import { useLogo } from '@/context/logo-context';
 import { getAgentAvailability } from '@/lib/agents';
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 
 export default function AgentsPage() {
@@ -338,9 +343,16 @@ export default function AgentsPage() {
                   <FileUp className="mr-2 h-4 w-4" /> Importer
                 </Button>
               </ImportAgentsDialog>
-              <Button onClick={() => setRegisterOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
-              </Button>
+              <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <RegisterAgentForm onAgentRegistered={() => setRegisterOpen(false)} />
+                </DialogContent>
+              </Dialog>
             </>
           )}
         </div>
@@ -436,11 +448,6 @@ export default function AgentsPage() {
           </TableBody>
         </Table>
       </div>
-      
-      <RegisterAgentSheet 
-        isOpen={isRegisterOpen} 
-        onOpenChange={setRegisterOpen}
-      />
 
       {editingAgent && (
         <EditAgentSheet

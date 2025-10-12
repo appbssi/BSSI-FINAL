@@ -1,13 +1,12 @@
-
 'use client';
 
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
@@ -38,13 +37,12 @@ const agentSchema = z.object({
 
 type AgentFormValues = z.infer<typeof agentSchema>;
 
-interface RegisterAgentSheetProps {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
+interface RegisterAgentFormProps {
+  onAgentRegistered: () => void;
 }
 
 
-export function RegisterAgentSheet({ isOpen, onOpenChange }: RegisterAgentSheetProps) {
+export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -66,7 +64,6 @@ export function RegisterAgentSheet({ isOpen, onOpenChange }: RegisterAgentSheetP
     try {
       const agentsRef = collection(firestore, 'agents');
       
-      // Check for uniqueness of registrationNumber
       const regQuery = query(agentsRef, where("registrationNumber", "==", data.registrationNumber));
       const regQuerySnapshot = await getDocs(regQuery);
 
@@ -78,7 +75,6 @@ export function RegisterAgentSheet({ isOpen, onOpenChange }: RegisterAgentSheetP
         return; 
       }
       
-      // Check for uniqueness of contact
       const contactQuery = query(agentsRef, where("contact", "==", data.contact));
       const contactQuerySnapshot = await getDocs(contactQuery);
       
@@ -102,7 +98,7 @@ export function RegisterAgentSheet({ isOpen, onOpenChange }: RegisterAgentSheetP
                 description: `L'agent ${data.firstName} ${data.lastName} a été ajouté avec succès.`,
             });
             form.reset();
-            onOpenChange(false);
+            onAgentRegistered();
         })
         .catch(async (serverError) => {
             const permissionError = new FirestorePermissionError({
@@ -125,103 +121,101 @@ export function RegisterAgentSheet({ isOpen, onOpenChange }: RegisterAgentSheetP
   const { isSubmitting } = form.formState;
 
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Enregistrer un nouvel agent</SheetTitle>
-          <SheetDescription>
-            Ajoutez un nouvel agent à la brigade. Remplissez les détails ci-dessous.
-          </SheetDescription>
-        </SheetHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-6">
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="firstName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Prénom</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="registrationNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Matricule</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="rank"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Grade</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="contact"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Adresse</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="flex justify-end pt-4">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Sauvegarder l'agent
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
+    <>
+      <DialogHeader>
+        <DialogTitle>Enregistrer un nouvel agent</DialogTitle>
+        <DialogDescription>
+          Ajoutez un nouvel agent à la brigade. Remplissez les détails ci-dessous.
+        </DialogDescription>
+      </DialogHeader>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-6">
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nom</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+           <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Prénom</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="registrationNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Matricule</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="rank"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Grade</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="contact"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Contact</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Adresse</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="flex justify-end pt-4">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Sauvegarder l'agent
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </>
   );
 }
