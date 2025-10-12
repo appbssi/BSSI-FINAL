@@ -40,9 +40,10 @@ import * as XLSX from 'xlsx';
 import { useRole } from '@/hooks/use-role';
 import { useLogo } from '@/context/logo-context';
 import type { Visitor } from '@/lib/types';
-import { RegisterVisitorSheet } from '@/components/secretariat/register-visitor-sheet';
 import { EditVisitorSheet } from '@/components/secretariat/edit-visitor-sheet';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { RegisterVisitorForm } from '@/components/secretariat/register-visitor-form';
 
 export default function SecretariatPage() {
   const firestore = useFirestore();
@@ -193,9 +194,16 @@ export default function SecretariatPage() {
             </DropdownMenu>
 
           {!isObserver && (
-            <Button onClick={() => setRegisterOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer un visiteur
-            </Button>
+             <Popover open={isRegisterOpen} onOpenChange={setRegisterOpen}>
+                <PopoverTrigger asChild>
+                    <Button>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer un visiteur
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-96">
+                    <RegisterVisitorForm onVisitorRegistered={() => setRegisterOpen(false)} />
+                </PopoverContent>
+            </Popover>
           )}
         </div>
       </div>
@@ -258,11 +266,6 @@ export default function SecretariatPage() {
         </Table>
       </div>
       
-      <RegisterVisitorSheet 
-        isOpen={isRegisterOpen} 
-        onOpenChange={setRegisterOpen}
-      />
-
       {editingVisitor && (
         <EditVisitorSheet
           visitor={editingVisitor}
