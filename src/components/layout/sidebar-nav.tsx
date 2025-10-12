@@ -7,7 +7,8 @@ import {
   Rocket,
   Users,
   CalendarClock,
-  Loader2
+  Loader2,
+  BookUser
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -36,6 +37,7 @@ const navItems: NavItem[] = [
   { href: '/agents', label: 'Agents', icon: Users },
   { href: '/missions', label: 'Missions', icon: Rocket },
   { href: '/gatherings', label: 'Rassemblements', icon: CalendarClock },
+  { href: '/secretariat', label: 'Secrétariat', icon: BookUser },
 ];
 
 export function SidebarNav() {

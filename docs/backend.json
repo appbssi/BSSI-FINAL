@@ -139,6 +139,42 @@
                 "description": "The application logo, stored as a base64 data URI."
             }
         }
+    },
+    "Visitor": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Visitor",
+      "type": "object",
+      "description": "Represents a visitor.",
+      "properties": {
+        "firstName": {
+          "type": "string",
+          "description": "The visitor's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The visitor's last name."
+        },
+        "contact": {
+          "type": "string",
+          "description": "The visitor's contact details."
+        },
+        "occupation": {
+          "type": "string",
+          "description": "The visitor's occupation or function."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the visitor was registered.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "firstName",
+        "lastName",
+        "contact",
+        "occupation",
+        "createdAt"
+      ]
     }
   },
   "auth": {
@@ -171,6 +207,12 @@
           "$ref": "#/entities/AppSettings"
         },
         "description": "Stores global application settings like the logo."
+      },
+      "/visitors/{visitorId}": {
+        "schema": {
+          "$ref": "#/entities/Visitor"
+        },
+        "description": "Stores information about registered visitors."
       }
   }
 }

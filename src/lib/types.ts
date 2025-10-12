@@ -30,3 +30,12 @@ export type Gathering = {
   assignedAgentIds: string[];
   absentAgentIds: string[];
 }
+
+export type Visitor = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  contact: string;
+  occupation: string;
+  createdAt: Timestamp;
+}
