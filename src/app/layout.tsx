@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthGuard } from '@/components/layout/auth-guard';
 import { FirebaseClientProvider } from '@/firebase';
 import { LogoProvider } from '@/context/logo-context';
+import { ThemeProvider } from '@/components/layout/theme-provider';
 
 export const metadata: Metadata = {
   title: 'sBSSI',
@@ -14,24 +15,26 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.Node;
+  children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" suppressHydrationWarning className="dark">
+    <html lang="fr" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <FirebaseClientProvider>
-          <AuthGuard>
-            <LogoProvider>
-              {children}
-            </LogoProvider>
-          </AuthGuard>
-        </FirebaseClientProvider>
-        <Toaster />
+        <ThemeProvider>
+          <FirebaseClientProvider>
+            <AuthGuard>
+              <LogoProvider>
+                {children}
+              </LogoProvider>
+            </AuthGuard>
+          </FirebaseClientProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
