@@ -52,9 +52,11 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { useRole } from '@/hooks/use-role';
+import { useLogo } from '@/context/logo-context';
 
 const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missionName: string }) => {
     const [searchQuery, setSearchQuery] = useState('');
+    const { logo } = useLogo();
     
     const sortedAgents = useMemo(() => 
         [...agents].sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName)),
@@ -72,50 +74,75 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
         const generationDate = new Date().toLocaleDateString('fr-FR');
         const pageWidth = doc.internal.pageSize.getWidth();
 
-        // Official Header
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text("BRIGADE SPECIALE DE SURVEILLANCE ET D'INTERVENTION", pageWidth / 2, 15, { align: 'center' });
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        doc.text("Duralex - Sed Lex", pageWidth / 2, 20, { align: 'center' });
-        
-        // Report Header
-        doc.setFontSize(18);
-        doc.setFont('helvetica', 'bold');
-        doc.text(mainTitle, pageWidth / 2, 35, { align: 'center' });
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'normal');
-        doc.text(subTitle, pageWidth / 2, 42, { align: 'center' });
-        doc.setFontSize(11);
-        doc.text(`Généré le: ${generationDate}`, 14, 50);
-
-        autoTable(doc, {
-            head: [['Prénom', 'Nom', 'Grade', 'Contact']],
-            body: filteredAgents.map(agent => [
-                agent.firstName,
-                agent.lastName,
-                agent.rank,
-                agent.contact,
-            ]),
-            startY: 60,
-            theme: 'striped',
-            headStyles: {
-                fillColor: [39, 55, 70],
-                textColor: 255,
-                fontStyle: 'bold'
-            },
-            alternateRowStyles: {
-                fillColor: [245, 245, 245]
-            },
-            didDrawPage: (data) => {
-                // Footer
-                const pageCount = doc.internal.getNumberOfPages();
-                doc.setFontSize(10);
-                doc.text(`Page ${data.pageNumber} sur ${pageCount}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
+        const addContent = (logoImg: HTMLImageElement | null) => {
+            let currentY = 15;
+            if (logoImg) {
+                const aspectRatio = logoImg.width / logoImg.height;
+                const logoWidth = 30;
+                const logoHeight = logoWidth / aspectRatio;
+                doc.addImage(logoImg, 'PNG', (pageWidth - logoWidth) / 2, currentY, logoWidth, logoHeight);
+                currentY += logoHeight + 5;
             }
-        });
-        doc.save(`agents_assignes_${missionName.replace(/ /g, '_')}.pdf`);
+
+            // Official Header
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text("BRIGADE SPECIALE DE SURVEILLANCE ET D'INTERVENTION", pageWidth / 2, currentY, { align: 'center' });
+            currentY += 10;
+            
+            // Report Header
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text(mainTitle, pageWidth / 2, currentY, { align: 'center' });
+            currentY += 7;
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'normal');
+            doc.text(subTitle, pageWidth / 2, currentY, { align: 'center' });
+            currentY += 8;
+            doc.setFontSize(11);
+            doc.text(`Généré le: ${generationDate}`, 14, currentY);
+            currentY += 8;
+
+            autoTable(doc, {
+                head: [['Prénom', 'Nom', 'Grade', 'Contact']],
+                body: filteredAgents.map(agent => [
+                    agent.firstName,
+                    agent.lastName,
+                    agent.rank,
+                    agent.contact,
+                ]),
+                startY: currentY,
+                theme: 'striped',
+                headStyles: {
+                    fillColor: [39, 55, 70],
+                    textColor: 255,
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [245, 245, 245]
+                },
+                didDrawPage: (data) => {
+                    // Footer
+                    const pageCount = doc.internal.getNumberOfPages();
+                    doc.setFontSize(10);
+                    doc.text(`Page ${data.pageNumber} sur ${pageCount}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
+                }
+            });
+            doc.save(`agents_assignes_${missionName.replace(/ /g, '_')}.pdf`);
+        }
+
+        if (logo) {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = () => addContent(img);
+            img.onerror = () => {
+                console.error("Erreur de chargement du logo pour le PDF.");
+                addContent(null);
+            };
+            img.src = logo;
+        } else {
+            addContent(null);
+        }
     };
 
     const handleExportXLSX = () => {

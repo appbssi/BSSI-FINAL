@@ -48,11 +48,13 @@ import * as XLSX from 'xlsx';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AgentDetailsSheet } from '@/components/agents/agent-details-sheet';
 import { useRole } from '@/hooks/use-role';
+import { useLogo } from '@/context/logo-context';
 
 
 export default function AgentsPage() {
   const firestore = useFirestore();
   const { isObserver } = useRole();
+  const { logo } = useLogo();
   const [searchQuery, setSearchQuery] = useState('');
   const [isRegisterOpen, setRegisterOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
@@ -173,50 +175,79 @@ export default function AgentsPage() {
     const generationDate = new Date().toLocaleDateString('fr-FR');
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Official Header
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text("BRIGADE SPECIALE DE SURVEILLANCE ET D'INTERVENTION", pageWidth / 2, 15, { align: 'center' });
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text("Duralex - Sed Lex", pageWidth / 2, 20, { align: 'center' });
+    const addContent = (logoImg: HTMLImageElement | null) => {
+        let currentY = 15;
 
-    // Report Header
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text(tableTitle, 14, 35);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Généré le: ${generationDate}`, 14, 42);
-
-    autoTable(doc, {
-        head: [['Prénom', 'Nom', 'Matricule', 'Grade', 'Contact', 'Disponibilité']],
-        body: filteredAgents.map(agent => [
-            agent.firstName,
-            agent.lastName,
-            agent.registrationNumber,
-            agent.rank,
-            agent.contact,
-            agent.availability,
-        ]),
-        startY: 50,
-        theme: 'striped',
-        headStyles: {
-            fillColor: [39, 55, 70],
-            textColor: 255,
-            fontStyle: 'bold'
-        },
-        alternateRowStyles: {
-            fillColor: [245, 245, 245]
-        },
-        didDrawPage: (data) => {
-            // Footer
-            const pageCount = doc.internal.getNumberOfPages();
-            doc.setFontSize(10);
-            doc.text(`Page ${data.pageNumber} sur ${pageCount}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
+        if (logoImg) {
+            const aspectRatio = logoImg.width / logoImg.height;
+            const logoWidth = 30;
+            const logoHeight = logoWidth / aspectRatio;
+            doc.addImage(logoImg, 'PNG', (pageWidth - logoWidth) / 2, currentY, logoWidth, logoHeight);
+            currentY += logoHeight + 5;
         }
-    });
-    doc.save('liste_agents.pdf');
+
+        // Official Header
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text("BRIGADE SPECIALE DE SURVEILLANCE ET D'INTERVENTION", pageWidth / 2, currentY, { align: 'center' });
+        currentY += 5;
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text("Duralex - Sed Lex", pageWidth / 2, currentY, { align: 'center' });
+        currentY += 15;
+
+        // Report Header
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text(tableTitle, 14, currentY);
+        currentY += 7;
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Généré le: ${generationDate}`, 14, currentY);
+        currentY += 8;
+
+        autoTable(doc, {
+            head: [['Prénom', 'Nom', 'Matricule', 'Grade', 'Contact', 'Disponibilité']],
+            body: filteredAgents.map(agent => [
+                agent.firstName,
+                agent.lastName,
+                agent.registrationNumber,
+                agent.rank,
+                agent.contact,
+                agent.availability,
+            ]),
+            startY: currentY,
+            theme: 'striped',
+            headStyles: {
+                fillColor: [39, 55, 70],
+                textColor: 255,
+                fontStyle: 'bold'
+            },
+            alternateRowStyles: {
+                fillColor: [245, 245, 245]
+            },
+            didDrawPage: (data) => {
+                // Footer
+                const pageCount = doc.internal.getNumberOfPages();
+                doc.setFontSize(10);
+                doc.text(`Page ${data.pageNumber} sur ${pageCount}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
+            }
+        });
+        doc.save('liste_agents.pdf');
+    };
+
+    if (logo) {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => addContent(img);
+        img.onerror = () => {
+            console.error("Erreur de chargement du logo pour le PDF.");
+            addContent(null);
+        };
+        img.src = logo;
+    } else {
+        addContent(null);
+    }
   };
 
 
