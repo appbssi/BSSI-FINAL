@@ -108,7 +108,7 @@ export default function LoginPage() {
           <div className="absolute inset-0 bg-background opacity-[.88]" />
         </>
       )}
-      <Card className="z-10 w-full max-w-sm bg-card/80 backdrop-blur-sm">
+      <Card className="z-10 w-full max-w-sm bg-card/80 backdrop-blur-sm neon-orange-box">
         <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
                 <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary/20">
@@ -134,7 +134,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Login</FormLabel>
                     <FormControl>
-                      <Input type="text" {...field} />
+                      <Input type="text" {...field} className="neon-orange-input" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -148,7 +148,7 @@ export default function LoginPage() {
                     <FormLabel>Mot de passe</FormLabel>
                     <div className="relative">
                       <FormControl>
-                        <Input type={showPassword ? 'text' : 'password'} {...field} className="pr-10" />
+                        <Input type={showPassword ? 'text' : 'password'} {...field} className="pr-10 neon-orange-input" />
                       </FormControl>
                       <button
                         type="button"
