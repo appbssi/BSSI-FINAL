@@ -33,7 +33,7 @@ export function LogoProvider({ children }: { children: ReactNode }) {
     if (settingsData) {
       setLogoState(settingsData.logo);
     } else {
-      const defaultLogo = 'https://s10.aconvert.com/convert/p3r68-cdx67/a91vh-95ux4.png';
+      const defaultLogo = 'https://i.imgur.com/kT9dC0d.png';
       setLogoState(defaultLogo);
     }
   }, [settingsData, isDocLoading]);
