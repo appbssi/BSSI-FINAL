@@ -115,7 +115,7 @@ export default function LoginPage() {
       )}
       <Card className={cn(
           "z-10 w-full max-w-sm bg-card/80 backdrop-blur-sm",
-          hasError ? "neon-destructive-box" : "neon-orange-box"
+          hasError ? "neon-error-box" : "neon-orange-box"
       )}>
         <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">

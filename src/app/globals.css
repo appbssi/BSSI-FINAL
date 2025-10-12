@@ -123,12 +123,12 @@ body {
                 0 0 15px hsl(var(--primary));
     border-color: hsl(var(--primary) / 0.5);
   }
-  .neon-destructive-box {
-    --destructive-green: 120 70% 50%; /* Define a green color */
-    box-shadow: 0 0 5px hsl(var(--destructive-green)), 
-                0 0 10px hsl(var(--destructive-green)),
-                0 0 15px hsl(var(--destructive-green));
-    border-color: hsl(var(--destructive-green) / 0.5);
+  .neon-error-box {
+    --error-blue: 210 100% 50%; /* Define a blue color */
+    box-shadow: 0 0 5px hsl(var(--error-blue)), 
+                0 0 10px hsl(var(--error-blue)),
+                0 0 15px hsl(var(--error-blue));
+    border-color: hsl(var(--error-blue) / 0.5);
   }
   .neon-orange-input:focus-visible {
     box-shadow: 0 0 5px hsl(var(--primary)), 
