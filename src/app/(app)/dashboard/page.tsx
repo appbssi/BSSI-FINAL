@@ -97,7 +97,9 @@ export default function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Aperçu des missions en cours</CardTitle>
+          <CardTitle>
+            Aperçu des missions en cours ({activeMissionsLoading ? '...' : activeMissions.length})
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
