@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useUser } from '@/firebase';
@@ -35,10 +36,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (isUserLoading || (!user && !publicPaths.includes(pathname)) || (user && publicPaths.includes(pathname))) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
-        <div className="flex items-center gap-3 text-lg">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Chargement de la session...</span>
-        </div>
+        <div className="loader"></div>
       </div>
     );
   }
