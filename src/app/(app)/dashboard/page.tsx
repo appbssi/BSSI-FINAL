@@ -67,11 +67,15 @@ export default function DashboardPage() {
 
   const activeMissions = useMemo(() => {
     if (!missions) return [];
-    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     return missions.filter(mission => {
-        return mission.status === 'En cours' || mission.status === 'Planification';
+        const missionStartDate = mission.startDate.toDate();
+        const isPlannedAndShouldBeActive = mission.status === 'Planification' && missionStartDate <= today;
+        return mission.status === 'En cours' || isPlannedAndShouldBeActive;
     }).slice(0, 5);
-  }, [missions]);
+}, [missions]);
 
 
   const totalAgents = agents?.length ?? 0;
