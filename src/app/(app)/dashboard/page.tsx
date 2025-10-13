@@ -145,14 +145,13 @@ export default function DashboardPage() {
                 <TableRow>
                   <TableHead>Mission</TableHead>
                   <TableHead>Lieu</TableHead>
-                  <TableHead>Statut</TableHead>
                   <TableHead>Date de fin</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center">Chargement...</TableCell>
+                    <TableCell colSpan={3} className="text-center">Chargement...</TableCell>
                   </TableRow>
                 )}
                 {!isLoading && activeMissions.map((mission) => {
@@ -173,13 +172,6 @@ export default function DashboardPage() {
                       <TableCell className="font-medium">{mission.name}</TableCell>
                       <TableCell>{mission.location}</TableCell>
                       <TableCell>
-                        <Badge
-                          variant={getBadgeVariant(displayStatus)}
-                        >
-                          {displayStatus}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
                         {mission.endDate.toDate().toLocaleDateString('fr-FR')}
                       </TableCell>
                     </TableRow>
@@ -187,7 +179,7 @@ export default function DashboardPage() {
                 })}
                 {!isLoading && activeMissions.length === 0 && (
                   <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                      <TableCell colSpan={3} className="text-center text-muted-foreground">
                           Aucune mission en cours.
                       </TableCell>
                   </TableRow>
