@@ -135,29 +135,35 @@ body {
                 0 0 8px hsl(var(--primary));
   }
   .loader {
-    width: 70px;
-    aspect-ratio: 1;
-    background:
-      radial-gradient(farthest-side,#ffa516 90%,#0000) center/16px 16px,
-      radial-gradient(farthest-side,green   90%,#0000) bottom/12px 12px;
-    background-repeat: no-repeat;
-    animation: l17 1s infinite linear;
+    width: 64px;
+    height: 64px;
     position: relative;
+    animation: rotate 1.5s ease-in infinite alternate;
   }
-  .loader::before {    
-    content:"";
+  .loader::before {
+    content: '';
     position: absolute;
-    width: 8px;
-    aspect-ratio: 1;
-    inset: auto 0 16px;
-    margin: auto;
-    background: #ccc;
-    border-radius: 50%;
-    transform-origin: 50% calc(100% + 10px);
-    animation: inherit;
-    animation-duration: 0.5s;
+    left: 0;
+    bottom: 0;
+    color: #FF3D00;
+    background: currentColor;
+    width: 64px;
+    height: 32px;
+    border-radius: 0 0 50px 50px;
   }
-  @keyframes l17 { 
-    100%{transform: rotate(1turn)}
+  .loader::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 10%;
+    background: #FFF;
+    width: 8px;
+    height: 64px;
+    animation: rotate 1.2s linear infinite alternate-reverse;
+  }
+  @keyframes rotate {
+    100% {
+      transform: rotate(360deg);
+    }
   }
 }
