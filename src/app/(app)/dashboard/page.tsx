@@ -29,6 +29,8 @@ import { useMemo, useState } from 'react';
 import { getAgentAvailability } from '@/lib/agents';
 import { MissionDetailsDialog } from '@/components/missions/mission-details-dialog';
 
+type MissionStatus = 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
+
 export default function DashboardPage() {
   const firestore = useFirestore();
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
@@ -77,6 +79,20 @@ export default function DashboardPage() {
   const availableAgents = agentsWithAvailability?.filter(a => a.availability === 'Disponible').length ?? 0;
 
   const isLoading = agentsLoading || missionsLoading;
+
+  const getBadgeVariant = (status: MissionStatus) => {
+    switch (status) {
+      case 'En cours':
+        return 'default';
+      case 'Terminée':
+        return 'outline';
+      case 'Annulée':
+        return 'destructive';
+      case 'Planification':
+      default:
+        return 'secondary';
+    }
+  };
 
   return (
     <>
@@ -135,22 +151,36 @@ export default function DashboardPage() {
                     <TableCell colSpan={4} className="text-center">Chargement...</TableCell>
                   </TableRow>
                 )}
-                {!isLoading && activeMissions.map((mission) => (
-                  <TableRow key={mission.id} onClick={() => setSelectedMission(mission)} className="cursor-pointer">
-                    <TableCell className="font-medium">{mission.name}</TableCell>
-                    <TableCell>{mission.location}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={mission.status === 'En cours' ? 'default' : 'secondary'}
-                      >
-                        {mission.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {mission.endDate.toDate().toLocaleDateString('fr-FR')}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {!isLoading && activeMissions.map((mission) => {
+                   const today = new Date();
+                   today.setHours(0, 0, 0, 0);
+                   const missionStartDate = mission.startDate.toDate();
+                   const missionEndDate = mission.endDate.toDate();
+
+                   let displayStatus: MissionStatus = mission.status;
+                   if (mission.status === 'Planification' && missionStartDate <= today) {
+                       displayStatus = 'En cours';
+                   } else if (mission.status === 'En cours' && missionEndDate < today) {
+                       displayStatus = 'Terminée';
+                   }
+
+                  return(
+                    <TableRow key={mission.id} onClick={() => setSelectedMission(mission)} className="cursor-pointer">
+                      <TableCell className="font-medium">{mission.name}</TableCell>
+                      <TableCell>{mission.location}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={getBadgeVariant(displayStatus)}
+                        >
+                          {displayStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {mission.endDate.toDate().toLocaleDateString('fr-FR')}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
                 {!isLoading && activeMissions.length === 0 && (
                   <TableRow>
                       <TableCell colSpan={4} className="text-center text-muted-foreground">
