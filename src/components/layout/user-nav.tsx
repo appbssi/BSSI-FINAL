@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useRole, clearRole } from '@/hooks/use-role';
 import { useLogo } from '@/context/logo-context';
 import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 export function UserNav() {
   const { user } = useUser();
@@ -64,6 +66,7 @@ export function UserNav() {
   };
 
   const capitalizedRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : '';
+  const roleInitial = role ? role.charAt(0).toUpperCase() : '?';
 
 
   return (
@@ -71,9 +74,9 @@ export function UserNav() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-            <div className="h-10 w-10 rounded-full flex items-center justify-center bg-muted">
-                <User className="h-5 w-5" />
-            </div>
+            <Avatar className="h-9 w-9">
+                <AvatarFallback>{roleInitial}</AvatarFallback>
+            </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount>
