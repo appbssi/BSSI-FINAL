@@ -35,7 +35,7 @@ import { collection, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/fire
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent, Mission } from '@/lib/types';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { EditMissionSheet } from '@/components/missions/edit-mission-sheet';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -254,6 +254,52 @@ export default function MissionsPage() {
     }, {} as Record<string, Agent>);
   }, [agents]);
 
+  // Effect to update missions that should be completed
+  useEffect(() => {
+    if (!firestore || !missions || missionsLoading) return;
+
+    const updateCompletedMissions = () => {
+        const batch = writeBatch(firestore);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Start of today
+
+        let missionsToUpdate = 0;
+
+        missions.forEach(mission => {
+            const missionEndDate = mission.endDate.toDate();
+            const shouldBeCompleted = missionEndDate < today;
+
+            if (shouldBeCompleted && (mission.status === 'En cours' || mission.status === 'Planification')) {
+                const missionRef = doc(firestore, 'missions', mission.id);
+                batch.update(missionRef, { status: 'Terminée' });
+                missionsToUpdate++;
+            }
+        });
+
+        if (missionsToUpdate > 0) {
+            batch.commit().then(() => {
+                toast({
+                    title: 'Statuts mis à jour',
+                    description: `${missionsToUpdate} mission(s) ont été marquées comme "Terminée".`
+                });
+            }).catch(error => {
+                console.error("Error updating mission statuses:", error);
+                 const permissionError = new FirestorePermissionError({
+                    path: 'missions/[batch]',
+                    operation: 'update',
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            });
+        }
+    };
+    
+    // We run this once when the data is loaded.
+    updateCompletedMissions();
+
+  // The dependency array ensures this runs only once when missions are loaded.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missions, firestore, missionsLoading]);
+
   const sortedMissions = useMemo(() => {
     if (!missions) return [];
     
@@ -416,12 +462,15 @@ export default function MissionsPage() {
               const today = new Date();
               today.setHours(0, 0, 0, 0);
               const missionStartDate = mission.startDate.toDate();
-              const missionEndDate = mission.endDate.toDate();
-
+              
               let displayStatus: MissionStatus = mission.status;
               if (mission.status === 'Planification' && missionStartDate <= today) {
                 displayStatus = 'En cours';
-              } else if (mission.status === 'En cours' && missionEndDate < today) {
+              }
+              // The visual update for 'Terminée' is now handled by the data layer,
+              // but we keep the visual consistency logic as a fallback.
+              const missionEndDate = mission.endDate.toDate();
+              if ((displayStatus === 'En cours' || displayStatus === 'Planification') && missionEndDate < today) {
                 displayStatus = 'Terminée';
               }
 
