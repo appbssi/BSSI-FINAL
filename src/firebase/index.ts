@@ -2,7 +2,7 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
+import { getAuth, Auth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
 // This variable will hold the singleton instances of the Firebase services.
@@ -19,6 +19,8 @@ export function initializeFirebase() {
     // Initialize the app if it hasn't been already.
     firebaseApp = initializeApp(firebaseConfig);
     auth = getAuth(firebaseApp);
+    // Set persistence to local storage
+    setPersistence(auth, browserLocalPersistence);
     firestore = getFirestore(firebaseApp);
   } else {
     // If it has been initialized, get the existing app instance.
