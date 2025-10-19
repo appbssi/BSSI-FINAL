@@ -162,9 +162,14 @@
           "type": "string",
           "description": "The visitor's occupation or function."
         },
-        "createdAt": {
+        "entryTime": {
           "type": "string",
           "description": "The timestamp when the visitor was registered.",
+          "format": "date-time"
+        },
+        "exitTime": {
+          "type": "string",
+          "description": "The timestamp when the visitor checked out.",
           "format": "date-time"
         }
       },
@@ -173,7 +178,7 @@
         "lastName",
         "contact",
         "occupation",
-        "createdAt"
+        "entryTime"
       ]
     }
   },

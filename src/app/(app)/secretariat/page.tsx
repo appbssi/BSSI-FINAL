@@ -10,18 +10,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { MoreHorizontal, PlusCircle, Search, Trash2, Loader2, FileDown } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Search, Trash2, Loader2, FileDown, LogOut } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, deleteDoc, doc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -69,7 +70,7 @@ export default function SecretariatPage() {
 
   const sortedVisitors = useMemo(() => {
     if (!visitors) return [];
-    return [...visitors].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+    return [...visitors].sort((a, b) => b.entryTime.toMillis() - a.entryTime.toMillis());
   }, [visitors]);
 
   const filteredVisitors = sortedVisitors.filter(visitor => {
@@ -99,9 +100,32 @@ export default function SecretariatPage() {
     });
   };
 
+  const handleRecordExit = async (visitor: Visitor) => {
+    if (!firestore || visitor.exitTime) return;
+
+    const visitorRef = doc(firestore, 'visitors', visitor.id);
+    const updateData = { exitTime: Timestamp.now() };
+
+    updateDoc(visitorRef, updateData).then(() => {
+        toast({
+            title: 'Sortie enregistrée',
+            description: `L'heure de sortie pour ${visitor.firstName} ${visitor.lastName} a été enregistrée.`,
+        });
+    }).catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: visitorRef.path,
+            operation: 'update',
+            requestResourceData: updateData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
+  };
+
   const handleExportXLSX = () => {
     const dataToExport = filteredVisitors.map(visitor => ({
-        'Date': visitor.createdAt.toDate().toLocaleDateString('fr-FR'),
+        'Date': visitor.entryTime.toDate().toLocaleDateString('fr-FR'),
+        'Heure d\'entrée': visitor.entryTime.toDate().toLocaleTimeString('fr-FR'),
+        'Heure de sortie': visitor.exitTime ? visitor.exitTime.toDate().toLocaleTimeString('fr-FR') : 'N/A',
         'Prénom': visitor.firstName,
         'Nom': visitor.lastName,
         'Contact': visitor.contact,
@@ -110,12 +134,12 @@ export default function SecretariatPage() {
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Visiteurs');
-    XLSX.writeFile(workbook, 'liste_visiteurs.xlsx');
+    XLSX.writeFile(workbook, 'registre_visiteurs.xlsx');
   };
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const tableTitle = "Liste des Visiteurs";
+    const tableTitle = "Registre des Visiteurs";
     const generationDate = new Date().toLocaleDateString('fr-FR');
     const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -145,19 +169,20 @@ export default function SecretariatPage() {
         currentY += 8;
 
         autoTable(doc, {
-            head: [['Date', 'Prénom', 'Nom', 'Contact', 'Fonction']],
+            head: [['Date', 'Entrée', 'Sortie', 'Visiteur', 'Fonction', 'Contact']],
             body: filteredVisitors.map(v => [
-                v.createdAt.toDate().toLocaleString('fr-FR'),
-                v.firstName,
-                v.lastName,
-                v.contact,
+                v.entryTime.toDate().toLocaleDateString('fr-FR'),
+                v.entryTime.toDate().toLocaleTimeString('fr-FR'),
+                v.exitTime ? v.exitTime.toDate().toLocaleTimeString('fr-FR') : 'N/A',
+                `${v.lastName.toUpperCase()} ${v.firstName}`,
                 v.occupation,
+                v.contact,
             ]),
             startY: currentY,
             theme: 'striped',
             headStyles: { fillColor: [39, 55, 70] },
         });
-        doc.save('liste_visiteurs.pdf');
+        doc.save('registre_visiteurs.pdf');
     };
 
     if (logo) {
@@ -228,25 +253,28 @@ export default function SecretariatPage() {
             <TableRow>
               <TableHead>Visiteur</TableHead>
               <TableHead>Fonction</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Date d'enregistrement</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Heure d'entrée</TableHead>
+              <TableHead>Heure de sortie</TableHead>
               {!isObserver && <TableHead><span className="sr-only">Actions</span></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {visitorsLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center">Chargement des visiteurs...</TableCell>
+                <TableCell colSpan={6} className="text-center">Chargement des visiteurs...</TableCell>
               </TableRow>
             ) : (
               filteredVisitors.map((visitor) => (
                   <TableRow key={visitor.id}>
                     <TableCell>
                       <div className="font-medium">{visitor.lastName.toUpperCase()} {visitor.firstName}</div>
+                      <div className="text-sm text-muted-foreground">{visitor.contact}</div>
                     </TableCell>
                     <TableCell>{visitor.occupation}</TableCell>
-                    <TableCell>{visitor.contact}</TableCell>
-                    <TableCell>{visitor.createdAt.toDate().toLocaleString('fr-FR')}</TableCell>
+                    <TableCell>{visitor.entryTime.toDate().toLocaleDateString('fr-FR')}</TableCell>
+                    <TableCell>{visitor.entryTime.toDate().toLocaleTimeString('fr-FR')}</TableCell>
+                    <TableCell>{visitor.exitTime ? visitor.exitTime.toDate().toLocaleTimeString('fr-FR') : '...'}</TableCell>
                     {!isObserver && (
                         <TableCell>
                         <DropdownMenu>
@@ -258,7 +286,12 @@ export default function SecretariatPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onSelect={() => handleRecordExit(visitor)} disabled={!!visitor.exitTime}>
+                                <LogOut className="mr-2 h-4 w-4" />
+                                Enregistrer la sortie
+                            </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => setEditingVisitor(visitor)}>Modifier</DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem onSelect={() => setVisitorToDelete(visitor)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                                 Supprimer
                             </DropdownMenuItem>
@@ -271,7 +304,7 @@ export default function SecretariatPage() {
             )}
             {!visitorsLoading && filteredVisitors.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground">
                         Aucun visiteur trouvé.
                     </TableCell>
                 </TableRow>

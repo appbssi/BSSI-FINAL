@@ -37,5 +37,6 @@ export type Visitor = {
   lastName: string;
   contact: string;
   occupation: string;
-  createdAt: Timestamp;
+  entryTime: Timestamp;
+  exitTime?: Timestamp;
 }

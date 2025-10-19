@@ -61,6 +61,7 @@ export function EditVisitorSheet({ visitor, isOpen, onOpenChange }: EditVisitorS
     if (!firestore) return;
     
     const visitorRef = doc(firestore, 'visitors', visitor.id);
+    // We only update the fields from the form, leaving entry/exit times untouched
     const updateData = { ...data };
 
     updateDoc(visitorRef, updateData).then(() => {

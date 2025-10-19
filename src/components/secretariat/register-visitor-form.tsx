@@ -52,7 +52,7 @@ export function RegisterVisitorForm({ onVisitorRegistered }: RegisterVisitorForm
 
     const visitorData = {
         ...data,
-        createdAt: Timestamp.now(),
+        entryTime: Timestamp.now(),
     };
 
     addDoc(collection(firestore, 'visitors'), visitorData)
