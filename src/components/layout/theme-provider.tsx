@@ -8,28 +8,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setIsMounted(true);
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    const handleChange = () => {
-      if (mediaQuery.matches) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    };
-
-    // Set initial theme
-    handleChange();
-
-    // Listen for changes
-    mediaQuery.addEventListener('change', handleChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
+    // Force le thème clair en retirant la classe 'dark'
+    document.documentElement.classList.remove('dark');
   }, []);
 
   if (!isMounted) {
+    // Évite les problèmes d'hydratation en ne rendant rien côté serveur
     return null;
   }
 
