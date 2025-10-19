@@ -38,5 +38,5 @@ export type Visitor = {
   contact: string;
   occupation: string;
   entryTime: Timestamp;
-  exitTime?: Timestamp;
+  exitTime: Timestamp | null;
 }

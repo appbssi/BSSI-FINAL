@@ -70,7 +70,10 @@ export default function SecretariatPage() {
 
   const sortedVisitors = useMemo(() => {
     if (!visitors) return [];
-    return [...visitors].sort((a, b) => b.entryTime.toMillis() - a.entryTime.toMillis());
+    // Filter out visitors with no entryTime and then sort
+    return visitors
+      .filter(v => v.entryTime)
+      .sort((a, b) => b.entryTime.toMillis() - a.entryTime.toMillis());
   }, [visitors]);
 
   const filteredVisitors = sortedVisitors.filter(visitor => {
