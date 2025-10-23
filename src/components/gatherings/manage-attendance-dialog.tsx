@@ -6,12 +6,13 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -32,14 +33,14 @@ const attendanceSchema = z.object({
 
 type AttendanceFormValues = z.infer<typeof attendanceSchema>;
 
-interface ManageAttendanceSheetProps {
+interface ManageAttendanceDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   gathering: Gathering;
   agents: Agent[];
 }
 
-export function ManageAttendanceSheet({ isOpen, onOpenChange, gathering, agents }: ManageAttendanceSheetProps) {
+export function ManageAttendanceDialog({ isOpen, onOpenChange, gathering, agents }: ManageAttendanceDialogProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -89,16 +90,16 @@ export function ManageAttendanceSheet({ isOpen, onOpenChange, gathering, agents 
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto w-full max-w-lg sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>Gérer les présences</SheetTitle>
-          <SheetDescription>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Gérer les présences</DialogTitle>
+          <DialogDescription>
             Cochez les agents absents pour le rassemblement "{gathering.name}".
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-2">
             <Controller
               control={form.control}
               name="absentAgentIds"
@@ -142,15 +143,18 @@ export function ManageAttendanceSheet({ isOpen, onOpenChange, gathering, agents 
                 </div>
               )}
             />
-            <div className="flex justify-end pt-4">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Enregistrer les présences
-              </Button>
-            </div>
+            <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                    Annuler
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Enregistrer les présences
+                </Button>
+            </DialogFooter>
           </form>
         </Form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

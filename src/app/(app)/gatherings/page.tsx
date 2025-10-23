@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRole } from '@/hooks/use-role';
 import { CreateGatheringForm } from '@/components/gatherings/create-gathering-sheet';
-import { ManageAttendanceSheet } from '@/components/gatherings/manage-attendance-sheet';
+import { ManageAttendanceDialog } from '@/components/gatherings/manage-attendance-dialog';
 import { ViewAttendanceDialog } from '@/components/gatherings/view-attendance-dialog';
 import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
 
@@ -218,7 +218,7 @@ export default function GatheringsPage() {
       </div>
       
       {selectedGathering && (
-        <ManageAttendanceSheet
+        <ManageAttendanceDialog
             isOpen={!!selectedGathering}
             onOpenChange={(open) => !open && setSelectedGathering(null)}
             gathering={selectedGathering}
