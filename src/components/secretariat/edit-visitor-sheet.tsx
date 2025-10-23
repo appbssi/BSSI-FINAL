@@ -1,13 +1,12 @@
-
 'use client';
 
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  Dialog,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
@@ -61,7 +60,6 @@ export function EditVisitorSheet({ visitor, isOpen, onOpenChange }: EditVisitorS
     if (!firestore) return;
     
     const visitorRef = doc(firestore, 'visitors', visitor.id);
-    // We only update the fields from the form, leaving entry/exit times untouched
     const updateData = { ...data };
 
     updateDoc(visitorRef, updateData).then(() => {
@@ -83,14 +81,14 @@ export function EditVisitorSheet({ visitor, isOpen, onOpenChange }: EditVisitorS
   const { isSubmitting } = form.formState;
 
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Modifier le visiteur</SheetTitle>
-          <SheetDescription>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Modifier le visiteur</DialogTitle>
+          <DialogDescription>
             Mettez à jour les informations du visiteur.
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-6">
             <FormField
@@ -153,7 +151,7 @@ export function EditVisitorSheet({ visitor, isOpen, onOpenChange }: EditVisitorS
             </div>
           </form>
         </Form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
