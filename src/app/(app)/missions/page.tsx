@@ -36,7 +36,7 @@ import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent, Mission } from '@/lib/types';
 import { useState, useMemo, useEffect } from 'react';
-import { EditMissionSheet } from '@/components/missions/edit-mission-sheet';
+import { EditMissionDialog } from '@/components/missions/edit-mission-dialog';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -546,7 +546,7 @@ export default function MissionsPage() {
       </div>
 
       {editingMission && (
-        <EditMissionSheet
+        <EditMissionDialog
           mission={editingMission}
           isOpen={!!editingMission}
           onOpenChange={(open) => {

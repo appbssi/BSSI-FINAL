@@ -168,7 +168,7 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="overflow-y-auto w-full max-w-2xl">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Modifier la mission</DialogTitle>
           <DialogDescription>
