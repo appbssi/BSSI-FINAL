@@ -76,7 +76,7 @@ export default function AgentsPage() {
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
 
-  const agentsWithAvailability = useMemo(() => {
+  const agentsWithAvailability: Agent[] = useMemo(() => {
     if (!agents || !missions) return [];
     return agents.map(agent => ({
       ...agent,
@@ -100,7 +100,7 @@ export default function AgentsPage() {
     return matchesSearch && matchesFilter;
   });
 
-  const getBadgeVariant = (availability: Availability) => {
+  const getBadgeVariant = (availability?: Availability) => {
     switch (availability) {
       case 'Disponible':
         return 'outline';
@@ -454,6 +454,7 @@ export default function AgentsPage() {
           <DialogContent>
             <EditAgentSheet
               agent={editingAgent}
+              availability={editingAgent.availability!}
               onAgentEdited={() => setEditingAgent(null)}
             />
           </DialogContent>

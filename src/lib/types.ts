@@ -9,6 +9,7 @@ export type Agent = {
   contact: string;
   address: string;
   onLeave: boolean;
+  availability?: Availability;
 };
 
 export type Availability = 'Disponible' | 'En mission' | 'En congé';

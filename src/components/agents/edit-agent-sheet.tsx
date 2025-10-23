@@ -24,7 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useFirestore, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
-import type { Agent } from '@/lib/types';
+import type { Agent, Availability } from '@/lib/types';
 import { Switch } from '../ui/switch';
 import { Loader2 } from 'lucide-react';
 
@@ -43,9 +43,10 @@ type AgentFormValues = z.infer<typeof agentSchema>;
 interface EditAgentSheetProps {
   agent: Agent;
   onAgentEdited: () => void;
+  availability: Availability;
 }
 
-export function EditAgentSheet({ agent, onAgentEdited }: EditAgentSheetProps) {
+export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgentSheetProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -121,6 +122,7 @@ export function EditAgentSheet({ agent, onAgentEdited }: EditAgentSheetProps) {
   };
 
   const { isSubmitting } = form.formState;
+  const isAgentOnMission = availability === 'En mission';
 
   return (
     <>
@@ -226,13 +228,17 @@ export function EditAgentSheet({ agent, onAgentEdited }: EditAgentSheetProps) {
                     En congé
                   </FormLabel>
                   <FormDescription>
-                    Marquer cet agent comme étant en congé. Il ne sera pas disponible pour les missions.
+                    {isAgentOnMission 
+                        ? "Un agent en mission ne peut pas être mis en congé." 
+                        : "Marquer cet agent comme étant en congé. Il ne sera pas disponible pour les missions."
+                    }
                   </FormDescription>
                 </div>
                 <FormControl>
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                    disabled={isAgentOnMission}
                   />
                 </FormControl>
               </FormItem>
