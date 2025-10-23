@@ -450,15 +450,14 @@ export default function AgentsPage() {
       </div>
 
       {editingAgent && (
-        <EditAgentSheet
-          agent={editingAgent}
-          isOpen={!!editingAgent}
-          onOpenChange={(open) => {
-            if (!open) {
-              setEditingAgent(null);
-            }
-          }}
-        />
+        <Dialog open={!!editingAgent} onOpenChange={(open) => !open && setEditingAgent(null)}>
+          <DialogContent>
+            <EditAgentSheet
+              agent={editingAgent}
+              onAgentEdited={() => setEditingAgent(null)}
+            />
+          </DialogContent>
+        </Dialog>
       )}
 
       {selectedAgent && missions && (

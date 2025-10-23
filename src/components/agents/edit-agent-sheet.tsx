@@ -2,12 +2,10 @@
 'use client';
 
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
@@ -28,6 +26,7 @@ import { useFirestore, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent } from '@/lib/types';
 import { Switch } from '../ui/switch';
+import { Loader2 } from 'lucide-react';
 
 const agentSchema = z.object({
   firstName: z.string().min(2, 'Le prénom est requis'),
@@ -43,11 +42,10 @@ type AgentFormValues = z.infer<typeof agentSchema>;
 
 interface EditAgentSheetProps {
   agent: Agent;
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
+  onAgentEdited: () => void;
 }
 
-export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetProps) {
+export function EditAgentSheet({ agent, onAgentEdited }: EditAgentSheetProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -103,7 +101,7 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
             title: 'Agent mis à jour !',
             description: `Les informations de l'agent ${data.firstName} ${data.lastName} ont été mises à jour.`,
         });
-        onOpenChange(false);
+        onAgentEdited();
       }).catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
             path: agentRef.path,
@@ -122,17 +120,19 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
     }
   };
 
+  const { isSubmitting } = form.formState;
+
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Modifier l'agent</SheetTitle>
-          <SheetDescription>
-            Mettez à jour les informations de l'agent ci-dessous.
-          </SheetDescription>
-        </SheetHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-6">
+    <>
+      <DialogHeader>
+        <DialogTitle>Modifier l'agent</DialogTitle>
+        <DialogDescription>
+          Mettez à jour les informations de l'agent ci-dessous.
+        </DialogDescription>
+      </DialogHeader>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-6">
+          <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="lastName"
@@ -146,7 +146,7 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
                 </FormItem>
               )}
             />
-             <FormField
+            <FormField
               control={form.control}
               name="firstName"
               render={({ field }) => (
@@ -159,6 +159,8 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
                 </FormItem>
               )}
             />
+          </div>
+           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="registrationNumber"
@@ -185,6 +187,8 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
                 </FormItem>
               )}
             />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="contact"
@@ -211,34 +215,37 @@ export function EditAgentSheet({ agent, isOpen, onOpenChange }: EditAgentSheetPr
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="onLeave"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">
-                      En congé
-                    </FormLabel>
-                    <FormDescription>
-                      Marquer cet agent comme étant en congé. Il ne sera pas disponible pour les missions.
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <div className="flex justify-end pt-4">
-              <Button type="submit">Sauvegarder les modifications</Button>
-            </div>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
+          </div>
+          <FormField
+            control={form.control}
+            name="onLeave"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">
+                    En congé
+                  </FormLabel>
+                  <FormDescription>
+                    Marquer cet agent comme étant en congé. Il ne sera pas disponible pour les missions.
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <div className="flex justify-end pt-4">
+            <Button type="submit" disabled={isSubmitting}>
+               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Sauvegarder les modifications
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </>
   );
 }
