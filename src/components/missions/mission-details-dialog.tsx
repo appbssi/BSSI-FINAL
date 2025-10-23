@@ -23,7 +23,7 @@ interface MissionDetailsDialogProps {
 export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: MissionDetailsDialogProps) {
   const startDate = mission.startDate.toDate();
   const endDate = mission.endDate.toDate();
-  const duration = differenceInDays(endDate, startDate);
+  const duration = differenceInDays(endDate, startDate) + 1;
 
   const getBadgeVariant = (status: Mission['status']) => {
     switch (status) {

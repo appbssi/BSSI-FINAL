@@ -53,6 +53,7 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { useRole } from '@/hooks/use-role';
 import { useLogo } from '@/context/logo-context';
+import { differenceInDays } from 'date-fns';
 
 const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missionName: string }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -439,7 +440,7 @@ export default function MissionsPage() {
             <TableRow>
               <TableHead>Mission</TableHead>
               <TableHead>Lieu</TableHead>
-              <TableHead>Date de début</TableHead>
+              <TableHead>Période</TableHead>
               <TableHead>Agents Assignés</TableHead>
               <TableHead>Statut</TableHead>
               <TableHead>
@@ -473,13 +474,19 @@ export default function MissionsPage() {
               if ((displayStatus === 'En cours' || displayStatus === 'Planification') && missionEndDate < today) {
                 displayStatus = 'Terminée';
               }
+              const duration = differenceInDays(missionEndDate, missionStartDate) + 1;
 
 
               return (
               <TableRow key={mission.id}>
                 <TableCell className="font-medium">{mission.name}</TableCell>
                 <TableCell>{mission.location}</TableCell>
-                <TableCell>{mission.startDate.toDate().toLocaleDateString('fr-FR')}</TableCell>
+                <TableCell>
+                    <div className="flex flex-col">
+                        <span>{missionStartDate.toLocaleDateString('fr-FR')} - {missionEndDate.toLocaleDateString('fr-FR')}</span>
+                        <span className="text-xs text-muted-foreground">{duration} jour(s)</span>
+                    </div>
+                </TableCell>
                 <TableCell>
                    <div className="flex items-center gap-2">
                     {assignedAgents && assignedAgents.length > 0 ? (
