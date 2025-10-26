@@ -361,79 +361,77 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Agents assignés</FormLabel>
-                    <div className="rounded-lg border">
-                         <ScrollArea className="h-60">
-                            <div className="p-4 space-y-2">
-                            {agentsLoading || missionsLoading ? (
-                                <div className="flex items-center justify-center p-8">
-                                    <Loader2 className="animate-spin h-8 w-8 text-muted-foreground"/>
-                                </div>
-                            ) : combinedAgentList.length > 0 ? (
-                                combinedAgentList.map((agent) => {
-                                    const isChecked = field.value?.includes(agent.id);
-                                    const isOriginallyAssigned = (mission.assignedAgentIds || []).includes(agent.id);
-                                    
-                                    const agentMissions = (allMissions || []).filter(m => 
-                                        m.id !== mission.id &&
-                                        m.assignedAgentIds.includes(agent.id) && 
-                                        m.status !== 'Annulée' && 
-                                        m.status !== 'Terminée'
-                                    );
-                                    const isOverlapping = agentMissions.some(m => {
-                                        const missionStart = m.startDate.toDate();
-                                        const missionEnd = m.endDate.toDate();
-                                        return startDate < missionEnd && endDate > missionStart;
-                                    });
-
-                                    const isDisabled = !isOriginallyAssigned && (agent.onLeave || isOverlapping);
-
-                                    const getBadgeVariant = (availability: Availability) => {
-                                        switch (availability) {
-                                        case 'Disponible':
-                                            return 'outline';
-                                        case 'En mission':
-                                            return 'default';
-                                        case 'En congé':
-                                            return 'destructive';
-                                        default:
-                                            return 'secondary';
-                                        }
-                                    };
-
-                                    return (
-                                        <div
-                                            key={agent.id}
-                                            className={cn("flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 hover:bg-accent hover:text-accent-foreground", isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer")}
-                                            onClick={() => {
-                                                if(isDisabled) return;
-                                                const currentValues = field.value || [];
-                                                const newValue = isChecked
-                                                    ? currentValues.filter((id) => id !== agent.id)
-                                                    : [...currentValues, agent.id];
-                                                field.onChange(newValue);
-                                            }}
-                                        >
-                                            <div className={cn("h-5 w-5 flex items-center justify-center rounded border", isChecked ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground/50")}>
-                                              {isChecked && <Check className="h-4 w-4" />}
-                                            </div>
-                                            <div className="font-medium flex-1">
-                                                {agent.firstName} {agent.lastName}
-                                                <div className="text-sm text-muted-foreground">
-                                                   {agent.rank} | {agent.registrationNumber}
-                                                </div>
-                                            </div>
-                                             <Badge variant={getBadgeVariant(agent.availability)}>
-                                                {isDisabled && !agent.onLeave ? 'Conflit' : agent.availability}
-                                             </Badge>
-                                        </div>
-                                    );
-                                })
-                            ) : (
-                                <p className="text-center text-muted-foreground p-8">Aucun agent disponible.</p>
-                            )}
+                     <ScrollArea className="h-60 w-full rounded-md border">
+                        <div className="p-4 space-y-2">
+                        {agentsLoading || missionsLoading ? (
+                            <div className="flex items-center justify-center p-8">
+                                <Loader2 className="animate-spin h-8 w-8 text-muted-foreground"/>
                             </div>
-                        </ScrollArea>
-                    </div>
+                        ) : combinedAgentList.length > 0 ? (
+                            combinedAgentList.map((agent) => {
+                                const isChecked = field.value?.includes(agent.id);
+                                const isOriginallyAssigned = (mission.assignedAgentIds || []).includes(agent.id);
+                                
+                                const agentMissions = (allMissions || []).filter(m => 
+                                    m.id !== mission.id &&
+                                    m.assignedAgentIds.includes(agent.id) && 
+                                    m.status !== 'Annulée' && 
+                                    m.status !== 'Terminée'
+                                );
+                                const isOverlapping = agentMissions.some(m => {
+                                    const missionStart = m.startDate.toDate();
+                                    const missionEnd = m.endDate.toDate();
+                                    return startDate < missionEnd && endDate > missionStart;
+                                });
+
+                                const isDisabled = !isOriginallyAssigned && (agent.onLeave || isOverlapping);
+
+                                const getBadgeVariant = (availability: Availability) => {
+                                    switch (availability) {
+                                    case 'Disponible':
+                                        return 'outline';
+                                    case 'En mission':
+                                        return 'default';
+                                    case 'En congé':
+                                        return 'destructive';
+                                    default:
+                                        return 'secondary';
+                                    }
+                                };
+
+                                return (
+                                    <div
+                                        key={agent.id}
+                                        className={cn("flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 hover:bg-accent hover:text-accent-foreground", isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer")}
+                                        onClick={() => {
+                                            if(isDisabled) return;
+                                            const currentValues = field.value || [];
+                                            const newValue = isChecked
+                                                ? currentValues.filter((id) => id !== agent.id)
+                                                : [...currentValues, agent.id];
+                                            field.onChange(newValue);
+                                        }}
+                                    >
+                                        <div className={cn("h-5 w-5 flex items-center justify-center rounded border", isChecked ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground/50")}>
+                                          {isChecked && <Check className="h-4 w-4" />}
+                                        </div>
+                                        <div className="font-medium flex-1">
+                                            {agent.firstName} {agent.lastName}
+                                            <div className="text-sm text-muted-foreground">
+                                               {agent.rank} | {agent.registrationNumber}
+                                            </div>
+                                        </div>
+                                         <Badge variant={getBadgeVariant(agent.availability)}>
+                                            {isDisabled && !agent.onLeave ? 'Conflit' : agent.availability}
+                                         </Badge>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <p className="text-center text-muted-foreground p-8">Aucun agent disponible.</p>
+                        )}
+                        </div>
+                    </ScrollArea>
                    <FormMessage />
                 </FormItem>
                 )}
@@ -451,3 +449,5 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
     </Dialog>
   );
 }
+
+  
