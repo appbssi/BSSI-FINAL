@@ -65,13 +65,51 @@ export default function DashboardPage() {
     }));
   }, [agents, missions]);
 
+  const getDisplayStatus = (mission: Mission): MissionStatus => {
+    const now = new Date();
+    const startDate = mission.startDate.toDate();
+    const endDate = mission.endDate.toDate();
+
+    if (mission.status === 'Annulée') {
+        return 'Annulée';
+    }
+
+    if (isSameDay(startDate, endDate) && mission.startTime && mission.endTime) {
+        const [startHours, startMinutes] = mission.startTime.split(':').map(Number);
+        const [endHours, endMinutes] = mission.endTime.split(':').map(Number);
+        const fullStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), startHours, startMinutes);
+        const fullEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), endHours, endMinutes);
+
+        if (now > fullEndDate) return 'Terminée';
+        if (now < fullStartDate) return 'Planification';
+        return 'En cours';
+    }
+    
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const missionEndDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+    if (today > missionEndDay) {
+        return 'Terminée';
+    }
+    if (today < startDate) {
+        return 'Planification';
+    }
+    
+    return 'En cours';
+  };
+
+  const missionsWithDisplayStatus = useMemo(() => {
+    if (!missions) return [];
+    return missions.map(mission => ({
+      ...mission,
+      displayStatus: getDisplayStatus(mission),
+    }));
+  }, [missions]);
 
   const activeMissions = useMemo(() => {
-    if (!missions) return [];
-    return missions.filter(mission => {
-        return mission.status === 'En cours';
+    return missionsWithDisplayStatus.filter(mission => {
+        return mission.displayStatus === 'En cours';
     }).slice(0, 5);
-}, [missions]);
+  }, [missionsWithDisplayStatus]);
 
 
   const totalAgents = agents?.length ?? 0;
@@ -93,38 +131,6 @@ export default function DashboardPage() {
         return 'secondary';
     }
   };
-  
-    const getDisplayStatus = (mission: Mission): MissionStatus => {
-        const now = new Date();
-        const startDate = mission.startDate.toDate();
-        const endDate = mission.endDate.toDate();
-
-        if (mission.status === 'Annulée') {
-            return 'Annulée';
-        }
-
-        if (isSameDay(startDate, endDate) && mission.startTime && mission.endTime) {
-            const [startHours, startMinutes] = mission.startTime.split(':').map(Number);
-            const [endHours, endMinutes] = mission.endTime.split(':').map(Number);
-            const fullStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), startHours, startMinutes);
-            const fullEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), endHours, endMinutes);
-
-            if (now > fullEndDate) return 'Terminée';
-            if (now < fullStartDate) return 'Planification';
-            return 'En cours';
-        }
-        
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const missionEndDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-        if (today > missionEndDay) {
-            return 'Terminée';
-        }
-        if (today < startDate) {
-            return 'Planification';
-        }
-        
-        return 'En cours';
-    };
 
   return (
     <>
@@ -184,13 +190,12 @@ export default function DashboardPage() {
                   </TableRow>
                 )}
                 {!isLoading && activeMissions.map((mission) => {
-                   const displayStatus = getDisplayStatus(mission);
                   return(
                     <TableRow key={mission.id} onClick={() => setSelectedMission(mission)} className="cursor-pointer">
                       <TableCell className="font-medium">{mission.name}</TableCell>
                       <TableCell>{mission.location}</TableCell>
                       <TableCell>
-                        <Badge variant={getBadgeVariant(displayStatus)}>{displayStatus}</Badge>
+                        <Badge variant={getBadgeVariant(mission.displayStatus)}>{mission.displayStatus}</Badge>
                       </TableCell>
                       <TableCell>
                         {mission.endDate.toDate().toLocaleDateString('fr-FR')}
@@ -229,5 +234,3 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    
