@@ -160,27 +160,40 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   }, [allAgents, allMissions]);
   
   const availableAgents = useMemo(() => {
-    if (!startDate || !endDate) return [];
-    return agentsWithAvailability
+    if (!startDate || !endDate || !allAgents || !allMissions) return [];
+    
+    // Set hours to cover the entire day for multi-day missions
+    const selectedStart = new Date(startDate);
+    const selectedEnd = new Date(endDate);
+    if (!isSingleDay(selectedStart, selectedEnd)) {
+        selectedStart.setHours(0, 0, 0, 0);
+        selectedEnd.setHours(23, 59, 59, 999);
+    }
+
+    return allAgents
       .filter(agent => {
         if (agent.onLeave) return false;
 
-        const agentMissions = allMissions?.filter(m => 
-            m.assignedAgentIds.includes(agent.id) && 
-            m.status !== 'Annulée' && 
-            m.status !== 'Terminée'
-        ) ?? [];
-
-        const isOverlapping = agentMissions.some(mission => {
+        // Check for mission conflicts
+        const hasConflict = allMissions.some(mission => {
+            if (mission.status === 'Terminée' || mission.status === 'Annulée') {
+                return false;
+            }
+            if (!mission.assignedAgentIds.includes(agent.id)) {
+                return false;
+            }
+            
             const missionStart = mission.startDate.toDate();
             const missionEnd = mission.endDate.toDate();
-            return startDate < missionEnd && endDate > missionStart;
+
+            // Simple date overlap check
+            return selectedStart < missionEnd && selectedEnd > missionStart;
         });
 
-        return !isOverlapping;
+        return !hasConflict;
       })
       .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
-  }, [agentsWithAvailability, allMissions, startDate, endDate]);
+  }, [allAgents, allMissions, startDate, endDate]);
 
   return (
     <div className="p-0 sm:p-6">
@@ -376,7 +389,6 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                                         {agent.rank} | {agent.registrationNumber} | {agent.contact}
                                                     </div>
                                                 </div>
-                                                <Badge variant={agent.availability === 'Disponible' ? 'outline' : 'secondary'}>{agent.availability}</Badge>
                                             </div>
                                         );
                                     })

@@ -177,32 +177,37 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
   }, [allAgents, allMissions, mission.id]);
 
   const combinedAgentList = useMemo(() => {
-    if (!startDate || !endDate) return [];
-    return agentsWithAvailability
+    if (!startDate || !endDate || !allAgents || !allMissions) return [];
+
+    const selectedStart = new Date(startDate);
+    const selectedEnd = new Date(endDate);
+     if (!isSameDay(selectedStart, selectedEnd)) {
+        selectedStart.setHours(0, 0, 0, 0);
+        selectedEnd.setHours(23, 59, 59, 999);
+    }
+
+    return allAgents
       .filter(agent => {
         if (agent.onLeave) return false;
 
-        if ((mission.assignedAgentIds || []).includes(agent.id)) {
-            return true;
-        }
+        const isCurrentlyAssigned = (mission.assignedAgentIds || []).includes(agent.id);
 
-        const agentMissions = allMissions?.filter(m => 
-            m.id !== mission.id &&
-            m.assignedAgentIds.includes(agent.id) && 
-            m.status !== 'Annulée' && 
-            m.status !== 'Terminée'
-        ) ?? [];
+        const hasConflict = allMissions.some(m => {
+            if (m.id === mission.id) return false; // Don't check against the mission being edited
+            if (m.status === 'Terminée' || m.status === 'Annulée') return false;
+            if (!m.assignedAgentIds.includes(agent.id)) return false;
 
-        const isOverlapping = agentMissions.some(m => {
             const missionStart = m.startDate.toDate();
             const missionEnd = m.endDate.toDate();
-            return startDate < missionEnd && endDate > missionStart;
+
+            return selectedStart < missionEnd && selectedEnd > missionStart;
         });
 
-        return !isOverlapping;
+        // Agent is available if they are already in this mission, or if they have no conflicts.
+        return isCurrentlyAssigned || !hasConflict;
       })
       .sort((a,b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
-  }, [startDate, endDate, agentsWithAvailability, allMissions, mission.id, mission.assignedAgentIds]);
+  }, [startDate, endDate, allAgents, allMissions, mission]);
 
 
   return (
@@ -378,26 +383,13 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
                                     m.status !== 'Annulée' && 
                                     m.status !== 'Terminée'
                                 );
-                                const isOverlapping = agentMissions.some(m => {
+                                const hasConflict = agentMissions.some(m => {
                                     const missionStart = m.startDate.toDate();
                                     const missionEnd = m.endDate.toDate();
                                     return startDate < missionEnd && endDate > missionStart;
                                 });
 
-                                const isDisabled = !isOriginallyAssigned && (agent.onLeave || isOverlapping);
-
-                                const getBadgeVariant = (availability: Availability) => {
-                                    switch (availability) {
-                                    case 'Disponible':
-                                        return 'outline';
-                                    case 'En mission':
-                                        return 'default';
-                                    case 'En congé':
-                                        return 'destructive';
-                                    default:
-                                        return 'secondary';
-                                    }
-                                };
+                                const isDisabled = !isOriginallyAssigned && (agent.onLeave || hasConflict);
 
                                 return (
                                     <div
@@ -421,8 +413,8 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
                                                {agent.rank} | {agent.registrationNumber}
                                             </div>
                                         </div>
-                                         <Badge variant={getBadgeVariant(agent.availability)}>
-                                            {isDisabled && !agent.onLeave ? 'Conflit' : agent.availability}
+                                         <Badge variant={isDisabled ? 'destructive' : 'outline'}>
+                                            {agent.onLeave ? 'En congé' : hasConflict ? 'Conflit' : 'Disponible'}
                                          </Badge>
                                     </div>
                                 );
