@@ -265,19 +265,31 @@ export default function MissionsPage() {
     let missionsUpdatedCount = 0;
 
     missions.forEach(mission => {
-        const startDate = mission.startDate.toDate();
-        const endDate = mission.endDate.toDate();
-        let newStatus: MissionStatus | null = null;
-        
         if (mission.status === 'Annulée') {
             return; // Do not change cancelled missions
         }
+        
+        let newStatus: MissionStatus | null = null;
+        
+        const startDate = mission.startDate.toDate();
+        const endDate = mission.endDate.toDate();
 
-        if (endDate < now && mission.status !== 'Terminée') {
+        // For single day missions, parse time
+        if (isSameDay(startDate, endDate) && mission.startTime && mission.endTime) {
+            const [startHours, startMinutes] = mission.startTime.split(':').map(Number);
+            const [endHours, endMinutes] = mission.endTime.split(':').map(Number);
+            startDate.setHours(startHours, startMinutes, 0, 0);
+            endDate.setHours(endHours, endMinutes, 0, 0);
+        } else {
+             // For multi-day missions, consider the whole day
+            endDate.setHours(23, 59, 59, 999);
+        }
+
+        if (now > endDate && mission.status !== 'Terminée') {
             newStatus = 'Terminée';
-        } else if (startDate <= now && endDate >= now && mission.status !== 'En cours') {
+        } else if (now >= startDate && now <= endDate && mission.status !== 'En cours') {
             newStatus = 'En cours';
-        } else if (startDate > now && mission.status !== 'Planification') {
+        } else if (now < startDate && mission.status !== 'Planification') {
             newStatus = 'Planification';
         }
 
@@ -311,16 +323,32 @@ export default function MissionsPage() {
     const now = new Date();
     const startDate = mission.startDate.toDate();
     const endDate = mission.endDate.toDate();
-
+    
     if (mission.status === 'Annulée') {
         return 'Annulée';
     }
-    if (mission.status === 'Terminée' || endDate < now) {
+
+    if (isSameDay(startDate, endDate) && mission.startTime && mission.endTime) {
+        const [startHours, startMinutes] = mission.startTime.split(':').map(Number);
+        const [endHours, endMinutes] = mission.endTime.split(':').map(Number);
+        const fullStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), startHours, startMinutes);
+        const fullEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), endHours, endMinutes);
+
+        if (now > fullEndDate) return 'Terminée';
+        if (now < fullStartDate) return 'Planification';
+        return 'En cours';
+    }
+
+    // For multi-day missions, just compare dates
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const missionEndDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+    if (today > missionEndDay) {
         return 'Terminée';
     }
-    if (startDate > now) {
+    if (today < startDate) {
         return 'Planification';
     }
+
     return 'En cours';
   };
 
@@ -631,3 +659,5 @@ export default function MissionsPage() {
     </div>
   );
 }
+
+    

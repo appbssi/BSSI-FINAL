@@ -28,6 +28,7 @@ import type { Agent, Mission } from '@/lib/types';
 import { useMemo, useState } from 'react';
 import { getAgentAvailability } from '@/lib/agents';
 import { MissionDetailsDialog } from '@/components/missions/mission-details-dialog';
+import { isSameDay } from 'date-fns';
 
 type MissionStatus = 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
 
@@ -101,12 +102,27 @@ export default function DashboardPage() {
         if (mission.status === 'Annulée') {
             return 'Annulée';
         }
-        if (mission.status === 'Terminée' || endDate < now) {
+
+        if (isSameDay(startDate, endDate) && mission.startTime && mission.endTime) {
+            const [startHours, startMinutes] = mission.startTime.split(':').map(Number);
+            const [endHours, endMinutes] = mission.endTime.split(':').map(Number);
+            const fullStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), startHours, startMinutes);
+            const fullEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), endHours, endMinutes);
+
+            if (now > fullEndDate) return 'Terminée';
+            if (now < fullStartDate) return 'Planification';
+            return 'En cours';
+        }
+        
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const missionEndDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        if (today > missionEndDay) {
             return 'Terminée';
         }
-        if (startDate > now) {
+        if (today < startDate) {
             return 'Planification';
         }
+        
         return 'En cours';
     };
 
@@ -213,3 +229,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    
