@@ -1,3 +1,4 @@
+
 import type { Agent, Mission, Availability } from './types';
 
 /**
@@ -12,13 +13,21 @@ export function getAgentAvailability(agent: Agent, missions: Mission[], excludeM
     return 'En congé';
   }
 
+  const now = new Date();
+
   const isAssignedToActiveMission = missions.some(mission => {
     if (mission.id === excludeMissionId) {
       return false;
     }
     
-    const isActive = mission.status === 'En cours' || mission.status === 'Planification';
-    return isActive && mission.assignedAgentIds.includes(agent.id);
+    // An active mission is one that is currently happening
+    const startDate = mission.startDate.toDate();
+    const endDate = mission.endDate.toDate();
+    const isCurrentlyRunning = startDate <= now && endDate >= now;
+    
+    const isMissionActive = (mission.status === 'En cours' || mission.status === 'Planification') && isCurrentlyRunning;
+
+    return isMissionActive && mission.assignedAgentIds.includes(agent.id);
   });
 
   if (isAssignedToActiveMission) {

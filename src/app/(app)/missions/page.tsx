@@ -35,7 +35,7 @@ import { collection, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/fire
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent, Mission } from '@/lib/types';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { EditMissionDialog } from '@/components/missions/edit-mission-dialog';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -223,6 +223,8 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
     )
 }
 
+type MissionStatus = 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
+
 export default function MissionsPage() {
   const { isObserver } = useRole();
   const [isCreateMissionOpen, setCreateMissionOpen] = useState(false);
@@ -255,51 +257,72 @@ export default function MissionsPage() {
     }, {} as Record<string, Agent>);
   }, [agents]);
 
-  // Effect to update missions that should be completed
-  useEffect(() => {
-    if (!firestore || !missions || missionsLoading) return;
+  const updateMissionStatuses = useCallback(() => {
+    if (!firestore || !missions) return;
 
-    const updateCompletedMissions = () => {
-        const batch = writeBatch(firestore);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Start of today
+    const batch = writeBatch(firestore);
+    const now = new Date();
+    let missionsUpdatedCount = 0;
 
-        let missionsToUpdate = 0;
-
-        missions.forEach(mission => {
-            const missionEndDate = mission.endDate.toDate();
-            const shouldBeCompleted = missionEndDate < today;
-
-            if (shouldBeCompleted && (mission.status === 'En cours' || mission.status === 'Planification')) {
-                const missionRef = doc(firestore, 'missions', mission.id);
-                batch.update(missionRef, { status: 'Terminée' });
-                missionsToUpdate++;
-            }
-        });
-
-        if (missionsToUpdate > 0) {
-            batch.commit().then(() => {
-                toast({
-                    title: 'Statuts mis à jour',
-                    description: `${missionsToUpdate} mission(s) ont été marquées comme "Terminée".`
-                });
-            }).catch(error => {
-                console.error("Error updating mission statuses:", error);
-                 const permissionError = new FirestorePermissionError({
-                    path: 'missions/[batch]',
-                    operation: 'update',
-                });
-                errorEmitter.emit('permission-error', permissionError);
-            });
+    missions.forEach(mission => {
+        const startDate = mission.startDate.toDate();
+        const endDate = mission.endDate.toDate();
+        let newStatus: MissionStatus | null = null;
+        
+        if (mission.status === 'Annulée') {
+            return; // Do not change cancelled missions
         }
-    };
-    
-    // We run this once when the data is loaded.
-    updateCompletedMissions();
 
-  // The dependency array ensures this runs only once when missions are loaded.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [missions, firestore, missionsLoading]);
+        if (endDate < now && mission.status !== 'Terminée') {
+            newStatus = 'Terminée';
+        } else if (startDate <= now && endDate >= now && mission.status !== 'En cours') {
+            newStatus = 'En cours';
+        } else if (startDate > now && mission.status !== 'Planification') {
+            newStatus = 'Planification';
+        }
+
+        if (newStatus) {
+            const missionRef = doc(firestore, 'missions', mission.id);
+            batch.update(missionRef, { status: newStatus });
+            missionsUpdatedCount++;
+        }
+    });
+
+    if (missionsUpdatedCount > 0) {
+        batch.commit().catch(error => {
+            console.error("Erreur lors de la mise à jour des statuts de mission:", error);
+            const permissionError = new FirestorePermissionError({
+                path: 'missions/[batch]',
+                operation: 'update',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
+    }
+  }, [firestore, missions, toast]);
+
+  useEffect(() => {
+    if (!missionsLoading && missions) {
+        updateMissionStatuses();
+    }
+  }, [missionsLoading, missions, updateMissionStatuses]);
+
+
+  const getDisplayStatus = (mission: Mission): MissionStatus => {
+    const now = new Date();
+    const startDate = mission.startDate.toDate();
+    const endDate = mission.endDate.toDate();
+
+    if (mission.status === 'Annulée') {
+        return 'Annulée';
+    }
+    if (mission.status === 'Terminée' || endDate < now) {
+        return 'Terminée';
+    }
+    if (startDate > now) {
+        return 'Planification';
+    }
+    return 'En cours';
+  };
 
   const sortedMissions = useMemo(() => {
     if (!missions) return [];
@@ -311,27 +334,26 @@ export default function MissionsPage() {
       'Annulée': 4,
     };
 
-    return [...missions].sort((a, b) => {
-      const orderA = statusOrder[a.status] || 5;
-      const orderB = statusOrder[b.status] || 5;
+    return [...missions].map(m => ({...m, displayStatus: getDisplayStatus(m)}))
+      .sort((a, b) => {
+        const orderA = statusOrder[a.displayStatus] || 5;
+        const orderB = statusOrder[b.displayStatus] || 5;
 
-      if (orderA !== orderB) {
-        return orderA - orderB;
-      }
-      
-      return b.startDate.toMillis() - a.startDate.toMillis();
-    });
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        
+        return b.startDate.toMillis() - a.startDate.toMillis();
+      });
   }, [missions]);
 
   const filteredMissions = useMemo(() => {
     return sortedMissions.filter(mission => {
       const matchesSearch = mission.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesFilter = statusFilter === 'all' || mission.status === statusFilter;
+      const matchesFilter = statusFilter === 'all' || mission.displayStatus === statusFilter;
       return matchesSearch && matchesFilter;
     });
   }, [sortedMissions, searchQuery, statusFilter]);
-
-  type MissionStatus = 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
 
   const getBadgeVariant = (status: MissionStatus) => {
     switch (status) {
@@ -460,20 +482,8 @@ export default function MissionsPage() {
                 .filter(Boolean)
                 .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
               
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
               const missionStartDate = mission.startDate.toDate();
-              
-              let displayStatus: MissionStatus = mission.status;
-              if (mission.status === 'Planification' && missionStartDate <= today) {
-                displayStatus = 'En cours';
-              }
-              // The visual update for 'Terminée' is now handled by the data layer,
-              // but we keep the visual consistency logic as a fallback.
               const missionEndDate = mission.endDate.toDate();
-              if ((displayStatus === 'En cours' || displayStatus === 'Planification') && missionEndDate < today) {
-                displayStatus = 'Terminée';
-              }
               const duration = differenceInDays(missionEndDate, missionStartDate) + 1;
 
 
@@ -506,9 +516,9 @@ export default function MissionsPage() {
                 </TableCell>
                 <TableCell>
                   <Badge
-                    variant={getBadgeVariant(displayStatus)}
+                    variant={getBadgeVariant(mission.displayStatus)}
                   >
-                    {displayStatus}
+                    {mission.displayStatus}
                   </Badge>
                 </TableCell>
                 <TableCell>

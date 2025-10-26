@@ -67,13 +67,8 @@ export default function DashboardPage() {
 
   const activeMissions = useMemo(() => {
     if (!missions) return [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
     return missions.filter(mission => {
-        const missionStartDate = mission.startDate.toDate();
-        const isPlannedAndShouldBeActive = mission.status === 'Planification' && missionStartDate <= today;
-        return mission.status === 'En cours' || isPlannedAndShouldBeActive;
+        return mission.status === 'En cours' || mission.status === 'Planification';
     }).slice(0, 5);
 }, [missions]);
 
@@ -97,6 +92,23 @@ export default function DashboardPage() {
         return 'secondary';
     }
   };
+  
+    const getDisplayStatus = (mission: Mission): MissionStatus => {
+        const now = new Date();
+        const startDate = mission.startDate.toDate();
+        const endDate = mission.endDate.toDate();
+
+        if (mission.status === 'Annulée') {
+            return 'Annulée';
+        }
+        if (mission.status === 'Terminée' || endDate < now) {
+            return 'Terminée';
+        }
+        if (startDate > now) {
+            return 'Planification';
+        }
+        return 'En cours';
+    };
 
   return (
     <>
@@ -136,7 +148,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              Aperçu des missions en cours ({isLoading ? '...' : activeMissions.length})
+              Aperçu des missions planifiées et en cours ({isLoading ? '...' : activeMissions.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -156,18 +168,7 @@ export default function DashboardPage() {
                   </TableRow>
                 )}
                 {!isLoading && activeMissions.map((mission) => {
-                   const today = new Date();
-                   today.setHours(0, 0, 0, 0);
-                   const missionStartDate = mission.startDate.toDate();
-                   const missionEndDate = mission.endDate.toDate();
-
-                   let displayStatus: MissionStatus = mission.status;
-                   if (mission.status === 'Planification' && missionStartDate <= today) {
-                       displayStatus = 'En cours';
-                   } else if (mission.status === 'En cours' && missionEndDate < today) {
-                       displayStatus = 'Terminée';
-                   }
-
+                   const displayStatus = getDisplayStatus(mission);
                   return(
                     <TableRow key={mission.id} onClick={() => setSelectedMission(mission)} className="cursor-pointer">
                       <TableCell className="font-medium">{mission.name}</TableCell>
@@ -184,7 +185,7 @@ export default function DashboardPage() {
                 {!isLoading && activeMissions.length === 0 && (
                   <TableRow>
                       <TableCell colSpan={4} className="text-center text-muted-foreground">
-                          Aucune mission en cours.
+                          Aucune mission planifiée ou en cours.
                       </TableCell>
                   </TableRow>
               )}
