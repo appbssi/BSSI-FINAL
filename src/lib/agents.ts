@@ -17,17 +17,16 @@ export function getAgentAvailability(agent: Agent, missions: Mission[], excludeM
   }
 
   const isAssignedToActiveOrPlannedMission = missions.some(mission => {
+    // Exclude the specified mission if an ID is provided
     if (mission.id === excludeMissionId) {
       return false;
     }
     
-    const isRelevantStatus = mission.status === 'En cours' || mission.status === 'Planification';
-    
-    if (isRelevantStatus && mission.assignedAgentIds.includes(agent.id)) {
-      return true;
-    }
+    // Check if the agent is assigned and the mission status is relevant
+    const isAgentAssigned = mission.assignedAgentIds.includes(agent.id);
+    const isMissionActiveOrPlanned = mission.status === 'En cours' || mission.status === 'Planification';
 
-    return false;
+    return isAgentAssigned && isMissionActiveOrPlanned;
   });
 
   if (isAssignedToActiveOrPlannedMission) {
