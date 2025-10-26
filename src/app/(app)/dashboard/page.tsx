@@ -68,7 +68,7 @@ export default function DashboardPage() {
   const activeMissions = useMemo(() => {
     if (!missions) return [];
     return missions.filter(mission => {
-        return mission.status === 'En cours' || mission.status === 'Planification';
+        return mission.status === 'En cours';
     }).slice(0, 5);
 }, [missions]);
 
@@ -148,7 +148,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              Aperçu des missions planifiées et en cours ({isLoading ? '...' : activeMissions.length})
+              Aperçu des missions en cours ({isLoading ? '...' : activeMissions.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -185,7 +185,7 @@ export default function DashboardPage() {
                 {!isLoading && activeMissions.length === 0 && (
                   <TableRow>
                       <TableCell colSpan={4} className="text-center text-muted-foreground">
-                          Aucune mission planifiée ou en cours.
+                          Aucune mission en cours.
                       </TableCell>
                   </TableRow>
               )}
