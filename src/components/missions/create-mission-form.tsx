@@ -19,12 +19,12 @@ import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { collection, Timestamp, addDoc, writeBatch, doc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { Agent, Mission, Availability } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
@@ -40,10 +40,28 @@ const missionSchema = z.object({
   endDate: z.date({
     required_error: "La date de fin est requise.",
   }),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
   assignedAgentIds: z.array(z.string()).min(1, "Vous devez assigner au moins un agent."),
 }).refine(data => data.endDate >= data.startDate, {
   message: "La date de fin ne peut pas être antérieure à la date de début.",
   path: ["endDate"],
+}).refine(data => {
+    if (data.startDate && data.endDate && isSameDay(data.startDate, data.endDate)) {
+        return !!data.startTime && !!data.endTime;
+    }
+    return true;
+}, {
+    message: "Les heures de début et de fin sont requises pour une mission d'une journée.",
+    path: ["startTime"], 
+}).refine(data => {
+    if (data.startTime && data.endTime) {
+        return data.endTime > data.startTime;
+    }
+    return true;
+}, {
+    message: "L'heure de fin doit être après l'heure de début.",
+    path: ["endTime"],
 });
 
 
@@ -59,6 +77,8 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     defaultValues: {
       name: '',
       location: '',
+      startTime: '08:00',
+      endTime: '17:00',
       assignedAgentIds: [],
     },
   });
@@ -71,6 +91,16 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   const { data: allAgents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   const { data: allMissions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
 
+  const startDate = form.watch('startDate');
+  const endDate = form.watch('endDate');
+  const isSingleDayMission = startDate && endDate && isSameDay(startDate, endDate);
+
+  useEffect(() => {
+    if (!isSingleDayMission) {
+      form.clearErrors(['startTime', 'endTime']);
+    }
+  }, [isSingleDayMission, form]);
+
   const onSubmit = async (data: MissionFormValues) => {
     if (!firestore) return;
     
@@ -78,15 +108,22 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
 
     const missionsCollection = collection(firestore, 'missions');
     const newMissionRef = doc(missionsCollection);
-    const newMissionData = {
-        ...data,
+    
+    const newMissionData: Omit<Mission, 'id' | 'status'> = {
+        name: data.name,
+        location: data.location,
         startDate: Timestamp.fromDate(data.startDate),
         endDate: Timestamp.fromDate(data.endDate),
+        assignedAgentIds: data.assignedAgentIds,
         status: 'Planification',
     };
-    batch.set(newMissionRef, newMissionData);
 
-    // No need to update agent availability manually anymore
+    if (isSingleDayMission) {
+        newMissionData.startTime = data.startTime;
+        newMissionData.endTime = data.endTime;
+    }
+
+    batch.set(newMissionRef, newMissionData);
 
     batch.commit().then(() => {
         toast({
@@ -108,15 +145,12 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   };
 
   const handleNextStep = async () => {
-    const isValid = await form.trigger(['name', 'location', 'startDate', 'endDate']);
+    const isValid = await form.trigger(['name', 'location', 'startDate', 'endDate', 'startTime', 'endTime']);
     if (isValid) {
         setCurrentStep(2);
     }
   };
   
-  const startDate = form.watch('startDate');
-  const endDate = form.watch('endDate');
-
   const agentsWithAvailability = useMemo(() => {
     if (!allAgents || !allMissions) return [];
     return allAgents.map(agent => ({
@@ -265,6 +299,36 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                         )}
                     />
                     </div>
+                    {isSingleDayMission && (
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <FormField
+                                control={form.control}
+                                name="startTime"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Heure de début</FormLabel>
+                                    <FormControl>
+                                        <Input type="time" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={form.control}
+                                name="endTime"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Heure de fin</FormLabel>
+                                    <FormControl>
+                                        <Input type="time" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                       </div>
+                    )}
                     <div className="flex justify-end pt-4">
                         <Button type="button" onClick={handleNextStep}>Suivant</Button>
                     </div>

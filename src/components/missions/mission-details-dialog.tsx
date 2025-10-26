@@ -11,7 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import type { Agent, Mission } from '@/lib/types';
 import { Calendar, MapPin, Users, Info } from 'lucide-react';
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, isSameDay } from 'date-fns';
 
 interface MissionDetailsDialogProps {
   isOpen: boolean;
@@ -23,6 +23,7 @@ interface MissionDetailsDialogProps {
 export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: MissionDetailsDialogProps) {
   const startDate = mission.startDate.toDate();
   const endDate = mission.endDate.toDate();
+  const isSingleDay = isSameDay(startDate, endDate);
   const duration = differenceInDays(endDate, startDate) + 1;
 
   const getBadgeVariant = (status: Mission['status']) => {
@@ -57,10 +58,18 @@ export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: 
                     <Calendar className="h-5 w-5 mt-1 text-muted-foreground" />
                     <div>
                         <h3 className="font-semibold">Période</h3>
-                        <p className="text-sm text-foreground">
-                            {startDate.toLocaleDateString('fr-FR')} - {endDate.toLocaleDateString('fr-FR')}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{duration} jour(s)</p>
+                        {isSingleDay ? (
+                            <p className="text-sm text-foreground">
+                                {startDate.toLocaleDateString('fr-FR')} (de {mission.startTime} à {mission.endTime})
+                            </p>
+                        ) : (
+                            <>
+                                <p className="text-sm text-foreground">
+                                    {startDate.toLocaleDateString('fr-FR')} - {endDate.toLocaleDateString('fr-FR')}
+                                </p>
+                                <p className="text-xs text-muted-foreground">{duration} jour(s)</p>
+                            </>
+                        )}
                     </div>
                 </div>
                  <div className="flex items-start gap-3">

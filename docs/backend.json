@@ -69,6 +69,14 @@
           "description": "The scheduled end time for the mission.",
           "format": "date-time"
         },
+        "startTime": {
+          "type": "string",
+          "description": "The start time for the mission, if it's on a single day."
+        },
+        "endTime": {
+          "type": "string",
+          "description": "The end time for the mission, if it's on a single day."
+        },
         "status": {
           "type": "string",
           "description": "The current status of the mission.",

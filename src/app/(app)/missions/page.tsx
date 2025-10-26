@@ -53,7 +53,7 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { useRole } from '@/hooks/use-role';
 import { useLogo } from '@/context/logo-context';
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, isSameDay } from 'date-fns';
 
 const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missionName: string }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -298,7 +298,7 @@ export default function MissionsPage() {
             errorEmitter.emit('permission-error', permissionError);
         });
     }
-  }, [firestore, missions, toast]);
+  }, [firestore, missions]);
 
   useEffect(() => {
     if (!missionsLoading && missions) {
@@ -327,7 +327,7 @@ export default function MissionsPage() {
   const sortedMissions = useMemo(() => {
     if (!missions) return [];
     
-    const statusOrder: Record<Mission['status'], number> = {
+    const statusOrder: Record<MissionStatus, number> = {
       'En cours': 1,
       'Planification': 2,
       'Terminée': 3,
@@ -484,6 +484,8 @@ export default function MissionsPage() {
               
               const missionStartDate = mission.startDate.toDate();
               const missionEndDate = mission.endDate.toDate();
+              
+              const isSingleDay = isSameDay(missionStartDate, missionEndDate);
               const duration = differenceInDays(missionEndDate, missionStartDate) + 1;
 
 
@@ -493,8 +495,21 @@ export default function MissionsPage() {
                 <TableCell>{mission.location}</TableCell>
                 <TableCell>
                     <div className="flex flex-col">
-                        <span>{missionStartDate.toLocaleDateString('fr-FR')} - {missionEndDate.toLocaleDateString('fr-FR')}</span>
-                        <span className="text-xs text-muted-foreground">{duration} jour(s)</span>
+                        {isSingleDay ? (
+                            <>
+                                <span>{missionStartDate.toLocaleDateString('fr-FR')}</span>
+                                {mission.startTime && mission.endTime && (
+                                    <span className="text-xs text-muted-foreground">
+                                        {mission.startTime} - {mission.endTime}
+                                    </span>
+                                )}
+                            </>
+                        ) : (
+                             <>
+                                <span>{missionStartDate.toLocaleDateString('fr-FR')} - {missionEndDate.toLocaleDateString('fr-FR')}</span>
+                                <span className="text-xs text-muted-foreground">{duration} jour(s)</span>
+                            </>
+                        )}
                     </div>
                 </TableCell>
                 <TableCell>

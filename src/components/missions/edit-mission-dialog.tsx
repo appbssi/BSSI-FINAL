@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -28,7 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { collection, Timestamp, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
@@ -48,10 +48,28 @@ const missionSchema = z.object({
   endDate: z.date({
     required_error: "La date de fin est requise.",
   }),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
   assignedAgentIds: z.array(z.string()).min(1, "Vous devez assigner au moins un agent."),
 }).refine(data => data.endDate >= data.startDate, {
   message: "La date de fin ne peut pas être antérieure à la date de début.",
   path: ["endDate"],
+}).refine(data => {
+    if (data.startDate && data.endDate && isSameDay(data.startDate, data.endDate)) {
+        return !!data.startTime && !!data.endTime;
+    }
+    return true;
+}, {
+    message: "Les heures de début et de fin sont requises pour une mission d'une journée.",
+    path: ["startTime"],
+}).refine(data => {
+    if (data.startTime && data.endTime) {
+        return data.endTime > data.startTime;
+    }
+    return true;
+}, {
+    message: "L'heure de fin doit être après l'heure de début.",
+    path: ["endTime"],
 });
 
 type MissionFormValues = z.infer<typeof missionSchema>;
@@ -73,6 +91,8 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
       location: mission.location,
       startDate: mission.startDate.toDate(),
       endDate: mission.endDate.toDate(),
+      startTime: mission.startTime || '08:00',
+      endTime: mission.endTime || '17:00',
       assignedAgentIds: mission.assignedAgentIds || [],
     },
   });
@@ -85,12 +105,24 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
   const { data: allAgents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   const { data: allMissions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
   
+  const startDate = form.watch('startDate');
+  const endDate = form.watch('endDate');
+  const isSingleDayMission = startDate && endDate && isSameDay(startDate, endDate);
+
+   useEffect(() => {
+    if (!isSingleDayMission) {
+      form.clearErrors(['startTime', 'endTime']);
+    }
+  }, [isSingleDayMission, form]);
+
   useEffect(() => {
     form.reset({
       name: mission.name,
       location: mission.location,
       startDate: mission.startDate.toDate(),
       endDate: mission.endDate.toDate(),
+      startTime: mission.startTime || '08:00',
+      endTime: mission.endTime || '17:00',
       assignedAgentIds: mission.assignedAgentIds || [],
     });
   }, [mission, form, isOpen]);
@@ -102,11 +134,22 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
     const batch = writeBatch(firestore);
 
     const missionRef = doc(firestore, 'missions', mission.id);
-    const missionUpdateData = {
-        ...data,
+    const missionUpdateData: any = {
+        name: data.name,
+        location: data.location,
         startDate: Timestamp.fromDate(data.startDate),
         endDate: Timestamp.fromDate(data.endDate),
+        assignedAgentIds: data.assignedAgentIds,
     };
+
+    if (isSingleDayMission) {
+        missionUpdateData.startTime = data.startTime;
+        missionUpdateData.endTime = data.endTime;
+    } else {
+        missionUpdateData.startTime = null;
+        missionUpdateData.endTime = null;
+    }
+    
     batch.update(missionRef, missionUpdateData);
     
     batch.commit().then(() => {
@@ -125,9 +168,6 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
     });
   };
   
-  const startDate = form.watch('startDate');
-  const endDate = form.watch('endDate');
-
   const agentsWithAvailability = useMemo(() => {
     if (!allAgents || !allMissions) return [];
     return allAgents.map(agent => ({
@@ -142,7 +182,6 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
       .filter(agent => {
         if (agent.onLeave) return false;
 
-        // If agent is already in this mission, keep them in the list
         if ((mission.assignedAgentIds || []).includes(agent.id)) {
             return true;
         }
@@ -284,6 +323,37 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
                 )}
               />
             </div>
+
+             {isSingleDayMission && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="startTime"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Heure de début</FormLabel>
+                            <FormControl>
+                                <Input type="time" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                        <FormField
+                        control={form.control}
+                        name="endTime"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Heure de fin</FormLabel>
+                            <FormControl>
+                                <Input type="time" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </div>
+            )}
             
             <Controller
                 control={form.control}

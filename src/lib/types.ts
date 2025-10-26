@@ -20,6 +20,8 @@ export type Mission = {
   location: string;
   startDate: Timestamp;
   endDate: Timestamp;
+  startTime?: string;
+  endTime?: string;
   status: 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
   assignedAgentIds: string[];
 };
