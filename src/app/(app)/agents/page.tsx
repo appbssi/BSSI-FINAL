@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -69,6 +69,17 @@ export default function AgentsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'Disponible' | 'En mission' | 'En congé'>('all');
   const { toast } = useToast();
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 60000); // Mettre à jour toutes les 60 secondes
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
 
   const agentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'agents') : null), [firestore]);
   const missionsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'missions') : null), [firestore]);
@@ -82,7 +93,7 @@ export default function AgentsPage() {
       ...agent,
       availability: getAgentAvailability(agent, missions)
     }));
-  }, [agents, missions]);
+  }, [agents, missions, now]);
 
   const sortedAgents = useMemo(() => {
     return [...agentsWithAvailability].sort((a, b) => {

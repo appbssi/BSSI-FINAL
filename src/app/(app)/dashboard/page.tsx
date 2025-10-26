@@ -25,7 +25,7 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import type { Agent, Mission } from '@/lib/types';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { getAgentAvailability } from '@/lib/agents';
 import { MissionDetailsDialog } from '@/components/missions/mission-details-dialog';
 import { isSameDay } from 'date-fns';
@@ -71,6 +71,17 @@ const getDisplayStatus = (mission: Mission): MissionStatus => {
 export default function DashboardPage() {
   const firestore = useFirestore();
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 60000); // Mettre à jour toutes les 60 secondes
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
 
   const agentsQuery = useMemoFirebase(
     () => (firestore ? collection(firestore, 'agents') : null),
@@ -99,7 +110,7 @@ export default function DashboardPage() {
       ...mission,
       displayStatus: getDisplayStatus(mission),
     }));
-  }, [missions]);
+  }, [missions, now]);
 
   const agentsWithAvailability = useMemo(() => {
     if (!agents || !missions) return [];
@@ -111,7 +122,7 @@ export default function DashboardPage() {
       ...agent,
       availability: getAgentAvailability(agent, missionsWithCorrectStatus)
     }));
-  }, [agents, missions]);
+  }, [agents, missions, now]);
 
 
   const activeMissions = useMemo(() => {

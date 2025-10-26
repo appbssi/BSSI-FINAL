@@ -35,7 +35,7 @@ import { collection, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/fire
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent, Mission } from '@/lib/types';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { EditMissionDialog } from '@/components/missions/edit-mission-dialog';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -270,6 +270,17 @@ export default function MissionsPage() {
   const firestore = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'Planification' | 'En cours' | 'Terminée' | 'Annulée'>('all');
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 60000); // Mettre à jour toutes les 60 secondes
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
   
   const missionsQuery = useMemoFirebase(
     () => (firestore ? collection(firestore, 'missions') : null),
@@ -313,7 +324,7 @@ export default function MissionsPage() {
         
         return b.startDate.toMillis() - a.startDate.toMillis();
       });
-  }, [missions]);
+  }, [missions, now]);
 
   const filteredMissions = useMemo(() => {
     return sortedMissions.filter(mission => {
