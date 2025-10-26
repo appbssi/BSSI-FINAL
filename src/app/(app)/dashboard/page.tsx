@@ -114,13 +114,9 @@ export default function DashboardPage() {
 
   const agentsWithAvailability = useMemo(() => {
     if (!agents || !missions) return [];
-    
-    // Pass missions with real-time status to getAgentAvailability
-    const missionsWithCorrectStatus = missions.map(m => ({ ...m, status: getDisplayStatus(m) }));
-    
     return agents.map(agent => ({
       ...agent,
-      availability: getAgentAvailability(agent, missionsWithCorrectStatus)
+      availability: getAgentAvailability(agent, missions)
     }));
   }, [agents, missions, now]);
 

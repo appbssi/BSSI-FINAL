@@ -151,30 +151,16 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     }
   };
   
-  const agentsWithAvailability = useMemo(() => {
-    if (!allAgents || !allMissions) return [];
-    return allAgents.map(agent => ({
-        ...agent,
-        availability: getAgentAvailability(agent, allMissions)
-    }));
-  }, [allAgents, allMissions]);
-  
   const availableAgents = useMemo(() => {
     if (!startDate || !endDate || !allAgents || !allMissions) return [];
-    
-    // Set hours to cover the entire day for multi-day missions
+
     const selectedStart = new Date(startDate);
     const selectedEnd = new Date(endDate);
-    if (!isSingleDay(selectedStart, selectedEnd)) {
-        selectedStart.setHours(0, 0, 0, 0);
-        selectedEnd.setHours(23, 59, 59, 999);
-    }
-
+    
     return allAgents
       .filter(agent => {
         if (agent.onLeave) return false;
 
-        // Check for mission conflicts
         const hasConflict = allMissions.some(mission => {
             if (mission.status === 'Terminée' || mission.status === 'Annulée') {
                 return false;
@@ -186,7 +172,6 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
             const missionStart = mission.startDate.toDate();
             const missionEnd = mission.endDate.toDate();
 
-            // Simple date overlap check
             return selectedStart < missionEnd && selectedEnd > missionStart;
         });
 

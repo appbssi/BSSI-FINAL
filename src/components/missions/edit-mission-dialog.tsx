@@ -168,42 +168,33 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
     });
   };
   
-  const agentsWithAvailability = useMemo(() => {
-    if (!allAgents || !allMissions) return [];
-    return allAgents.map(agent => ({
-        ...agent,
-        availability: getAgentAvailability(agent, allMissions, mission.id)
-    }));
-  }, [allAgents, allMissions, mission.id]);
-
-  const combinedAgentList = useMemo(() => {
+  const availableAgents = useMemo(() => {
     if (!startDate || !endDate || !allAgents || !allMissions) return [];
 
     const selectedStart = new Date(startDate);
     const selectedEnd = new Date(endDate);
-     if (!isSameDay(selectedStart, selectedEnd)) {
-        selectedStart.setHours(0, 0, 0, 0);
-        selectedEnd.setHours(23, 59, 59, 999);
-    }
 
     return allAgents
       .filter(agent => {
         if (agent.onLeave) return false;
-
+        
         const isCurrentlyAssigned = (mission.assignedAgentIds || []).includes(agent.id);
 
         const hasConflict = allMissions.some(m => {
-            if (m.id === mission.id) return false; // Don't check against the mission being edited
-            if (m.status === 'Terminée' || m.status === 'Annulée') return false;
-            if (!m.assignedAgentIds.includes(agent.id)) return false;
-
+            if (m.id === mission.id) return false;
+            if (m.status === 'Terminée' || m.status === 'Annulée') {
+                return false;
+            }
+            if (!m.assignedAgentIds.includes(agent.id)) {
+                return false;
+            }
+            
             const missionStart = m.startDate.toDate();
             const missionEnd = m.endDate.toDate();
-
+            
             return selectedStart < missionEnd && selectedEnd > missionStart;
         });
 
-        // Agent is available if they are already in this mission, or if they have no conflicts.
         return isCurrentlyAssigned || !hasConflict;
       })
       .sort((a,b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
@@ -372,24 +363,23 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
                             <div className="flex items-center justify-center p-8">
                                 <Loader2 className="animate-spin h-8 w-8 text-muted-foreground"/>
                             </div>
-                        ) : combinedAgentList.length > 0 ? (
-                            combinedAgentList.map((agent) => {
+                        ) : availableAgents.length > 0 ? (
+                            availableAgents.map((agent) => {
                                 const isChecked = field.value?.includes(agent.id);
-                                const isOriginallyAssigned = (mission.assignedAgentIds || []).includes(agent.id);
+                                const isCurrentlyAssigned = (mission.assignedAgentIds || []).includes(agent.id);
                                 
-                                const agentMissions = (allMissions || []).filter(m => 
-                                    m.id !== mission.id &&
-                                    m.assignedAgentIds.includes(agent.id) && 
-                                    m.status !== 'Annulée' && 
-                                    m.status !== 'Terminée'
-                                );
-                                const hasConflict = agentMissions.some(m => {
+                                const hasConflict = allMissions.some(m => {
+                                    if (m.id === mission.id) return false;
+                                    if (m.status === 'Terminée' || m.status === 'Annulée') return false;
+                                    if (!m.assignedAgentIds.includes(agent.id)) return false;
+                                    
                                     const missionStart = m.startDate.toDate();
                                     const missionEnd = m.endDate.toDate();
+                                    
                                     return startDate < missionEnd && endDate > missionStart;
                                 });
 
-                                const isDisabled = !isOriginallyAssigned && (agent.onLeave || hasConflict);
+                                const isDisabled = !isCurrentlyAssigned && (agent.onLeave || hasConflict);
 
                                 return (
                                     <div
