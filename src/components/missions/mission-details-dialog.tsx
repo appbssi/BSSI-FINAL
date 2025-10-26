@@ -16,7 +16,7 @@ import { differenceInDays, isSameDay } from 'date-fns';
 interface MissionDetailsDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  mission: Mission;
+  mission: Mission & { displayStatus?: Mission['status'] };
   agents: Agent[];
 }
 
@@ -25,6 +25,8 @@ export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: 
   const endDate = mission.endDate.toDate();
   const isSingleDay = isSameDay(startDate, endDate);
   const duration = differenceInDays(endDate, startDate) + 1;
+
+  const displayStatus = mission.displayStatus || mission.status;
 
   const getBadgeVariant = (status: Mission['status']) => {
     switch (status) {
@@ -76,7 +78,7 @@ export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: 
                     <Info className="h-5 w-5 mt-1 text-muted-foreground" />
                     <div>
                         <h3 className="font-semibold">Statut</h3>
-                        <Badge variant={getBadgeVariant(mission.status)}>{mission.status}</Badge>
+                        <Badge variant={getBadgeVariant(displayStatus)}>{displayStatus}</Badge>
                     </div>
                 </div>
             </div>

@@ -35,7 +35,7 @@ import { collection, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/fire
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent, Mission } from '@/lib/types';
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { EditMissionDialog } from '@/components/missions/edit-mission-dialog';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -225,6 +225,41 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
 
 type MissionStatus = 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
 
+const getDisplayStatus = (mission: Mission): MissionStatus => {
+    const now = new Date();
+    const startDate = mission.startDate.toDate();
+    const endDate = mission.endDate.toDate();
+    
+    if (mission.status === 'Annulée') {
+        return 'Annulée';
+    }
+
+    if (isSameDay(startDate, endDate) && mission.startTime && mission.endTime) {
+        const [startHours, startMinutes] = mission.startTime.split(':').map(Number);
+        const [endHours, endMinutes] = mission.endTime.split(':').map(Number);
+        const fullStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), startHours, startMinutes);
+        const fullEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), endHours, endMinutes);
+
+        if (now > fullEndDate) return 'Terminée';
+        if (now < fullStartDate) return 'Planification';
+        return 'En cours';
+    }
+
+    // For multi-day missions, just compare dates
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const missionEndDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+    if (today > missionEndDay) {
+        return 'Terminée';
+    }
+
+    const missionStartDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    if (today < missionStartDay) {
+        return 'Planification';
+    }
+
+    return 'En cours';
+  };
+
 export default function MissionsPage() {
   const { isObserver } = useRole();
   const [isCreateMissionOpen, setCreateMissionOpen] = useState(false);
@@ -256,101 +291,6 @@ export default function MissionsPage() {
         return acc;
     }, {} as Record<string, Agent>);
   }, [agents]);
-
-  const updateMissionStatuses = useCallback(() => {
-    if (!firestore || !missions) return;
-
-    const batch = writeBatch(firestore);
-    const now = new Date();
-    let missionsUpdatedCount = 0;
-
-    missions.forEach(mission => {
-        if (mission.status === 'Annulée') {
-            return; // Do not change cancelled missions
-        }
-        
-        let newStatus: MissionStatus | null = null;
-        
-        const startDate = mission.startDate.toDate();
-        const endDate = mission.endDate.toDate();
-
-        // For single day missions, parse time
-        if (isSameDay(startDate, endDate) && mission.startTime && mission.endTime) {
-            const [startHours, startMinutes] = mission.startTime.split(':').map(Number);
-            const [endHours, endMinutes] = mission.endTime.split(':').map(Number);
-            startDate.setHours(startHours, startMinutes, 0, 0);
-            endDate.setHours(endHours, endMinutes, 0, 0);
-        } else {
-             // For multi-day missions, consider the whole day
-            endDate.setHours(23, 59, 59, 999);
-        }
-
-        if (now > endDate && mission.status !== 'Terminée') {
-            newStatus = 'Terminée';
-        } else if (now >= startDate && now <= endDate && mission.status !== 'En cours') {
-            newStatus = 'En cours';
-        } else if (now < startDate && mission.status !== 'Planification') {
-            newStatus = 'Planification';
-        }
-
-        if (newStatus) {
-            const missionRef = doc(firestore, 'missions', mission.id);
-            batch.update(missionRef, { status: newStatus });
-            missionsUpdatedCount++;
-        }
-    });
-
-    if (missionsUpdatedCount > 0) {
-        batch.commit().catch(error => {
-            console.error("Erreur lors de la mise à jour des statuts de mission:", error);
-            const permissionError = new FirestorePermissionError({
-                path: 'missions/[batch]',
-                operation: 'update',
-            });
-            errorEmitter.emit('permission-error', permissionError);
-        });
-    }
-  }, [firestore, missions]);
-
-  useEffect(() => {
-    if (!missionsLoading && missions) {
-        updateMissionStatuses();
-    }
-  }, [missionsLoading, missions, updateMissionStatuses]);
-
-
-  const getDisplayStatus = (mission: Mission): MissionStatus => {
-    const now = new Date();
-    const startDate = mission.startDate.toDate();
-    const endDate = mission.endDate.toDate();
-    
-    if (mission.status === 'Annulée') {
-        return 'Annulée';
-    }
-
-    if (isSameDay(startDate, endDate) && mission.startTime && mission.endTime) {
-        const [startHours, startMinutes] = mission.startTime.split(':').map(Number);
-        const [endHours, endMinutes] = mission.endTime.split(':').map(Number);
-        const fullStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), startHours, startMinutes);
-        const fullEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), endHours, endMinutes);
-
-        if (now > fullEndDate) return 'Terminée';
-        if (now < fullStartDate) return 'Planification';
-        return 'En cours';
-    }
-
-    // For multi-day missions, just compare dates
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const missionEndDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-    if (today > missionEndDay) {
-        return 'Terminée';
-    }
-    if (today < startDate) {
-        return 'Planification';
-    }
-
-    return 'En cours';
-  };
 
   const sortedMissions = useMemo(() => {
     if (!missions) return [];
@@ -403,20 +343,19 @@ export default function MissionsPage() {
     const missionRef = doc(firestore, 'missions', missionToCancel.id);
     const updateData = { status: 'Annulée' as const };
     
-    try {
-        await updateDoc(missionRef, updateData);
+    updateDoc(missionRef, updateData).then(() => {
         toast({
             title: 'Mission annulée',
             description: `La mission "${missionToCancel.name}" a été annulée.`
         });
-    } catch (serverError) {
+    }).catch((serverError) => {
         const permissionError = new FirestorePermissionError({
             path: missionRef.path,
             operation: 'update',
             requestResourceData: updateData,
         });
         errorEmitter.emit('permission-error', permissionError);
-    }
+    });
     setMissionToCancel(null);
   }
 
@@ -576,7 +515,7 @@ export default function MissionsPage() {
                       <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Modifier/Prolonger</DropdownMenuItem>
-                        {mission.status !== 'Annulée' && mission.status !== 'Terminée' && (
+                        {mission.displayStatus !== 'Annulée' && mission.displayStatus !== 'Terminée' && (
                           <DropdownMenuItem 
                               onSelect={() => setMissionToCancel(mission)}
                               className="text-destructive focus:bg-destructive/10 focus:text-destructive">

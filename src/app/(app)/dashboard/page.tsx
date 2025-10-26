@@ -32,6 +32,42 @@ import { isSameDay } from 'date-fns';
 
 type MissionStatus = 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
 
+const getDisplayStatus = (mission: Mission): MissionStatus => {
+    const now = new Date();
+    const startDate = mission.startDate.toDate();
+    const endDate = mission.endDate.toDate();
+
+    if (mission.status === 'Annulée') {
+        return 'Annulée';
+    }
+
+    if (isSameDay(startDate, endDate) && mission.startTime && mission.endTime) {
+        const [startHours, startMinutes] = mission.startTime.split(':').map(Number);
+        const [endHours, endMinutes] = mission.endTime.split(':').map(Number);
+        const fullStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), startHours, startMinutes);
+        const fullEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), endHours, endMinutes);
+
+        if (now > fullEndDate) return 'Terminée';
+        if (now < fullStartDate) return 'Planification';
+        return 'En cours';
+    }
+    
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const missionEndDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+     if (today > missionEndDay) {
+        return 'Terminée';
+    }
+    
+    // Set start date to the beginning of the day for comparison
+    const missionStartDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    if (today < missionStartDay) {
+        return 'Planification';
+    }
+    
+    return 'En cours';
+  };
+
+
 export default function DashboardPage() {
   const firestore = useFirestore();
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
@@ -57,46 +93,6 @@ export default function DashboardPage() {
     }, {} as Record<string, Agent>);
   }, [agents]);
 
-  const agentsWithAvailability = useMemo(() => {
-    if (!agents || !missions) return [];
-    return agents.map(agent => ({
-      ...agent,
-      availability: getAgentAvailability(agent, missions)
-    }));
-  }, [agents, missions]);
-
-  const getDisplayStatus = (mission: Mission): MissionStatus => {
-    const now = new Date();
-    const startDate = mission.startDate.toDate();
-    const endDate = mission.endDate.toDate();
-
-    if (mission.status === 'Annulée') {
-        return 'Annulée';
-    }
-
-    if (isSameDay(startDate, endDate) && mission.startTime && mission.endTime) {
-        const [startHours, startMinutes] = mission.startTime.split(':').map(Number);
-        const [endHours, endMinutes] = mission.endTime.split(':').map(Number);
-        const fullStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), startHours, startMinutes);
-        const fullEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), endHours, endMinutes);
-
-        if (now > fullEndDate) return 'Terminée';
-        if (now < fullStartDate) return 'Planification';
-        return 'En cours';
-    }
-    
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const missionEndDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-    if (today > missionEndDay) {
-        return 'Terminée';
-    }
-    if (today < startDate) {
-        return 'Planification';
-    }
-    
-    return 'En cours';
-  };
-
   const missionsWithDisplayStatus = useMemo(() => {
     if (!missions) return [];
     return missions.map(mission => ({
@@ -104,6 +100,19 @@ export default function DashboardPage() {
       displayStatus: getDisplayStatus(mission),
     }));
   }, [missions]);
+
+  const agentsWithAvailability = useMemo(() => {
+    if (!agents || !missions) return [];
+    
+    // Pass missions with real-time status to getAgentAvailability
+    const missionsWithCorrectStatus = missions.map(m => ({ ...m, status: getDisplayStatus(m) }));
+    
+    return agents.map(agent => ({
+      ...agent,
+      availability: getAgentAvailability(agent, missionsWithCorrectStatus)
+    }));
+  }, [agents, missions]);
+
 
   const activeMissions = useMemo(() => {
     return missionsWithDisplayStatus.filter(mission => {
@@ -223,7 +232,7 @@ export default function DashboardPage() {
                     setSelectedMission(null);
                 }
             }}
-            mission={selectedMission}
+            mission={{...selectedMission, status: getDisplayStatus(selectedMission)}}
             agents={
                 selectedMission.assignedAgentIds
                 .map(id => agentsById[id])
