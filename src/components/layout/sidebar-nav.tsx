@@ -73,16 +73,16 @@ export function SidebarNav() {
               alt="Sidebar background"
               layout="fill"
               objectFit="cover"
-              className="opacity-30 pointer-events-none"
+              className="opacity-10 pointer-events-none"
           />
       )}
-      <div className={cn("relative z-10 flex flex-col h-full", logo ? "bg-black/50" : "")}>
+      <div className={cn("relative z-10 flex flex-col h-full", logo ? "" : "")}>
         <SidebarHeader>
           <div className="flex p-2 bg-sidebar-accent/50 backdrop-blur-sm">
               <div className="flex py-3 px-2 items-center">
                    <p className="text-2xl font-semibold">
                       <span className="text-green-500">s</span>
-                      <span className="text-white">BSSI</span>
+                      <span className="text-sidebar-foreground">BSSI</span>
                   </p>
               </div>
           </div>
@@ -99,7 +99,7 @@ export function SidebarNav() {
                           height={96}
                       />
                   )}
-                  <p className="font-bold text-base text-gray-200 pt-2 text-center w-24 drop-shadow-md">{userName}</p>
+                  <p className="font-bold text-base text-sidebar-foreground pt-2 text-center w-24 drop-shadow-md">{userName}</p>
               </div>
           </div>
         </SidebarHeader>
@@ -111,7 +111,7 @@ export function SidebarNav() {
                       <SidebarMenuButton
                       isActive={pathname.startsWith(item.href)}
                       tooltip={item.label}
-                      className="inline-flex items-center w-full text-sm font-semibold text-white transition-colors duration-150 cursor-pointer hover:text-green-500"
+                      className="inline-flex items-center w-full text-sm font-semibold text-sidebar-foreground transition-colors duration-150 cursor-pointer hover:text-green-500"
                       >
                       <item.icon />
                       <span className="ml-4">{item.label}</span>
