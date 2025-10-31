@@ -81,7 +81,7 @@ export function SidebarNav() {
           <div className="flex p-2 bg-sidebar-accent/50 backdrop-blur-sm">
               <div className="flex py-3 px-2 items-center">
                    <p className="text-2xl font-semibold">
-                      <span className="text-green-500">s</span>
+                      <span className="text-primary">s</span>
                       <span className="text-sidebar-foreground">BSSI</span>
                   </p>
               </div>
@@ -92,7 +92,7 @@ export function SidebarNav() {
                       <Loader2 className="h-24 w-24 animate-spin text-primary" />
                   ) : (
                       <Image 
-                          className="hidden h-24 w-24 rounded-full sm:block object-cover mr-2 border-4 border-green-400"
+                          className="hidden h-24 w-24 rounded-full sm:block object-cover mr-2 border-4 border-primary"
                           src={logo || "https://image.flaticon.com/icons/png/512/149/149071.png"} 
                           alt="User Avatar"
                           width={96}
@@ -111,7 +111,7 @@ export function SidebarNav() {
                       <SidebarMenuButton
                       isActive={pathname.startsWith(item.href)}
                       tooltip={item.label}
-                      className="inline-flex items-center w-full text-sm font-semibold text-sidebar-foreground transition-colors duration-150 cursor-pointer hover:text-green-500"
+                      className="inline-flex items-center w-full text-sm font-semibold text-sidebar-foreground transition-colors duration-150 cursor-pointer hover:text-primary"
                       >
                       <item.icon />
                       <span className="ml-4">{item.label}</span>
