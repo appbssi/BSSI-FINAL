@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -136,19 +137,9 @@ export default function LoginPage(props: any) {
   };
   
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center bg-background p-4">
-       {logo && (
-        <Image
-          src={logo}
-          alt="Background"
-          fill
-          className="object-cover"
-          priority
-        />
-      )}
-      <div className="absolute inset-0 bg-black/0" />
+    <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
       <Card className={cn(
-          "relative z-10 w-full max-w-sm bg-card/80 backdrop-blur-sm",
+          "w-full max-w-sm",
           hasError ? "neon-error-box" : "soft-shadow"
       )}>
         <CardHeader className="text-center">
@@ -220,3 +211,4 @@ export default function LoginPage(props: any) {
     </div>
   );
 }
+
