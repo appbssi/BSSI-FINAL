@@ -66,9 +66,11 @@ export function SidebarNav() {
   return (
     <>
       <SidebarHeader>
-        <div className="flex items-center gap-2 p-2">
-            <p className="text-2xl text-primary font-semibold">BSSI</p>
-            <p className="ml-2 font-semibold italic text-white">Système</p>
+        <div className="flex p-2 bg-gray-800">
+            <div className="flex py-3 px-2 items-center">
+                <p className="text-2xl text-green-500 font-semibold">BSSI</p>
+                <p className="ml-2 font-semibold italic text-white">App</p>
+            </div>
         </div>
         <div className="flex justify-center mt-4">
             <div className="text-center">
@@ -88,17 +90,17 @@ export function SidebarNav() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-            <SidebarMenu className="mt-6">
+            <SidebarMenu className="mt-6 leading-10">
             {filteredNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                 <Link href={item.href}>
                     <SidebarMenuButton
                     isActive={pathname.startsWith(item.href)}
                     tooltip={item.label}
-                    className="text-white hover:text-green-500"
+                    className="inline-flex items-center w-full text-sm font-semibold text-white transition-colors duration-150 cursor-pointer hover:text-green-500"
                     >
                     <item.icon />
-                    <span>{item.label}</span>
+                    <span className="ml-4">{item.label}</span>
                     </SidebarMenuButton>
                 </Link>
                 </SidebarMenuItem>
