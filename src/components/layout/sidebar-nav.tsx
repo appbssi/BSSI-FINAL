@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -25,7 +24,6 @@ import Image from 'next/image';
 import { useRole } from '@/hooks/use-role';
 import { useIsMounted } from '@/hooks/use-is-mounted';
 import { useUser } from '@/firebase';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useMemo } from 'react';
 
 type NavItem = {
@@ -70,7 +68,7 @@ export function SidebarNav() {
       <SidebarHeader>
         <div className="flex items-center gap-2 p-2">
             <p className="text-2xl text-primary font-semibold">BSSI</p>
-            <p className="ml-2 font-semibold italic text-white">DASHBOARD</p>
+            <p className="ml-2 font-semibold italic text-white">Système</p>
         </div>
         <div className="flex justify-center mt-4">
             <div className="text-center">
@@ -78,14 +76,14 @@ export function SidebarNav() {
                     <Loader2 className="h-24 w-24 animate-spin text-primary" />
                 ) : (
                     <Image 
-                        className="h-24 w-24 rounded-full object-cover border-4 border-primary"
+                        className="hidden h-24 w-24 rounded-full sm:block object-cover mr-2 border-4 border-green-400"
                         src={logo || "https://image.flaticon.com/icons/png/512/149/149071.png"} 
                         alt="User Avatar"
                         width={96}
                         height={96}
                     />
                 )}
-                <p className="font-bold text-base text-gray-400 pt-2">{userName}</p>
+                <p className="font-bold text-base text-gray-400 pt-2 text-center w-24">{userName}</p>
             </div>
         </div>
       </SidebarHeader>
@@ -97,7 +95,7 @@ export function SidebarNav() {
                     <SidebarMenuButton
                     isActive={pathname.startsWith(item.href)}
                     tooltip={item.label}
-                    className="text-white hover:text-primary data-[active=true]:text-primary"
+                    className="text-white hover:text-green-500"
                     >
                     <item.icon />
                     <span>{item.label}</span>
