@@ -142,20 +142,10 @@ export default function LoginPage(props: any) {
   };
   
   return (
-    <div className="relative flex min-h-screen items-center justify-center p-4">
-      {logo && (
-        <Image
-          src={logo}
-          alt="Background"
-          fill
-          className="object-cover"
-          priority
-        />
-      )}
-      <div className="absolute inset-0 bg-black/95" />
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className={cn(
-          "z-10 w-full max-w-sm relative bg-background/80 backdrop-blur-sm",
-          hasError ? "neon-error-box" : "neon-orange-box"
+          "w-full max-w-sm",
+          hasError ? "neon-error-box" : "soft-shadow"
       )}>
         <CardHeader className="text-center">
             <Link href="/" passHref>
@@ -187,7 +177,7 @@ export default function LoginPage(props: any) {
                   <FormItem>
                     <FormLabel>Login</FormLabel>
                     <FormControl>
-                      <Input type="text" {...field} className="neon-orange-input" />
+                      <Input type="text" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -201,7 +191,7 @@ export default function LoginPage(props: any) {
                     <FormLabel>Mot de passe</FormLabel>
                     <div className="relative">
                       <FormControl>
-                        <Input type={showPassword ? 'text' : 'password'} {...field} className="pr-10 neon-orange-input" />
+                        <Input type={showPassword ? 'text' : 'password'} {...field} className="pr-10" />
                       </FormControl>
                       <button
                         type="button"
