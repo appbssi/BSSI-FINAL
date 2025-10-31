@@ -10,6 +10,7 @@ import {
   Cell,
   Legend,
   Tooltip as RechartsTooltip,
+  YAxis,
 } from 'recharts';
 import {
   ChartContainer,
@@ -17,65 +18,63 @@ import {
 } from '@/components/ui/chart';
 import type { Agent, Mission } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { getDisplayStatus } from '@/lib/missions';
 
 export function MissionOutcomesChart() {
   const firestore = useFirestore();
   const { user } = useUser();
 
   const missionsQuery = useMemoFirebase(
-    () => (firestore && user ? collection(firestore, 'missions') : null),
+    () => (firestore && user ? query(collection(firestore, 'missions'), where('status', '!=', 'Annulée')) : null),
     [firestore, user]
   );
   const { data: missions, isLoading } = useCollection<Mission>(missionsQuery);
 
-  const missionStatusData = missions?.reduce((acc, mission) => {
-    const date = mission.startDate?.toDate();
-    if (!date) return acc;
-    const month = date.toLocaleString('fr-FR', { month: 'short' });
-    if (!acc[month]) {
-        acc[month] = { month, completed: 0, ongoing: 0, planning: 0, cancelled: 0 };
-    }
-    if (mission.status === 'Terminée') acc[month].completed++;
-    if (mission.status === 'En cours') acc[month].ongoing++;
-    if (mission.status === 'Planification') acc[month].planning++;
-    if (mission.status === 'Annulée') acc[month].cancelled++;
-    return acc;
-  }, {} as Record<string, { month: string, completed: number, ongoing: number, planning: number, cancelled: number }>) || {};
+  const ongoingMissionsData = missions
+    ?.map(mission => ({
+      ...mission,
+      displayStatus: getDisplayStatus(mission),
+    }))
+    .filter(mission => mission.displayStatus === 'En cours')
+    .map(mission => ({
+        name: mission.name.length > 15 ? `${mission.name.substring(0, 15)}...` : mission.name,
+        'En cours': 1,
+    })) || [];
 
 
   if (isLoading) {
     return <div className="h-[300px] w-full flex items-center justify-center">Chargement...</div>;
   }
 
+  if (ongoingMissionsData.length === 0) {
+    return <div className="h-[300px] w-full flex items-center justify-center text-muted-foreground">Aucune mission en cours.</div>;
+  }
+
   return (
     <ChartContainer
       config={{
-        completed: { label: 'Terminées', color: 'hsl(var(--chart-2))' },
-        ongoing: { label: 'En cours', color: 'hsl(var(--chart-1))' },
-        planning: { label: 'Planifiées', color: 'hsl(var(--chart-5))' },
-        cancelled: { label: 'Annulées', color: 'hsl(var(--chart-3))' },
+        'En cours': { label: 'En cours', color: 'hsl(var(--chart-1))' },
       }}
       className="h-[300px] w-full"
     >
       <BarChart
-        data={Object.values(missionStatusData)}
+        data={ongoingMissionsData}
         margin={{ top: 20, right: 20, bottom: 5, left: 0 }}
+        layout="vertical"
       >
-        <CartesianGrid vertical={false} />
-        <XAxis
-          dataKey="month"
+        <CartesianGrid horizontal={false} />
+        <YAxis
+          dataKey="name"
+          type="category"
           tickLine={false}
           tickMargin={10}
           axisLine={false}
         />
-        <RechartsTooltip content={<ChartTooltipContent />} />
-        <Legend />
-        <Bar dataKey="completed" stackId="a" fill="var(--color-completed)" radius={[4, 4, 0, 0]} />
-        <Bar dataKey="ongoing" stackId="a" fill="var(--color-ongoing)" />
-        <Bar dataKey="planning" stackId="a" fill="var(--color-planning)" />
-        <Bar dataKey="cancelled" stackId="a" fill="var(--color-cancelled)" radius={[4, 4, 0, 0]}/>
+        <XAxis dataKey="En cours" type="number" hide />
+        <RechartsTooltip cursor={{fill: 'hsl(var(--muted))'}} content={<ChartTooltipContent />} />
+        <Bar dataKey="En cours" fill="var(--color-En cours)" radius={4} />
       </BarChart>
     </ChartContainer>
   );
