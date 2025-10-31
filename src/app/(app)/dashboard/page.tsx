@@ -82,6 +82,7 @@ export default function DashboardPage() {
   const agentsOnMission = agentsWithAvailability?.filter(a => a.availability === 'En mission').length ?? 0;
   const availableAgents = agentsWithAvailability?.filter(a => a.availability === 'Disponible').length ?? 0;
   const completedMissions = missionsWithDisplayStatus.filter(m => m.displayStatus === 'Terminée').length ?? 0;
+  const ongoingMissionsCount = missionsWithDisplayStatus.filter(m => m.displayStatus === 'En cours').length ?? 0;
 
   const isLoading = agentsLoading || missionsLoading;
 
@@ -149,7 +150,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-2">
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><BarChart className="h-5 w-5"/>Résultats des missions</CardTitle>
+                    <CardTitle className="flex items-center gap-2"><BarChart className="h-5 w-5"/>Missions en cours ({isLoading ? '...' : ongoingMissionsCount})</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <MissionOutcomesChart />
