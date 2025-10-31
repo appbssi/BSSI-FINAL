@@ -148,11 +148,11 @@ export default function LoginPage(props: any) {
             src={logo}
             alt="Arrière-plan"
             fill
-            className="object-cover opacity-0"
+            className="object-cover opacity-100"
             priority
         />
       )}
-      <div className="absolute inset-0 bg-black" />
+      <div className="absolute inset-0 bg-black/0" />
       <div className="relative flex min-h-screen items-center justify-center p-4">
           <Card className={cn(
               "w-full max-w-sm bg-card/80 backdrop-blur-sm",
