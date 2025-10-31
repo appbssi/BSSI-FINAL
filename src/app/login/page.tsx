@@ -117,7 +117,7 @@ export default function LoginPage(props: any) {
           priority
         />
       )}
-      <div className="absolute inset-0 bg-black/92" />
+      <div className="absolute inset-0 bg-black/94" />
       <Card className={cn(
           "z-10 w-full max-w-sm relative bg-background/80 backdrop-blur-sm",
           hasError ? "neon-error-box" : "neon-orange-box"
