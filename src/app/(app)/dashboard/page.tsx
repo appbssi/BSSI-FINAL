@@ -153,53 +153,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-
-      
-       <div className="mt-6">
-          <Card className="bg-white text-black">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5" />Activités Récentes</CardTitle>
-              <CardDescription>Journal des dernières actions dans l'application.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-72">
-                 {activitiesLoading ? (
-                    <div className="flex justify-center items-center h-full">
-                        <p>Chargement des activités...</p>
-                    </div>
-                ) : activities && activities.length > 0 ? (
-                    <div className="space-y-4">
-                        {activities.map(activity => (
-                             <div key={activity.id} className="flex items-start gap-4">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-xl">
-                                    {getActivityIcon(activity.type)}
-                                </div>
-                                <div className="flex-1 space-y-1">
-                                    <p className="text-sm text-gray-800">{activity.description}</p>
-                                    <div className="flex items-center justify-between text-xs text-gray-500">
-                                        <p>
-                                            {formatDistanceToNow(activity.timestamp.toDate(), { addSuffix: true, locale: fr })}
-                                        </p>
-                                        {activity.link && (
-                                            <Button asChild variant="link" size="sm" className="p-0 h-auto text-green-500">
-                                                <Link href={activity.link}>Voir</Link>
-                                            </Button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                   <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
-                        <Newspaper className="h-12 w-12 mb-4" />
-                        <p>Aucune activité récente à afficher.</p>
-                    </div>
-                )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-       </div>
     </div>
   );
 }
