@@ -1,5 +1,6 @@
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { UserNav } from './user-nav';
+import { RecentActivitiesDialog } from '../dashboard/recent-activities-dialog';
 
 export function Header() {
   return (
@@ -8,8 +9,11 @@ export function Header() {
         <SidebarTrigger />
       </div>
       <div className="flex-1" />
-      <div className="hidden md:block">
-        <UserNav />
+      <div className="flex items-center gap-4">
+        <RecentActivitiesDialog />
+        <div className="hidden md:block">
+            <UserNav />
+        </div>
       </div>
     </header>
   );

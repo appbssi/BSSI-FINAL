@@ -150,91 +150,86 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Agents au total</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{isLoading ? '...' : totalAgents}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Agents disponibles</CardTitle>
-                <UserCheck className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{isLoading ? '...' : availableAgents}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Agents en mission
-                </CardTitle>
-                <Shield className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{isLoading ? '...' : agentsOnMission}</div>
-              </CardContent>
-            </Card>
-          </div>
-
+      <div className="space-y-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Card>
-            <CardHeader>
-              <CardTitle>
-                Aperçu des missions en cours ({isLoading ? '...' : activeMissions.length})
-              </CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Agents au total</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Mission</TableHead>
-                    <TableHead>Lieu</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Date de fin</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center">Chargement...</TableCell>
-                    </TableRow>
-                  )}
-                  {!isLoading && activeMissions.map((mission) => {
-                    return(
-                      <TableRow key={mission.id} onClick={() => setSelectedMission(mission)} className="cursor-pointer">
-                        <TableCell className="font-medium">{mission.name}</TableCell>
-                        <TableCell>{mission.location}</TableCell>
-                        <TableCell>
-                          <Badge variant={getBadgeVariant(mission.displayStatus)}>{mission.displayStatus}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          {mission.endDate.toDate().toLocaleDateString('fr-FR')}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                  {!isLoading && activeMissions.length === 0 && (
-                    <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground">
-                            Aucune mission en cours.
-                        </TableCell>
-                    </TableRow>
-                )}
-                </TableBody>
-              </Table>
+              <div className="text-2xl font-bold">{isLoading ? '...' : totalAgents}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Agents disponibles</CardTitle>
+              <UserCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{isLoading ? '...' : availableAgents}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Agents en mission
+              </CardTitle>
+              <Shield className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{isLoading ? '...' : agentsOnMission}</div>
             </CardContent>
           </Card>
         </div>
-        <div className="lg:col-span-1">
-            <RecentActivities />
-        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Aperçu des missions en cours ({isLoading ? '...' : activeMissions.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Mission</TableHead>
+                  <TableHead>Lieu</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Date de fin</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center">Chargement...</TableCell>
+                  </TableRow>
+                )}
+                {!isLoading && activeMissions.map((mission) => {
+                  return(
+                    <TableRow key={mission.id} onClick={() => setSelectedMission(mission)} className="cursor-pointer">
+                      <TableCell className="font-medium">{mission.name}</TableCell>
+                      <TableCell>{mission.location}</TableCell>
+                      <TableCell>
+                        <Badge variant={getBadgeVariant(mission.displayStatus)}>{mission.displayStatus}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {mission.endDate.toDate().toLocaleDateString('fr-FR')}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+                {!isLoading && activeMissions.length === 0 && (
+                  <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                          Aucune mission en cours.
+                      </TableCell>
+                  </TableRow>
+              )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
       {selectedMission && (
         <MissionDetailsDialog
