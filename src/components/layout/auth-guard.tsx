@@ -20,12 +20,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     // If the user is logged in...
     if (user) {
-      // and they are on the login page (and not forced), redirect them to the dashboard.
-      if (pathname === '/login' && searchParams.get('force') !== 'true') {
-        router.push('/dashboard');
-      }
-      // If the user is on the root landing page, also redirect to dashboard
-      else if (pathname === '/') {
+      // and they are on a public page (like login or landing), redirect them to the dashboard.
+      if (isPublicPath) {
         router.push('/dashboard');
       }
     } 
@@ -37,12 +33,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       }
     }
 
-  }, [user, isUserLoading, router, pathname, searchParams]);
+  }, [user, isUserLoading, router, pathname]);
 
   // Determine if the loader should be shown
   const showLoader = isUserLoading || 
     (!user && !publicPaths.includes(pathname)) || 
-    (user && (pathname === '/login' || pathname === '/') && searchParams.get('force') !== 'true');
+    (user && publicPaths.includes(pathname));
 
   if (showLoader) {
     return (
