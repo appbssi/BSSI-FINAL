@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -6,7 +5,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription
 } from '@/components/ui/card';
 import {
   Users,
@@ -14,41 +12,26 @@ import {
   UserCheck,
   CheckCircle,
   BarChart,
-  PieChartIcon,
-  Activity,
   Newspaper,
   Calendar,
   MapPin,
   Loader2
 } from 'lucide-react';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
-import type { Agent, Mission, ActivityLog } from '@/lib/types';
+import type { Agent, Mission } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
 import { getAgentAvailability } from '@/lib/agents';
-import { getDisplayStatus } from '@/lib/missions';
-import { AgentActivityChart, MissionOutcomesChart } from '@/components/reports/charts';
-import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { getDisplayStatus, MissionWithDisplayStatus } from '@/lib/missions';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-
-const getActivityIcon = (type: ActivityLog['type']) => {
-    switch (type) {
-        case 'Agent': return '🧑‍✈️';
-        case 'Mission': return '🚀';
-        case 'Rassemblement': return '👥';
-        case 'Visiteur': return '👤';
-        default: return '⚙️';
-    }
-};
+import { MissionDetailsDialog } from '@/components/missions/mission-details-dialog';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 
 export default function DashboardPage() {
   const firestore = useFirestore();
   const [now, setNow] = useState(new Date());
+  const [selectedMission, setSelectedMission] = useState<MissionWithDisplayStatus | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60000);
@@ -57,16 +40,11 @@ export default function DashboardPage() {
 
   const agentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'agents') : null), [firestore]);
   const missionsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'missions') : null), [firestore]);
-  const activitiesQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'activities'), orderBy('timestamp', 'desc'), limit(10)) : null),
-    [firestore]
-  );
 
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
-  const { data: activities, isLoading: activitiesLoading } = useCollection<ActivityLog>(activitiesQuery);
   
-  const missionsWithDisplayStatus = useMemo(() => {
+  const missionsWithDisplayStatus: MissionWithDisplayStatus[] = useMemo(() => {
     if (!missions) return [];
     return missions.map(mission => ({
       ...mission,
@@ -81,6 +59,14 @@ export default function DashboardPage() {
       availability: getAgentAvailability(agent, missions)
     }));
   }, [agents, missions, now]);
+  
+  const agentsById = useMemo(() => {
+    if (!agents) return {};
+    return agents.reduce((acc, agent) => {
+      acc[agent.id] = agent;
+      return acc;
+    }, {} as Record<string, Agent>);
+  }, [agents]);
 
   const totalAgents = agents?.length ?? 0;
   const agentsOnMission = agentsWithAvailability?.filter(a => a.availability === 'En mission').length ?? 0;
@@ -88,12 +74,19 @@ export default function DashboardPage() {
   const completedMissions = missionsWithDisplayStatus.filter(m => m.displayStatus === 'Terminée').length ?? 0;
   
   const ongoingMissions = useMemo(() => 
-    missionsWithDisplayStatus.filter(m => m.displayStatus === 'En cours'),
+    missionsWithDisplayStatus
+      .filter(m => m.displayStatus === 'En cours')
+      .sort((a, b) => a.startDate.toMillis() - b.startDate.toMillis()),
     [missionsWithDisplayStatus]
   );
   const ongoingMissionsCount = ongoingMissions.length;
 
   const isLoading = agentsLoading || missionsLoading;
+
+  const assignedAgentsForSelectedMission = useMemo(() => {
+    if (!selectedMission || !agentsById) return [];
+    return selectedMission.assignedAgentIds.map(id => agentsById[id]).filter(Boolean);
+  }, [selectedMission, agentsById]);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 bg-background">
@@ -153,7 +146,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="col-span-12 bg-white text-black">
+         <Card className="col-span-12 bg-white text-black">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <BarChart className="h-5 w-5" />
@@ -168,21 +161,33 @@ export default function DashboardPage() {
                 ) : ongoingMissions.length > 0 ? (
                     <ScrollArea className="h-[40vh]">
                         <div className="space-y-4">
-                            {ongoingMissions.map((mission) => (
-                                <div key={mission.id} className="p-3 rounded-lg border bg-background/50">
-                                    <h4 className="font-semibold">{mission.name}</h4>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                                        <MapPin className="h-4 w-4" />
-                                        <span>{mission.location}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                                        <Calendar className="h-4 w-4" />
-                                        <span>
-                                            {mission.startDate.toDate().toLocaleDateString('fr-FR')} - {mission.endDate.toDate().toLocaleDateString('fr-FR')}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
+                            <Dialog>
+                                {ongoingMissions.map((mission) => (
+                                    <DialogTrigger asChild key={mission.id} onClick={() => setSelectedMission(mission)}>
+                                        <div className="p-3 rounded-lg border bg-background/50 cursor-pointer hover:bg-accent transition-colors">
+                                            <h4 className="font-semibold">{mission.name}</h4>
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                                <MapPin className="h-4 w-4" />
+                                                <span>{mission.location}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                                <Calendar className="h-4 w-4" />
+                                                <span>
+                                                    {mission.startDate.toDate().toLocaleDateString('fr-FR')} - {mission.endDate.toDate().toLocaleDateString('fr-FR')}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </DialogTrigger>
+                                ))}
+                                {selectedMission && (
+                                    <MissionDetailsDialog
+                                        isOpen={!!selectedMission}
+                                        onOpenChange={(open) => !open && setSelectedMission(null)}
+                                        mission={selectedMission}
+                                        agents={assignedAgentsForSelectedMission}
+                                    />
+                                )}
+                            </Dialog>
                         </div>
                     </ScrollArea>
                 ) : (
