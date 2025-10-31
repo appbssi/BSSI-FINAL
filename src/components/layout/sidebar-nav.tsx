@@ -69,7 +69,7 @@ export function SidebarNav() {
       <SidebarHeader>
         <div className="flex p-2 bg-gray-800">
             <div className="flex py-3 px-2 items-center">
-                <p className="text-2xl text-green-500 font-semibold">BSSI</p>
+                <p className="text-2xl text-green-500 font-semibold">sBSSI</p>
             </div>
         </div>
         <div className="flex justify-center mt-4">
