@@ -188,6 +188,33 @@
         "occupation",
         "entryTime"
       ]
+    },
+    "ActivityLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ActivityLog",
+      "type": "object",
+      "description": "Represents a log of a recent activity in the application.",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "A human-readable description of the activity."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The time the activity occurred.",
+          "format": "date-time"
+        },
+        "type": {
+          "type": "string",
+          "description": "The category of the activity.",
+          "enum": ["Agent", "Mission", "Rassemblement", "Visiteur", "Général"]
+        },
+        "link": {
+          "type": "string",
+          "description": "An optional link related to the activity (e.g., /agents)."
+        }
+      },
+      "required": ["description", "timestamp", "type"]
     }
   },
   "auth": {
@@ -226,6 +253,12 @@
           "$ref": "#/entities/Visitor"
         },
         "description": "Stores information about registered visitors."
+      },
+      "/activities/{activityId}": {
+        "schema": {
+          "$ref": "#/entities/ActivityLog"
+        },
+        "description": "Stores a log of recent activities in the application."
       }
   }
 }

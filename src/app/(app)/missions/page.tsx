@@ -54,6 +54,7 @@ import * as XLSX from 'xlsx';
 import { useRole } from '@/hooks/use-role';
 import { useLogo } from '@/context/logo-context';
 import { differenceInDays, isSameDay } from 'date-fns';
+import { logActivity } from '@/lib/activity-logger';
 
 const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missionName: string }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -359,6 +360,7 @@ export default function MissionsPage() {
             title: 'Mission annulée',
             description: `La mission "${missionToCancel.name}" a été annulée.`
         });
+        logActivity(firestore, `La mission "${missionToCancel.name}" a été annulée.`, 'Mission', '/missions');
     }).catch((serverError) => {
         const permissionError = new FirestorePermissionError({
             path: missionRef.path,
@@ -382,6 +384,7 @@ export default function MissionsPage() {
             title: 'Mission supprimée',
             description: `La mission "${missionToDelete.name}" a été supprimée.`,
         });
+        logActivity(firestore, `La mission "${missionToDelete.name}" a été supprimée.`, 'Mission', '/missions');
     }).catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
             path: missionRef.path,
@@ -609,5 +612,3 @@ export default function MissionsPage() {
     </div>
   );
 }
-
-    

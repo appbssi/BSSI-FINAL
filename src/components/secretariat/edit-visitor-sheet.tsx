@@ -26,6 +26,7 @@ import { useFirestore, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { Visitor } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
+import { logActivity } from '@/lib/activity-logger';
 
 const visitorSchema = z.object({
   lastName: z.string().min(2, 'Le nom est requis.'),
@@ -67,6 +68,7 @@ export function EditVisitorSheet({ visitor, isOpen, onOpenChange }: EditVisitorS
             title: 'Visiteur mis à jour !',
             description: `Les informations du visiteur ${data.firstName} ${data.lastName} ont été mises à jour.`,
         });
+        logActivity(firestore, `Le visiteur ${data.firstName} ${data.lastName} a été modifié.`, 'Visiteur', '/secretariat');
         onOpenChange(false);
     }).catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({

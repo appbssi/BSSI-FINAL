@@ -26,6 +26,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent, Gathering } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { logActivity } from '@/lib/activity-logger';
 
 const attendanceSchema = z.object({
   absentAgentIds: z.array(z.string()),
@@ -78,6 +79,7 @@ export function ManageAttendanceDialog({ isOpen, onOpenChange, gathering, agents
             title: "Présences mises à jour !",
             description: `La liste des absents pour "${gathering.name}" a été enregistrée.`,
         });
+        logActivity(firestore, `La présence pour le rassemblement "${gathering.name}" a été mise à jour.`, 'Rassemblement', '/gatherings');
         onOpenChange(false);
     }).catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({

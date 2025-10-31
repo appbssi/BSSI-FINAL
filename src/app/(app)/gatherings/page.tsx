@@ -42,6 +42,7 @@ import { CreateGatheringForm } from '@/components/gatherings/create-gathering-sh
 import { ManageAttendanceDialog } from '@/components/gatherings/manage-attendance-dialog';
 import { ViewAttendanceDialog } from '@/components/gatherings/view-attendance-dialog';
 import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
+import { logActivity } from '@/lib/activity-logger';
 
 export default function GatheringsPage() {
   const { isObserver } = useRole();
@@ -86,6 +87,7 @@ export default function GatheringsPage() {
         title: 'Rassemblement supprimé',
         description: `Le rassemblement "${gatheringToDelete.name}" a été supprimé.`,
       });
+      logActivity(firestore, `Le rassemblement "${gatheringToDelete.name}" a été supprimé.`, 'Rassemblement', '/gatherings');
     }).catch((serverError) => {
       const permissionError = new FirestorePermissionError({
         path: gatheringRef.path,

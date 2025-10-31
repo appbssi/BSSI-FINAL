@@ -43,3 +43,11 @@ export type Visitor = {
   entryTime: Timestamp;
   exitTime: Timestamp | null;
 }
+
+export type ActivityLog = {
+    id: string;
+    description: string;
+    timestamp: Timestamp;
+    type: 'Agent' | 'Mission' | 'Rassemblement' | 'Visiteur' | 'Général';
+    link?: string;
+}

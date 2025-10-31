@@ -52,6 +52,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { RegisterVisitorForm } from '@/components/secretariat/register-visitor-form';
+import { logActivity } from '@/lib/activity-logger';
 
 
 export default function SecretariatPage() {
@@ -91,6 +92,7 @@ export default function SecretariatPage() {
         title: 'Visiteur supprimé',
         description: `Le visiteur ${visitorToDelete.firstName} ${visitorToDelete.lastName} a été supprimé.`,
         });
+        logActivity(firestore, `Le visiteur ${visitorToDelete.firstName} ${visitorToDelete.lastName} a été supprimé.`, 'Visiteur', '/secretariat');
         setVisitorToDelete(null);
     }).catch((serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -114,6 +116,7 @@ export default function SecretariatPage() {
             title: 'Sortie enregistrée',
             description: `L'heure de sortie pour ${visitor.firstName} ${visitor.lastName} a été enregistrée.`,
         });
+        logActivity(firestore, `La sortie du visiteur ${visitor.firstName} ${visitor.lastName} a été enregistrée.`, 'Visiteur', '/secretariat');
     }).catch((serverError) => {
         const permissionError = new FirestorePermissionError({
             path: visitorRef.path,

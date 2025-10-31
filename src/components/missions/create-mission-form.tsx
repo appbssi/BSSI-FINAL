@@ -30,6 +30,7 @@ import type { Agent, Mission, Availability } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
 import { getAgentAvailability } from '@/lib/agents';
+import { logActivity } from '@/lib/activity-logger';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
@@ -130,6 +131,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
             title: "Mission créée !",
             description: `La mission "${data.name}" a été créée avec succès.`,
         });
+        logActivity(firestore, `La mission "${data.name}" a été créée.`, 'Mission', '/missions');
         form.reset();
         if (onMissionCreated) {
           onMissionCreated();

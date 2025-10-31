@@ -29,6 +29,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { collection, doc, writeBatch, getDocs } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import * as z from 'zod';
+import { logActivity } from '@/lib/activity-logger';
 
 type AgentImportData = Omit<Agent, 'id' | 'onLeave'>;
 
@@ -165,6 +166,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             title: 'Importation réussie !',
             description: `${agentsToImport.length} agents ont été importés avec succès.`,
         });
+        logActivity(firestore, `${agentsToImport.length} agents ont été importés via un fichier.`, 'Agent', '/agents');
     }).catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
             path: 'agents/[batch]',

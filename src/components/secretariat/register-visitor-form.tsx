@@ -19,6 +19,7 @@ import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import { useFirestore, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Loader2 } from 'lucide-react';
+import { logActivity } from '@/lib/activity-logger';
 
 const visitorSchema = z.object({
   lastName: z.string().min(2, 'Le nom est requis.'),
@@ -62,6 +63,7 @@ export function RegisterVisitorForm({ onVisitorRegistered }: RegisterVisitorForm
                 title: 'Visiteur enregistré !',
                 description: `Le visiteur ${data.firstName} ${data.lastName} a été ajouté avec succès.`,
             });
+            logActivity(firestore, `Le visiteur ${data.firstName} ${data.lastName} a été enregistré.`, 'Visiteur', '/secretariat');
             form.reset();
             onVisitorRegistered?.();
         })

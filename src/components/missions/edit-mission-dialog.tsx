@@ -37,6 +37,7 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
 import { getAgentAvailability } from '@/lib/agents';
+import { logActivity } from '@/lib/activity-logger';
 
 
 const missionSchema = z.object({
@@ -157,6 +158,7 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
             title: "Mission mise à jour !",
             description: `La mission "${data.name}" a été mise à jour.`,
         });
+        logActivity(firestore, `La mission "${data.name}" a été modifiée.`, 'Mission', '/missions');
         onOpenChange(false);
     }).catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -431,5 +433,3 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
     </Dialog>
   );
 }
-
-  

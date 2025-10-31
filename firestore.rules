@@ -12,11 +12,13 @@
  * - /gatherings/{gatheringId}: Stores individual gathering details.
  * - /settings/app: Stores application settings (e.g., logo). Only accessible for reading.
  * - /visitors/{visitorId}: Stores visitor information.
+ * - /activities/{activityId}: Stores recent activity logs.
  *
  * Key Security Decisions:
  * - Listing of agents, missions and gatherings is allowed for any signed-in user.
  * - App settings can be read by anyone, but cannot be written to.
  * - Listing of visitors is allowed for any signed-in user.
+ * - Activity logs can be read and created by any signed-in user, but not modified or deleted.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -99,6 +101,21 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow update: if isSignedIn();
       allow delete: if isSignedIn();
+    }
+
+    /**
+     * @description Allows access to activity logs.
+     * @path /activities/{activityId}
+     * @allow (get, list, create) Signed-in user can view and create logs.
+     * @deny (update, delete) No one can modify or delete logs.
+     * @principle Ensures the integrity of the activity log.
+     */
+    match /activities/{activityId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if false;
+      allow delete: if false;
     }
 
   }

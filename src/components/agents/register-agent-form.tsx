@@ -24,6 +24,7 @@ import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { useFirestore, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Loader2 } from 'lucide-react';
+import { logActivity } from '@/lib/activity-logger';
 
 const agentSchema = z.object({
   firstName: z.string().min(2, 'Le prénom est requis'),
@@ -96,6 +97,7 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
                 title: 'Agent enregistré !',
                 description: `L'agent ${data.firstName} ${data.lastName} a été ajouté avec succès.`,
             });
+            logActivity(firestore, `L'agent ${data.firstName} ${data.lastName} a été enregistré.`, 'Agent', '/agents');
             form.reset();
             onAgentRegistered();
         })

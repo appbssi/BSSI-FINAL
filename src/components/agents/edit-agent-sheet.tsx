@@ -27,6 +27,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent, Availability } from '@/lib/types';
 import { Switch } from '../ui/switch';
 import { Loader2 } from 'lucide-react';
+import { logActivity } from '@/lib/activity-logger';
 
 const agentSchema = z.object({
   firstName: z.string().min(2, 'Le prénom est requis'),
@@ -102,6 +103,7 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
             title: 'Agent mis à jour !',
             description: `Les informations de l'agent ${data.firstName} ${data.lastName} ont été mises à jour.`,
         });
+        logActivity(firestore, `Les informations de l'agent ${data.firstName} ${data.lastName} ont été modifiées.`, 'Agent', '/agents');
         onAgentEdited();
       }).catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({

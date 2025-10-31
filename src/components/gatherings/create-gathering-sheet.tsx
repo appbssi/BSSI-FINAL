@@ -33,6 +33,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { Agent } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
+import { logActivity } from '@/lib/activity-logger';
 
 const gatheringSchema = z.object({
   name: z.string().min(3, 'Le nom du rassemblement est requis.'),
@@ -92,6 +93,7 @@ export function CreateGatheringForm({ onGatheringCreated }: CreateGatheringFormP
             title: "Rassemblement créé !",
             description: `Le rassemblement "${data.name}" a été créé avec succès.`,
         });
+        logActivity(firestore, `Le rassemblement "${data.name}" a été créé.`, 'Rassemblement', '/gatherings');
         form.reset();
         setCurrentStep(1);
         onGatheringCreated();

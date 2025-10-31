@@ -5,6 +5,7 @@ import { collection, getDocs, writeBatch, Firestore, doc, deleteDoc, WriteBatch 
 import type { Agent, Mission } from "./types";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
+import { logActivity } from "./activity-logger";
 
 
 /**
@@ -47,7 +48,9 @@ export async function deleteDuplicateAgents(firestore: Firestore): Promise<numbe
 
   // Commit the deletions if any
   if (duplicatesDeleted > 0) {
-     batch.commit().catch(async (serverError) => {
+     batch.commit().then(() => {
+        logActivity(firestore, `${duplicatesDeleted} agent(s) en double ont été supprimés.`, 'Agent', '/agents');
+     }).catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
             path: 'agents/[multiple]', // Generic path for batch operation
             operation: 'delete',
@@ -76,7 +79,9 @@ export function deleteAgent(firestore: Firestore, agent: Agent, missions: Missio
     
     batch.delete(agentRef);
 
-    batch.commit().catch(async (serverError) => {
+    batch.commit().then(() => {
+        logActivity(firestore, `L'agent ${agent.firstName} ${agent.lastName} a été supprimé.`, 'Agent', '/agents');
+    }).catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
             path: agentRef.path,
             operation: 'delete',
