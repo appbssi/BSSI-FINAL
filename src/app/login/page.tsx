@@ -20,12 +20,13 @@ import { useToast } from '@/hooks/use-toast';
 import { signInAnonymously } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { Loader2, Rocket, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Rocket, Eye, EyeOff, Home } from 'lucide-react';
 import { FirebaseError } from 'firebase/app';
 import { useLogo } from '@/context/logo-context';
 import Image from 'next/image';
 import { setRole } from '@/hooks/use-role';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Veuillez saisir votre login.'),
@@ -108,10 +109,15 @@ export default function LoginPage() {
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background p-4">
       <Card className={cn(
-          "z-10 w-full max-w-sm",
+          "z-10 w-full max-w-sm relative",
           hasError ? "neon-error-box" : "neon-orange-box"
       )}>
         <CardHeader className="text-center">
+            <Link href="/" passHref>
+                <Button variant="ghost" size="icon" className="absolute top-4 left-4">
+                    <Home className="h-5 w-5" />
+                </Button>
+            </Link>
             <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
                 <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary/20">
                     {isLogoLoading ? (
