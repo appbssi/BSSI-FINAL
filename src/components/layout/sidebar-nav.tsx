@@ -26,6 +26,7 @@ import { useRole } from '@/hooks/use-role';
 import { useIsMounted } from '@/hooks/use-is-mounted';
 import { useUser } from '@/firebase';
 import { useMemo } from 'react';
+import { cn } from '@/lib/utils';
 
 type NavItem = {
   href: string;
@@ -65,51 +66,62 @@ export function SidebarNav() {
   }
 
   return (
-    <>
-      <SidebarHeader>
-        <div className="flex p-2 bg-sidebar-accent">
-            <div className="flex py-3 px-2 items-center">
-                 <p className="text-2xl font-semibold">
-                    <span className="text-green-500">s</span>
-                    <span className="text-white">BSSI</span>
-                </p>
-            </div>
-        </div>
-        <div className="flex justify-center mt-4">
-            <div className="text-center">
-                {isLogoLoading ? (
-                    <Loader2 className="h-24 w-24 animate-spin text-primary" />
-                ) : (
-                    <Image 
-                        className="hidden h-24 w-24 rounded-full sm:block object-cover mr-2 border-4 border-green-400"
-                        src={logo || "https://image.flaticon.com/icons/png/512/149/149071.png"} 
-                        alt="User Avatar"
-                        width={96}
-                        height={96}
-                    />
-                )}
-                <p className="font-bold text-base text-gray-400 pt-2 text-center w-24">{userName}</p>
-            </div>
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-            <SidebarMenu className="mt-6 leading-10">
-            {filteredNavItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                <Link href={item.href}>
-                    <SidebarMenuButton
-                    isActive={pathname.startsWith(item.href)}
-                    tooltip={item.label}
-                    className="inline-flex items-center w-full text-sm font-semibold text-white transition-colors duration-150 cursor-pointer hover:text-green-500"
-                    >
-                    <item.icon />
-                    <span className="ml-4">{item.label}</span>
-                    </SidebarMenuButton>
-                </Link>
-                </SidebarMenuItem>
-            ))}
-            </SidebarMenu>
-      </SidebarContent>
-    </>
+    <div className="relative h-full w-full">
+      {logo && (
+          <Image
+              src={logo}
+              alt="Sidebar background"
+              layout="fill"
+              objectFit="cover"
+              className="opacity-30 pointer-events-none"
+          />
+      )}
+      <div className={cn("relative z-10 flex flex-col h-full", logo ? "bg-black/50" : "")}>
+        <SidebarHeader>
+          <div className="flex p-2 bg-sidebar-accent/50 backdrop-blur-sm">
+              <div className="flex py-3 px-2 items-center">
+                   <p className="text-2xl font-semibold">
+                      <span className="text-green-500">s</span>
+                      <span className="text-white">BSSI</span>
+                  </p>
+              </div>
+          </div>
+          <div className="flex justify-center mt-4">
+              <div className="text-center">
+                  {isLogoLoading ? (
+                      <Loader2 className="h-24 w-24 animate-spin text-primary" />
+                  ) : (
+                      <Image 
+                          className="hidden h-24 w-24 rounded-full sm:block object-cover mr-2 border-4 border-green-400"
+                          src={logo || "https://image.flaticon.com/icons/png/512/149/149071.png"} 
+                          alt="User Avatar"
+                          width={96}
+                          height={96}
+                      />
+                  )}
+                  <p className="font-bold text-base text-gray-200 pt-2 text-center w-24 drop-shadow-md">{userName}</p>
+              </div>
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+              <SidebarMenu className="mt-6 leading-10">
+              {filteredNavItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                  <Link href={item.href}>
+                      <SidebarMenuButton
+                      isActive={pathname.startsWith(item.href)}
+                      tooltip={item.label}
+                      className="inline-flex items-center w-full text-sm font-semibold text-white transition-colors duration-150 cursor-pointer hover:text-green-500"
+                      >
+                      <item.icon />
+                      <span className="ml-4">{item.label}</span>
+                      </SidebarMenuButton>
+                  </Link>
+                  </SidebarMenuItem>
+              ))}
+              </SidebarMenu>
+        </SidebarContent>
+      </div>
+    </div>
   );
 }
