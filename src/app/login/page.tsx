@@ -107,17 +107,8 @@ export default function LoginPage() {
   
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background p-4">
-      {logo && (
-        <>
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${logo})` }}
-          />
-          <div className="absolute inset-0 bg-background opacity-[.88]" />
-        </>
-      )}
       <Card className={cn(
-          "z-10 w-full max-w-sm bg-card/80 backdrop-blur-sm",
+          "z-10 w-full max-w-sm",
           hasError ? "neon-error-box" : "neon-orange-box"
       )}>
         <CardHeader className="text-center">
