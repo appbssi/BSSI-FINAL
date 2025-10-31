@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -15,18 +16,20 @@ import {
   Newspaper,
   Calendar,
   MapPin,
-  Loader2
+  Loader2,
+  Info,
 } from 'lucide-react';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
-import type { Agent, Mission } from '@/lib/types';
+import type { Agent, Mission, MissionStatus } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
 import { getAgentAvailability } from '@/lib/agents';
 import { getDisplayStatus, MissionWithDisplayStatus } from '@/lib/missions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MissionDetailsDialog } from '@/components/missions/mission-details-dialog';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
 export default function DashboardPage() {
   const firestore = useFirestore();
@@ -87,6 +90,16 @@ export default function DashboardPage() {
     if (!selectedMission || !agentsById) return [];
     return selectedMission.assignedAgentIds.map(id => agentsById[id]).filter(Boolean);
   }, [selectedMission, agentsById]);
+
+   const getBadgeVariant = (status: MissionStatus) => {
+    switch (status) {
+      case 'En cours': return 'default';
+      case 'Terminée': return 'outline';
+      case 'Annulée': return 'destructive';
+      case 'Planification': return 'secondary';
+      default: return 'secondary';
+    }
+  };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 bg-background">
@@ -150,7 +163,7 @@ export default function DashboardPage() {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <BarChart className="h-5 w-5" />
-                    Missions en cours ({ongoingMissionsCount})
+                    Mission en cours ({ongoingMissionsCount})
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -164,17 +177,26 @@ export default function DashboardPage() {
                             <Dialog>
                                 {ongoingMissions.map((mission) => (
                                     <DialogTrigger asChild key={mission.id} onClick={() => setSelectedMission(mission)}>
-                                        <div className="p-3 rounded-lg border bg-background/50 cursor-pointer hover:bg-accent transition-colors">
-                                            <h4 className="font-semibold">{mission.name}</h4>
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                                                <MapPin className="h-4 w-4" />
-                                                <span>{mission.location}</span>
+                                        <div className="p-4 rounded-lg border bg-background/50 cursor-pointer hover:bg-accent transition-colors">
+                                            <div className="flex justify-between items-start">
+                                                <h4 className="font-semibold">{mission.name}</h4>
+                                                <Badge variant={getBadgeVariant(mission.displayStatus)}>{mission.displayStatus}</Badge>
                                             </div>
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                                                <Calendar className="h-4 w-4" />
-                                                <span>
-                                                    {mission.startDate.toDate().toLocaleDateString('fr-FR')} - {mission.endDate.toDate().toLocaleDateString('fr-FR')}
-                                                </span>
+                                            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-muted-foreground mt-2">
+                                                <div className="flex items-center gap-2">
+                                                    <MapPin className="h-4 w-4" />
+                                                    <span>{mission.location}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Users className="h-4 w-4" />
+                                                    <span>{mission.assignedAgentIds.length} agent(s)</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 col-span-2">
+                                                    <Calendar className="h-4 w-4" />
+                                                    <span>
+                                                        {mission.startDate.toDate().toLocaleDateString('fr-FR')} - {mission.endDate.toDate().toLocaleDateString('fr-FR')}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </DialogTrigger>
