@@ -55,7 +55,7 @@ import { RegisterVisitorForm } from '@/components/secretariat/register-visitor-f
 import { logActivity } from '@/lib/activity-logger';
 
 
-export default function SecretariatPage() {
+export default function SecretariatPage({ params, searchParams }: { params: {}, searchParams: {} }) {
   const firestore = useFirestore();
   const { isObserver } = useRole();
   const { logo } = useLogo();

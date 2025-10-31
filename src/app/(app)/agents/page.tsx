@@ -59,7 +59,7 @@ import { logActivity } from '@/lib/activity-logger';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 
-export default function AgentsPage() {
+export default function AgentsPage({ params, searchParams }: { params: {}, searchParams: {} }) {
   const firestore = useFirestore();
   const { isObserver } = useRole();
   const { logo } = useLogo();

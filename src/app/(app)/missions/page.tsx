@@ -261,7 +261,7 @@ const getDisplayStatus = (mission: Mission): MissionStatus => {
     return 'En cours';
   };
 
-export default function MissionsPage() {
+export default function MissionsPage({ params, searchParams }: { params: {}, searchParams: {} }) {
   const { isObserver } = useRole();
   const [isCreateMissionOpen, setCreateMissionOpen] = useState(false);
   const [editingMission, setEditingMission] = useState<Mission | null>(null);

@@ -68,7 +68,7 @@ const getDisplayStatus = (mission: Mission): MissionStatus => {
   };
 
 
-export default function DashboardPage() {
+export default function DashboardPage({ params, searchParams }: { params: {}, searchParams: {} }) {
   const firestore = useFirestore();
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [now, setNow] = useState(new Date());
