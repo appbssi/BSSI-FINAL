@@ -154,18 +154,6 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        <div className="lg:col-span-2">
-            <Card className="bg-white text-black">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><PieChartIcon className="h-5 w-5"/>Activité des Agents</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <AgentActivityChart />
-                </CardContent>
-            </Card>
-        </div>
-      </div>
       
        <div className="mt-6">
           <Card className="bg-white text-black">
