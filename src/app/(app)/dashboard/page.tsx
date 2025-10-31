@@ -18,7 +18,8 @@ import {
   Activity,
   Newspaper,
   Calendar,
-  MapPin
+  MapPin,
+  Loader2
 } from 'lucide-react';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
@@ -151,6 +152,46 @@ export default function DashboardPage() {
               </div>
             </div>
           </CardContent>
+        </Card>
+        <Card className="col-span-12 bg-white text-black">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <BarChart className="h-5 w-5" />
+                    Missions en cours ({ongoingMissionsCount})
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                {isLoading ? (
+                    <div className="flex justify-center items-center h-40">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                ) : ongoingMissions.length > 0 ? (
+                    <ScrollArea className="h-[40vh]">
+                        <div className="space-y-4">
+                            {ongoingMissions.map((mission) => (
+                                <div key={mission.id} className="p-3 rounded-lg border bg-background/50">
+                                    <h4 className="font-semibold">{mission.name}</h4>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                        <MapPin className="h-4 w-4" />
+                                        <span>{mission.location}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                        <Calendar className="h-4 w-4" />
+                                        <span>
+                                            {mission.startDate.toDate().toLocaleDateString('fr-FR')} - {mission.endDate.toDate().toLocaleDateString('fr-FR')}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
+                        <Newspaper className="h-10 w-10 mb-2" />
+                        <p>Aucune mission en cours pour le moment.</p>
+                    </div>
+                )}
+            </CardContent>
         </Card>
       </div>
     </div>
