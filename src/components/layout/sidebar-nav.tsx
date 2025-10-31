@@ -15,14 +15,11 @@ import { usePathname } from 'next/navigation';
 
 import {
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarSeparator,
 } from '@/components/ui/sidebar';
-import { UserNav } from './user-nav';
 import { useLogo } from '@/context/logo-context';
 import Image from 'next/image';
 import { useRole } from '@/hooks/use-role';
@@ -76,17 +73,7 @@ export function SidebarNav() {
           </span>
         </div>
       </SidebarHeader>
-      <SidebarContent className="relative">
-         {logo && (
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage: `url(${logo})`,
-              opacity: 0.1, // Corresponds to 90% transparency
-            }}
-          />
-        )}
-        <div className="relative z-10">
+      <SidebarContent>
             <SidebarMenu>
             {filteredNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
@@ -102,14 +89,7 @@ export function SidebarNav() {
                 </SidebarMenuItem>
             ))}
             </SidebarMenu>
-        </div>
       </SidebarContent>
-      <SidebarFooter>
-        <SidebarSeparator />
-        <div className="group-data-[collapsible=icon]:hidden">
-          
-        </div>
-      </SidebarFooter>
     </>
   );
 }
