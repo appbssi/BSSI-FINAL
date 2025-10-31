@@ -23,22 +23,24 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     const isPublicPath = publicPaths.includes(pathname);
 
+    // If the user is not logged in and not on a public path, redirect to login
     if (!user && !isPublicPath) {
       router.push('/login');
     }
 
-    if (user && isPublicPath) {
-      // Allow access to landing page even if logged in, but not login page
-      if (pathname === '/login') {
-        router.push('/dashboard');
-      }
+    // If the user is logged in, redirect from /login to /dashboard
+    if (user && pathname === '/login') {
+      router.push('/dashboard');
     }
+
   }, [user, isUserLoading, router, pathname]);
 
-  // Show loading indicator while determining auth state or redirecting (but not for public pages)
-  const isRedirecting = (!user && !publicPaths.includes(pathname)) || (user && pathname === '/login');
-  
-  if (isUserLoading || isRedirecting) {
+  // Show a loader while determining auth state if we are not on a public path
+  // or if we are about to be redirected from the login page.
+  const isProtectedPathLoading = !isUserLoading && !user && !publicPaths.includes(pathname);
+  const isRedirectingFromLogin = !isUserLoading && user && pathname === '/login';
+
+  if (isUserLoading || isProtectedPathLoading || isRedirectingFromLogin) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
         <div className="loader"></div>

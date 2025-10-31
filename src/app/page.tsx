@@ -23,7 +23,7 @@ export default function LandingPage() {
   const [currentImage, setCurrentImage] = useState(0);
   const router = useRouter();
   const { logo, isLogoLoading } = useLogo();
-  const { user, isUserLoading } = useUser();
+  const { isUserLoading } = useUser();
   const isMounted = useIsMounted();
 
   useEffect(() => {
@@ -35,15 +35,6 @@ export default function LandingPage() {
   }, []);
 
   if (!isMounted || isUserLoading) {
-    return (
-       <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
-        <div className="loader"></div>
-      </div>
-    );
-  }
-
-  if(user) {
-    router.push('/dashboard');
     return (
        <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
         <div className="loader"></div>
