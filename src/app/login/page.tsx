@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -49,6 +49,41 @@ export default function LoginPage(props: any) {
   const [showPassword, setShowPassword] = useState(false);
   const { logo, isLogoLoading } = useLogo();
   const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    let activityTimer: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      clearTimeout(activityTimer);
+      activityTimer = setTimeout(() => {
+        // Redirect to home page after 5 minutes of inactivity
+        router.push('/');
+      }, 5 * 60 * 1000); // 5 minutes
+    };
+
+    const handleActivity = () => {
+      resetTimer();
+    };
+
+    // Initial setup
+    resetTimer();
+
+    // Add event listeners to detect user activity
+    window.addEventListener('mousemove', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+    window.addEventListener('click', handleActivity);
+    window.addEventListener('scroll', handleActivity);
+
+    // Cleanup function
+    return () => {
+      clearTimeout(activityTimer);
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('click', handleActivity);
+      window.removeEventListener('scroll', handleActivity);
+    };
+  }, [router]);
+
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
