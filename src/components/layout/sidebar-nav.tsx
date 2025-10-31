@@ -24,6 +24,9 @@ import { useLogo } from '@/context/logo-context';
 import Image from 'next/image';
 import { useRole } from '@/hooks/use-role';
 import { useIsMounted } from '@/hooks/use-is-mounted';
+import { useUser } from '@/firebase';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { useMemo } from 'react';
 
 type NavItem = {
   href: string;
@@ -45,6 +48,13 @@ export function SidebarNav() {
   const { logo, isLogoLoading } = useLogo();
   const { role } = useRole();
   const isMounted = useIsMounted();
+  const { user } = useUser();
+  
+  const userName = useMemo(() => {
+    if (!role) return 'Utilisateur';
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  }, [role]);
+
 
   const filteredNavItems = navItems.filter(item => {
     if (!item.roles) return true;
@@ -58,29 +68,36 @@ export function SidebarNav() {
   return (
     <>
       <SidebarHeader>
-        <div className="flex items-center gap-2">
-          <div className="bg-background rounded-md p-1 flex items-center justify-center h-14 w-14 relative">
-             {isLogoLoading ? (
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              ) : logo ? (
-                <Image src={logo} alt="Logo" fill className="rounded-md object-cover" />
-              ) : (
-                <Rocket className="w-8 h-8 text-primary" />
-              )}
-          </div>
-          <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">
-            sBSSI
-          </span>
+        <div className="flex items-center gap-2 p-2">
+            <p className="text-2xl text-primary font-semibold">BSSI</p>
+            <p className="ml-2 font-semibold italic text-white">DASHBOARD</p>
+        </div>
+        <div className="flex justify-center mt-4">
+            <div className="text-center">
+                {isLogoLoading ? (
+                    <Loader2 className="h-24 w-24 animate-spin text-primary" />
+                ) : (
+                    <Image 
+                        className="h-24 w-24 rounded-full object-cover border-4 border-primary"
+                        src={logo || "https://image.flaticon.com/icons/png/512/149/149071.png"} 
+                        alt="User Avatar"
+                        width={96}
+                        height={96}
+                    />
+                )}
+                <p className="font-bold text-base text-gray-400 pt-2">{userName}</p>
+            </div>
         </div>
       </SidebarHeader>
       <SidebarContent>
-            <SidebarMenu>
+            <SidebarMenu className="mt-6">
             {filteredNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                 <Link href={item.href}>
                     <SidebarMenuButton
                     isActive={pathname.startsWith(item.href)}
                     tooltip={item.label}
+                    className="text-white hover:text-primary data-[active=true]:text-primary"
                     >
                     <item.icon />
                     <span>{item.label}</span>

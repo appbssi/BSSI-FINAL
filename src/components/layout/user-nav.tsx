@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -9,12 +10,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut } from 'lucide-react';
+import { LogOut, User as UserIcon, Settings } from 'lucide-react';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useRole, clearRole } from '@/hooks/use-role';
-import { Avatar, AvatarFallback } from '../ui/avatar';
 
 export function UserNav() {
   const { user } = useUser();
@@ -25,20 +25,16 @@ export function UserNav() {
   const handleLogout = async () => {
     await signOut(auth);
     clearRole();
-    router.push('/login?force=true');
+    router.push('/login');
   };
   
   const capitalizedRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : '';
-  const roleInitial = role ? role.charAt(0).toUpperCase() : '?';
-
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar className="h-9 w-9">
-              <AvatarFallback>{roleInitial}</AvatarFallback>
-          </Avatar>
+        <Button variant="ghost" size="icon" className="p-2 bg-card text-primary align-middle rounded-full hover:text-white hover:bg-primary focus:outline-none">
+            <Settings className="h-6 w-6" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
@@ -51,10 +47,15 @@ export function UserNav() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => router.push('/dashboard')}>
+          <UserIcon className="mr-2 h-4 w-4" />
+          <span>Profile</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           Se déconnecter
-          </DropdownMenuItem>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

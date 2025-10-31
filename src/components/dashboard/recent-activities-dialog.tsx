@@ -1,37 +1,18 @@
+
 'use client';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { Button } from '../ui/button';
 import { Bell } from 'lucide-react';
-import { RecentActivities } from './recent-activities';
 
 export function RecentActivitiesDialog() {
+  // This component is now only for the notification icon.
+  // The actual dialog/list is shown on the dashboard page itself.
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="sr-only">Voir les activités récentes</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Activités Récentes</DialogTitle>
-          <DialogDescription>
-            Journal des dernières actions effectuées dans l'application.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="mt-4">
-            <RecentActivities />
-        </div>
-      </DialogContent>
-    </Dialog>
+    <Button variant="ghost" size="icon" className="relative p-2 bg-card text-primary align-middle rounded-full hover:text-white hover:bg-primary focus:outline-none">
+        <Bell className="h-6 w-6" />
+        <span className="sr-only">Notifications</span>
+        {/* You can add a notification badge here if needed */}
+        {/* <span aria-hidden="true" className="absolute top-0 right-0 inline-block w-3 h-3 transform translate-x-1 -translate-y-1 bg-red-600 border-2 border-white rounded-full"></span> */}
+    </Button>
   );
 }
