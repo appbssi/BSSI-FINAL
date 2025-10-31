@@ -12,8 +12,8 @@ import { useUser } from '@/firebase';
 import { useIsMounted } from '@/hooks/use-is-mounted';
 
 const images = [
-  'https://i0.wp.com/www.lemeridien.ci/wp-content/uploads/2025/01/IMG-20250107-WA0872.jpg?w=720&ssl=1',
-  'https://i.imgur.com/X1VvCu6.jpeg',
+  'https://i.imgur.com/kPlJEwW.jpeg',
+  'https://i.imgur.com/VidHWmL.jpeg',
   'https://i.imgur.com/aEXY1F2.jpeg',
   'https://i.imgur.com/ZnJVbg4.jpeg',
   'https://i.imgur.com/p0CP2p6.jpeg',
