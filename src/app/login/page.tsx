@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -56,25 +55,21 @@ export default function LoginPage(props: any) {
     const resetTimer = () => {
       clearTimeout(activityTimer);
       activityTimer = setTimeout(() => {
-        // Redirect to home page after 5 minutes of inactivity
         router.push('/');
-      }, 5 * 60 * 1000); // 5 minutes
+      }, 5 * 60 * 1000);
     };
 
     const handleActivity = () => {
       resetTimer();
     };
 
-    // Initial setup
     resetTimer();
 
-    // Add event listeners to detect user activity
     window.addEventListener('mousemove', handleActivity);
     window.addEventListener('keydown', handleActivity);
     window.addEventListener('click', handleActivity);
     window.addEventListener('scroll', handleActivity);
 
-    // Cleanup function
     return () => {
       clearTimeout(activityTimer);
       window.removeEventListener('mousemove', handleActivity);
@@ -114,7 +109,6 @@ export default function LoginPage(props: any) {
       if (userRole) {
         setRole(userRole);
         await signInAnonymously(auth);
-        // AuthGuard will handle redirection
       } else {
          setHasError(true);
          toast({
@@ -142,9 +136,19 @@ export default function LoginPage(props: any) {
   };
   
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-background p-4">
+       {logo && (
+        <Image
+          src={logo}
+          alt="Background"
+          fill
+          className="object-cover"
+          priority
+        />
+      )}
+      <div className="absolute inset-0 bg-black/0" />
       <Card className={cn(
-          "w-full max-w-sm",
+          "relative z-10 w-full max-w-sm bg-card/80 backdrop-blur-sm",
           hasError ? "neon-error-box" : "soft-shadow"
       )}>
         <CardHeader className="text-center">
