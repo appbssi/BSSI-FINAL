@@ -14,6 +14,8 @@ export type Agent = {
 
 export type Availability = 'Disponible' | 'En mission' | 'En congé';
 
+export type MissionStatus = 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
+
 export type Mission = {
   id: string;
   name: string;
@@ -22,7 +24,7 @@ export type Mission = {
   endDate: Timestamp;
   startTime?: string;
   endTime?: string;
-  status: 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
+  status: MissionStatus;
   assignedAgentIds: string[];
 };
 

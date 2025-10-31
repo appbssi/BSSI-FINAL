@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -9,14 +8,15 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import type { Agent, Mission } from '@/lib/types';
+import type { Agent, Mission, MissionStatus } from '@/lib/types';
 import { Calendar, MapPin, Users, Info } from 'lucide-react';
 import { differenceInDays, isSameDay } from 'date-fns';
+import type { MissionWithDisplayStatus } from '@/lib/missions';
 
 interface MissionDetailsDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  mission: Mission & { displayStatus?: Mission['status'] };
+  mission: MissionWithDisplayStatus;
   agents: Agent[];
 }
 
@@ -26,9 +26,9 @@ export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: 
   const isSingleDay = isSameDay(startDate, endDate);
   const duration = differenceInDays(endDate, startDate) + 1;
 
-  const displayStatus = mission.displayStatus || mission.status;
+  const displayStatus = mission.displayStatus;
 
-  const getBadgeVariant = (status: Mission['status']) => {
+  const getBadgeVariant = (status: MissionStatus) => {
     switch (status) {
       case 'En cours': return 'default';
       case 'Terminée': return 'outline';
@@ -43,9 +43,7 @@ export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: 
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{mission.name}</DialogTitle>
-          <DialogDescription>
-            Détails complets de la mission.
-          </DialogDescription>
+          <DialogDescription>Détails complets de la mission.</DialogDescription>
         </DialogHeader>
         <div className="grid md:grid-cols-2 gap-6 py-4">
             <div className="space-y-4">
@@ -60,18 +58,12 @@ export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: 
                     <Calendar className="h-5 w-5 mt-1 text-muted-foreground" />
                     <div>
                         <h3 className="font-semibold">Période</h3>
-                        {isSingleDay ? (
-                            <p className="text-sm text-foreground">
-                                {startDate.toLocaleDateString('fr-FR')} (de {mission.startTime} à {mission.endTime})
-                            </p>
-                        ) : (
-                            <>
-                                <p className="text-sm text-foreground">
-                                    {startDate.toLocaleDateString('fr-FR')} - {endDate.toLocaleDateString('fr-FR')}
-                                </p>
-                                <p className="text-xs text-muted-foreground">{duration} jour(s)</p>
-                            </>
-                        )}
+                         <p className="text-sm text-foreground">
+                            {startDate.toLocaleDateString('fr-FR')} - {endDate.toLocaleDateString('fr-FR')}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            {isSingleDay ? `${mission.startTime || ''} - ${mission.endTime || ''}` : `${duration} jour(s)`}
+                        </p>
                     </div>
                 </div>
                  <div className="flex items-start gap-3">

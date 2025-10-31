@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -28,70 +27,20 @@ import type { Agent, Mission } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
 import { getAgentAvailability } from '@/lib/agents';
 import { MissionDetailsDialog } from '@/components/missions/mission-details-dialog';
-import { isSameDay } from 'date-fns';
-import { RecentActivities } from '@/components/dashboard/recent-activities';
+import { getDisplayStatus, MissionWithDisplayStatus } from '@/lib/missions';
 
-type MissionStatus = 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
-
-const getDisplayStatus = (mission: Mission): MissionStatus => {
-    const now = new Date();
-    const startDate = mission.startDate.toDate();
-    const endDate = mission.endDate.toDate();
-
-    if (mission.status === 'Annulée') {
-        return 'Annulée';
-    }
-
-    if (isSameDay(startDate, endDate) && mission.startTime && mission.endTime) {
-        const [startHours, startMinutes] = mission.startTime.split(':').map(Number);
-        const [endHours, endMinutes] = mission.endTime.split(':').map(Number);
-        const fullStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), startHours, startMinutes);
-        const fullEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), endHours, endMinutes);
-
-        if (now > fullEndDate) return 'Terminée';
-        if (now < fullStartDate) return 'Planification';
-        return 'En cours';
-    }
-    
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const missionEndDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-     if (today > missionEndDay) {
-        return 'Terminée';
-    }
-    
-    const missionStartDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-    if (today < missionStartDay) {
-        return 'Planification';
-    }
-    
-    return 'En cours';
-  };
-
-
-export default function DashboardPage({ params, searchParams }: { params: {}, searchParams: {} }) {
+export default function DashboardPage() {
   const firestore = useFirestore();
-  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+  const [selectedMission, setSelectedMission] = useState<MissionWithDisplayStatus | null>(null);
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setNow(new Date());
-    }, 60000); // Mettre à jour toutes les 60 secondes
-
-    return () => {
-      clearInterval(timer);
-    };
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
   }, []);
 
-  const agentsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'agents') : null),
-    [firestore]
-  );
-  
-  const missionsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'missions') : null),
-    [firestore]
-  );
+  const agentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'agents') : null), [firestore]);
+  const missionsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'missions') : null), [firestore]);
 
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
@@ -104,7 +53,7 @@ export default function DashboardPage({ params, searchParams }: { params: {}, se
     }, {} as Record<string, Agent>);
   }, [agents]);
 
-  const missionsWithDisplayStatus = useMemo(() => {
+  const missionsWithDisplayStatus: MissionWithDisplayStatus[] = useMemo(() => {
     if (!missions) return [];
     return missions.map(mission => ({
       ...mission,
@@ -122,9 +71,7 @@ export default function DashboardPage({ params, searchParams }: { params: {}, se
 
 
   const activeMissions = useMemo(() => {
-    return missionsWithDisplayStatus.filter(mission => {
-        return mission.displayStatus === 'En cours';
-    }).slice(0, 5);
+    return missionsWithDisplayStatus.filter(mission => mission.displayStatus === 'En cours').slice(0, 5);
   }, [missionsWithDisplayStatus]);
 
 
@@ -134,7 +81,7 @@ export default function DashboardPage({ params, searchParams }: { params: {}, se
 
   const isLoading = agentsLoading || missionsLoading;
 
-  const getBadgeVariant = (status: MissionStatus) => {
+  const getBadgeVariant = (status: Mission['status']) => {
     switch (status) {
       case 'En cours':
         return 'default';
@@ -172,9 +119,7 @@ export default function DashboardPage({ params, searchParams }: { params: {}, se
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Agents en mission
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Agents en mission</CardTitle>
               <Shield className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -185,9 +130,7 @@ export default function DashboardPage({ params, searchParams }: { params: {}, se
 
         <Card>
           <CardHeader>
-            <CardTitle>
-              Aperçu des missions en cours ({isLoading ? '...' : activeMissions.length})
-            </CardTitle>
+            <CardTitle>Aperçu des missions en cours ({isLoading ? '...' : activeMissions.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -200,32 +143,20 @@ export default function DashboardPage({ params, searchParams }: { params: {}, se
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center">Chargement...</TableCell>
-                  </TableRow>
-                )}
-                {!isLoading && activeMissions.map((mission) => {
-                  return(
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={4} className="text-center">Chargement...</TableCell></TableRow>
+                ) : activeMissions.length > 0 ? (
+                  activeMissions.map((mission) => (
                     <TableRow key={mission.id} onClick={() => setSelectedMission(mission)} className="cursor-pointer">
                       <TableCell className="font-medium">{mission.name}</TableCell>
                       <TableCell>{mission.location}</TableCell>
-                      <TableCell>
-                        <Badge variant={getBadgeVariant(mission.displayStatus)}>{mission.displayStatus}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {mission.endDate.toDate().toLocaleDateString('fr-FR')}
-                      </TableCell>
+                      <TableCell><Badge variant={getBadgeVariant(mission.displayStatus)}>{mission.displayStatus}</Badge></TableCell>
+                      <TableCell>{mission.endDate.toDate().toLocaleDateString('fr-FR')}</TableCell>
                     </TableRow>
-                  )
-                })}
-                {!isLoading && activeMissions.length === 0 && (
-                  <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground">
-                          Aucune mission en cours.
-                      </TableCell>
-                  </TableRow>
-              )}
+                  ))
+                ) : (
+                  <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Aucune mission en cours.</TableCell></TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -234,12 +165,8 @@ export default function DashboardPage({ params, searchParams }: { params: {}, se
       {selectedMission && (
         <MissionDetailsDialog
             isOpen={!!selectedMission}
-            onOpenChange={(open) => {
-                if (!open) {
-                    setSelectedMission(null);
-                }
-            }}
-            mission={{...selectedMission, status: getDisplayStatus(selectedMission)}}
+            onOpenChange={(open) => !open && setSelectedMission(null)}
+            mission={selectedMission}
             agents={
                 selectedMission.assignedAgentIds
                 .map(id => agentsById[id])

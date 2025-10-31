@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -23,7 +22,7 @@ export default function LandingPage() {
   const [currentImage, setCurrentImage] = useState(0);
   const router = useRouter();
   const { logo, isLogoLoading } = useLogo();
-  const { user, isUserLoading } = useUser();
+  const { isUserLoading } = useUser();
   const isMounted = useIsMounted();
 
   useEffect(() => {
@@ -35,16 +34,10 @@ export default function LandingPage() {
   }, []);
 
   const handleEnterClick = () => {
-    if (user) {
-      // If user is logged in, force navigation to login page
-      router.push('/login?force=true');
-    } else {
-      // If user is not logged in, just go to login
-      router.push('/login');
-    }
+    router.push('/login');
   };
   
-  if (!isMounted || isUserLoading) {
+  if (!isMounted || isUserLoading || isLogoLoading) {
     return (
        <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
         <div className="loader"></div>
@@ -69,15 +62,13 @@ export default function LandingPage() {
       ))}
       <div className="absolute inset-0 bg-black/60" />
       <div className="relative z-10 flex h-full flex-col items-center justify-center text-center text-white">
-        <div className="mx-auto mb-6 flex h-28 w-28 items-center justify-center rounded-full bg-primary/10">
-            <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-primary/20">
+        <div className="mx-auto mb-6 h-28 w-28 flex items-center justify-center">
+            <div className="relative h-24 w-24">
                 {isLogoLoading ? (
-                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <Loader2 className="h-full w-full animate-spin text-primary" />
                 ) : logo ? (
                     <Image src={logo} alt="Logo" fill className="rounded-full object-cover" />
-                ) : (
-                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                )}
+                ) : null}
             </div>
         </div>
         <h1 className="text-5xl font-bold tracking-tight text-shadow-lg sm:text-6xl md:text-7xl" style={{fontFamily: 'Montserrat, sans-serif', textShadow: '2px 2px 8px rgba(0,0,0,0.7)'}}>

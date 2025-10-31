@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -34,7 +33,7 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
-import type { Agent, Mission } from '@/lib/types';
+import type { Agent, Mission, MissionStatus } from '@/lib/types';
 import { useState, useMemo, useEffect } from 'react';
 import { EditMissionDialog } from '@/components/missions/edit-mission-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -55,6 +54,7 @@ import { useRole } from '@/hooks/use-role';
 import { useLogo } from '@/context/logo-context';
 import { differenceInDays, isSameDay } from 'date-fns';
 import { logActivity } from '@/lib/activity-logger';
+import { getDisplayStatus, MissionWithDisplayStatus } from '@/lib/missions';
 
 const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missionName: string }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -86,13 +86,11 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
                 currentY += logoHeight + 5;
             }
 
-            // Official Header
             doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
             doc.text("BRIGADE SPECIALE DE SURVEILLANCE ET D'INTERVENTION", pageWidth / 2, currentY, { align: 'center' });
             currentY += 10;
             
-            // Report Header
             doc.setFontSize(18);
             doc.setFont('helvetica', 'bold');
             doc.text(mainTitle, pageWidth / 2, currentY, { align: 'center' });
@@ -115,16 +113,9 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
                 ]),
                 startY: currentY,
                 theme: 'striped',
-                headStyles: {
-                    fillColor: [39, 55, 70],
-                    textColor: 255,
-                    fontStyle: 'bold'
-                },
-                alternateRowStyles: {
-                    fillColor: [245, 245, 245]
-                },
+                headStyles: { fillColor: [39, 55, 70], textColor: 255, fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [245, 245, 245] },
                 didDrawPage: (data) => {
-                    // Footer
                     const pageCount = doc.internal.getNumberOfPages();
                     doc.setFontSize(10);
                     doc.text(`Page ${data.pageNumber} sur ${pageCount}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
@@ -165,9 +156,7 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
         <DialogContent className="max-w-3xl">
             <DialogHeader>
                 <DialogTitle>AGENT A LA MISSION "{missionName.toUpperCase()}"</DialogTitle>
-                <DialogDescription>
-                    Liste des agents assignés à cette mission.
-                </DialogDescription>
+                <DialogDescription>Liste des agents assignés à cette mission.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
                 <div className="flex items-center justify-between gap-4">
@@ -175,15 +164,14 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                             className="pl-10"
+                            placeholder="Rechercher un agent..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
                      <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline">
-                            <FileDown className="mr-2 h-4 w-4" /> Exporter
-                            </Button>
+                            <Button variant="outline"><FileDown className="mr-2 h-4 w-4" /> Exporter</Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                             <DropdownMenuLabel>Choisir un format</DropdownMenuLabel>
@@ -212,9 +200,7 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
                                     </TableRow>
                                 ))
                             ) : (
-                                <TableRow>
-                                    <TableCell colSpan={3} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell>
-                                </TableRow>
+                                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell></TableRow>
                             )}
                         </TableBody>
                     </Table>
@@ -224,44 +210,7 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
     )
 }
 
-type MissionStatus = 'Planification' | 'En cours' | 'Terminée' | 'Annulée';
-
-const getDisplayStatus = (mission: Mission): MissionStatus => {
-    const now = new Date();
-    const startDate = mission.startDate.toDate();
-    const endDate = mission.endDate.toDate();
-    
-    if (mission.status === 'Annulée') {
-        return 'Annulée';
-    }
-
-    if (isSameDay(startDate, endDate) && mission.startTime && mission.endTime) {
-        const [startHours, startMinutes] = mission.startTime.split(':').map(Number);
-        const [endHours, endMinutes] = mission.endTime.split(':').map(Number);
-        const fullStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), startHours, startMinutes);
-        const fullEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), endHours, endMinutes);
-
-        if (now > fullEndDate) return 'Terminée';
-        if (now < fullStartDate) return 'Planification';
-        return 'En cours';
-    }
-
-    // For multi-day missions, just compare dates
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const missionEndDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-    if (today > missionEndDay) {
-        return 'Terminée';
-    }
-
-    const missionStartDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-    if (today < missionStartDay) {
-        return 'Planification';
-    }
-
-    return 'En cours';
-  };
-
-export default function MissionsPage({ params, searchParams }: { params: {}, searchParams: {} }) {
+export default function MissionsPage() {
   const { isObserver } = useRole();
   const [isCreateMissionOpen, setCreateMissionOpen] = useState(false);
   const [editingMission, setEditingMission] = useState<Mission | null>(null);
@@ -270,28 +219,16 @@ export default function MissionsPage({ params, searchParams }: { params: {}, sea
   const { toast } = useToast();
   const firestore = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'Planification' | 'En cours' | 'Terminée' | 'Annulée'>('all');
+  const [statusFilter, setStatusFilter] = useState<MissionStatus | 'all'>('all');
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setNow(new Date());
-    }, 60000); // Mettre à jour toutes les 60 secondes
-
-    return () => {
-      clearInterval(timer);
-    };
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
   }, []);
   
-  const missionsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'missions') : null),
-    [firestore]
-  );
-  
-  const agentsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'agents') : null),
-    [firestore]
-  );
+  const missionsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'missions') : null), [firestore]);
+  const agentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'agents') : null), [firestore]);
 
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
@@ -304,27 +241,16 @@ export default function MissionsPage({ params, searchParams }: { params: {}, sea
     }, {} as Record<string, Agent>);
   }, [agents]);
 
-  const sortedMissions = useMemo(() => {
+  const sortedMissions: MissionWithDisplayStatus[] = useMemo(() => {
     if (!missions) return [];
     
     const statusOrder: Record<MissionStatus, number> = {
-      'En cours': 1,
-      'Planification': 2,
-      'Terminée': 3,
-      'Annulée': 4,
+      'En cours': 1, 'Planification': 2, 'Terminée': 3, 'Annulée': 4,
     };
 
-    return [...missions].map(m => ({...m, displayStatus: getDisplayStatus(m)}))
-      .sort((a, b) => {
-        const orderA = statusOrder[a.displayStatus] || 5;
-        const orderB = statusOrder[b.displayStatus] || 5;
-
-        if (orderA !== orderB) {
-          return orderA - orderB;
-        }
-        
-        return b.startDate.toMillis() - a.startDate.toMillis();
-      });
+    return [...missions]
+      .map(m => ({...m, displayStatus: getDisplayStatus(m)}))
+      .sort((a, b) => (statusOrder[a.displayStatus] || 5) - (statusOrder[b.displayStatus] || 5) || b.startDate.toMillis() - a.startDate.toMillis());
   }, [missions, now]);
 
   const filteredMissions = useMemo(() => {
@@ -337,15 +263,11 @@ export default function MissionsPage({ params, searchParams }: { params: {}, sea
 
   const getBadgeVariant = (status: MissionStatus) => {
     switch (status) {
-      case 'En cours':
-        return 'default';
-      case 'Terminée':
-        return 'outline';
-      case 'Annulée':
-        return 'destructive';
+      case 'En cours': return 'default';
+      case 'Terminée': return 'outline';
+      case 'Annulée': return 'destructive';
       case 'Planification':
-      default:
-        return 'secondary';
+      default: return 'secondary';
     }
   };
   
@@ -356,17 +278,10 @@ export default function MissionsPage({ params, searchParams }: { params: {}, sea
     const updateData = { status: 'Annulée' as const };
     
     updateDoc(missionRef, updateData).then(() => {
-        toast({
-            title: 'Mission annulée',
-            description: `La mission "${missionToCancel.name}" a été annulée.`
-        });
+        toast({ title: 'Mission annulée', description: `La mission "${missionToCancel.name}" a été annulée.` });
         logActivity(firestore, `La mission "${missionToCancel.name}" a été annulée.`, 'Mission', '/missions');
     }).catch((serverError) => {
-        const permissionError = new FirestorePermissionError({
-            path: missionRef.path,
-            operation: 'update',
-            requestResourceData: updateData,
-        });
+        const permissionError = new FirestorePermissionError({ path: missionRef.path, operation: 'update', requestResourceData: updateData });
         errorEmitter.emit('permission-error', permissionError);
     });
     setMissionToCancel(null);
@@ -374,22 +289,13 @@ export default function MissionsPage({ params, searchParams }: { params: {}, sea
 
   const handleDeleteMission = async () => {
     if (!firestore || !missionToDelete) return;
-    const batch = writeBatch(firestore);
-    
     const missionRef = doc(firestore, 'missions', missionToDelete.id);
-    batch.delete(missionRef);
     
-    batch.commit().then(() => {
-        toast({
-            title: 'Mission supprimée',
-            description: `La mission "${missionToDelete.name}" a été supprimée.`,
-        });
+    deleteDoc(missionRef).then(() => {
+        toast({ title: 'Mission supprimée', description: `La mission "${missionToDelete.name}" a été supprimée.` });
         logActivity(firestore, `La mission "${missionToDelete.name}" a été supprimée.`, 'Mission', '/missions');
     }).catch(async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-            path: missionRef.path,
-            operation: 'delete',
-        });
+        const permissionError = new FirestorePermissionError({ path: missionRef.path, operation: 'delete' });
         errorEmitter.emit('permission-error', permissionError);
     });
 
@@ -403,9 +309,7 @@ export default function MissionsPage({ params, searchParams }: { params: {}, sea
         {!isObserver && (
           <Dialog open={isCreateMissionOpen} onOpenChange={setCreateMissionOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Créer une mission
-              </Button>
+              <Button><PlusCircle className="mr-2 h-4 w-4" /> Créer une mission</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
@@ -423,6 +327,7 @@ export default function MissionsPage({ params, searchParams }: { params: {}, sea
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 className="pl-10"
+                placeholder="Rechercher par nom..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -446,29 +351,19 @@ export default function MissionsPage({ params, searchParams }: { params: {}, sea
               <TableHead>Période</TableHead>
               <TableHead>Agents Assignés</TableHead>
               <TableHead>Statut</TableHead>
-              <TableHead>
-                <span className="sr-only">Actions</span>
-              </TableHead>
+              {!isObserver && <TableHead><span className="sr-only">Actions</span></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {missionsLoading || agentsLoading ? (
-                <TableRow>
-                    <TableCell colSpan={6} className="text-center">Chargement des missions...</TableCell>
-                </TableRow>
-            ) : (
+              <TableRow><TableCell colSpan={6} className="text-center">Chargement des missions...</TableCell></TableRow>
+            ) : filteredMissions.length > 0 ? (
             filteredMissions.map((mission) => {
-              const assignedAgents = (mission.assignedAgentIds || [])
-                .map(id => agentsById[id])
-                .filter(Boolean)
-                .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
-              
+              const assignedAgents = (mission.assignedAgentIds || []).map(id => agentsById[id]).filter(Boolean);
               const missionStartDate = mission.startDate.toDate();
               const missionEndDate = mission.endDate.toDate();
-              
               const isSingleDay = isSameDay(missionStartDate, missionEndDate);
               const duration = differenceInDays(missionEndDate, missionStartDate) + 1;
-
 
               return (
               <TableRow key={mission.id}>
@@ -476,26 +371,15 @@ export default function MissionsPage({ params, searchParams }: { params: {}, sea
                 <TableCell>{mission.location}</TableCell>
                 <TableCell>
                     <div className="flex flex-col">
-                        {isSingleDay ? (
-                            <>
-                                <span>{missionStartDate.toLocaleDateString('fr-FR')}</span>
-                                {mission.startTime && mission.endTime && (
-                                    <span className="text-xs text-muted-foreground">
-                                        {mission.startTime} - {mission.endTime}
-                                    </span>
-                                )}
-                            </>
-                        ) : (
-                             <>
-                                <span>{missionStartDate.toLocaleDateString('fr-FR')} - {missionEndDate.toLocaleDateString('fr-FR')}</span>
-                                <span className="text-xs text-muted-foreground">{duration} jour(s)</span>
-                            </>
-                        )}
+                        <span>{missionStartDate.toLocaleDateString('fr-FR')} - {missionEndDate.toLocaleDateString('fr-FR')}</span>
+                        <span className="text-xs text-muted-foreground">
+                            {isSingleDay ? `${mission.startTime || ''} - ${mission.endTime || ''}` : `${duration} jour(s)`}
+                        </span>
                     </div>
                 </TableCell>
                 <TableCell>
                    <div className="flex items-center gap-2">
-                    {assignedAgents && assignedAgents.length > 0 ? (
+                    {assignedAgents.length > 0 ? (
                         <Dialog>
                             <DialogTrigger asChild>
                                 <Button variant="ghost" className="flex items-center gap-2 px-2" onClick={(e) => e.stopPropagation()}>
@@ -510,49 +394,31 @@ export default function MissionsPage({ params, searchParams }: { params: {}, sea
                     )}
                   </div>
                 </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={getBadgeVariant(mission.displayStatus)}
-                  >
-                    {mission.displayStatus}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {!isObserver && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Modifier/Prolonger</DropdownMenuItem>
-                        {mission.displayStatus !== 'Annulée' && mission.displayStatus !== 'Terminée' && (
-                          <DropdownMenuItem 
-                              onSelect={() => setMissionToCancel(mission)}
-                              className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                              Annuler la mission
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => setMissionToDelete(mission)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                          Supprimer
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                </TableCell>
+                <TableCell><Badge variant={getBadgeVariant(mission.displayStatus)}>{mission.displayStatus}</Badge></TableCell>
+                {!isObserver && (
+                  <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
+                            <MoreHorizontal className="h-4 w-4" /><span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Modifier/Prolonger</DropdownMenuItem>
+                          {mission.displayStatus !== 'Annulée' && mission.displayStatus !== 'Terminée' && (
+                            <DropdownMenuItem onSelect={() => setMissionToCancel(mission)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">Annuler la mission</DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onSelect={() => setMissionToDelete(mission)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">Supprimer</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                  </TableCell>
+                )}
               </TableRow>
             )})
-            )}
-             {!missionsLoading && filteredMissions.length === 0 && (
-                <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
-                        Aucune mission trouvée.
-                    </TableCell>
-                </TableRow>
+            ) : (
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Aucune mission trouvée.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
@@ -562,11 +428,7 @@ export default function MissionsPage({ params, searchParams }: { params: {}, sea
         <EditMissionDialog
           mission={editingMission}
           isOpen={!!editingMission}
-          onOpenChange={(open) => {
-            if (!open) {
-              setEditingMission(null);
-            }
-          }}
+          onOpenChange={(open) => !open && setEditingMission(null)}
         />
       )}
 
@@ -575,15 +437,11 @@ export default function MissionsPage({ params, searchParams }: { params: {}, sea
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Êtes-vous sûr de vouloir annuler cette mission ?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Cette action est irréversible. La mission <span className="font-semibold">{missionToCancel.name}</span> sera marquée comme "Annulée".
-              </AlertDialogDescription>
+              <AlertDialogDescription>Cette action est irréversible. La mission <span className="font-semibold">{missionToCancel.name}</span> sera marquée comme "Annulée".</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setMissionToCancel(null)}>Retour</AlertDialogCancel>
-              <AlertDialogAction onClick={handleCancelMission} className="bg-destructive hover:bg-destructive/90">
-                Annuler la mission
-              </AlertDialogAction>
+              <AlertDialogAction onClick={handleCancelMission} className="bg-destructive hover:bg-destructive/90">Annuler la mission</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -594,16 +452,11 @@ export default function MissionsPage({ params, searchParams }: { params: {}, sea
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Êtes-vous absolument sûr?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Cette action est irréversible. La mission{' '}
-                <span className="font-semibold">{missionToDelete.name}</span> sera définitivement supprimée.
-              </AlertDialogDescription>
+              <AlertDialogDescription>Cette action est irréversible. La mission <span className="font-semibold">{missionToDelete.name}</span> sera définitivement supprimée.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setMissionToDelete(null)}>Annuler</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteMission} className="bg-destructive hover:bg-destructive/90">
-                Supprimer
-              </AlertDialogAction>
+              <AlertDialogAction onClick={handleDeleteMission} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -29,7 +28,7 @@ import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
 import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
-import { deleteDuplicateAgents, deleteAgent } from '@/lib/firestore-utils';
+import { deleteDuplicateAgents } from '@/lib/firestore-utils';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -40,7 +39,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -59,7 +57,7 @@ import { logActivity } from '@/lib/activity-logger';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 
-export default function AgentsPage({ params, searchParams }: { params: {}, searchParams: {} }) {
+export default function AgentsPage() {
   const firestore = useFirestore();
   const { isObserver } = useRole();
   const { logo } = useLogo();
@@ -74,13 +72,8 @@ export default function AgentsPage({ params, searchParams }: { params: {}, searc
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setNow(new Date());
-    }, 60000); // Mettre à jour toutes les 60 secondes
-
-    return () => {
-      clearInterval(timer);
-    };
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
   }, []);
 
   const agentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'agents') : null), [firestore]);
@@ -100,9 +93,7 @@ export default function AgentsPage({ params, searchParams }: { params: {}, searc
   const sortedAgents = useMemo(() => {
     return [...agentsWithAvailability].sort((a, b) => {
       const firstNameComparison = a.firstName.localeCompare(b.firstName);
-      if (firstNameComparison !== 0) {
-        return firstNameComparison;
-      }
+      if (firstNameComparison !== 0) return firstNameComparison;
       return a.lastName.localeCompare(b.lastName);
     });
   }, [agentsWithAvailability]);
@@ -166,17 +157,10 @@ export default function AgentsPage({ params, searchParams }: { params: {}, searc
     setIsDeleting(true);
     try {
       const deletedCount = await deleteDuplicateAgents(firestore);
-      if (deletedCount > 0) {
-        toast({
-          title: 'Doublons supprimés',
-          description: `${deletedCount} agent(s) en double ont été supprimé(s).`,
-        });
-      } else {
-        toast({
-          title: 'Aucun doublon trouvé',
-          description: "Votre liste d'agents ne contient aucun doublon.",
-        });
-      }
+      toast({
+        title: deletedCount > 0 ? 'Doublons supprimés' : 'Aucun doublon trouvé',
+        description: deletedCount > 0 ? `${deletedCount} agent(s) en double ont été supprimé(s).` : "Votre liste d'agents ne contient aucun doublon.",
+      });
     } catch (error) {
       console.error("Erreur lors de la suppression des doublons: ", error);
       toast({
@@ -221,7 +205,6 @@ export default function AgentsPage({ params, searchParams }: { params: {}, searc
             currentY += logoHeight + 5;
         }
 
-        // Official Header
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.text("BRIGADE SPECIALE DE SURVEILLANCE ET D'INTERVENTION", pageWidth / 2, currentY, { align: 'center' });
@@ -231,7 +214,6 @@ export default function AgentsPage({ params, searchParams }: { params: {}, searc
         doc.text("Duralex - Sed Lex", pageWidth / 2, currentY, { align: 'center' });
         currentY += 15;
 
-        // Report Header
         doc.setFontSize(18);
         doc.setFont('helvetica', 'bold');
         doc.text(tableTitle, 14, currentY);
@@ -253,16 +235,9 @@ export default function AgentsPage({ params, searchParams }: { params: {}, searc
             ]),
             startY: currentY,
             theme: 'striped',
-            headStyles: {
-                fillColor: [39, 55, 70],
-                textColor: 255,
-                fontStyle: 'bold'
-            },
-            alternateRowStyles: {
-                fillColor: [245, 245, 245]
-            },
+            headStyles: { fillColor: [39, 55, 70], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [245, 245, 245] },
             didDrawPage: (data) => {
-                // Footer
                 const pageCount = doc.internal.getNumberOfPages();
                 doc.setFontSize(10);
                 doc.text(`Page ${data.pageNumber} sur ${pageCount}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
@@ -298,6 +273,7 @@ export default function AgentsPage({ params, searchParams }: { params: {}, searc
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               className="pl-10"
+              placeholder="Rechercher par nom..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -332,26 +308,18 @@ export default function AgentsPage({ params, searchParams }: { params: {}, searc
                       <Tooltip>
                         <TooltipTrigger asChild>
                             <Button variant="outline" size="icon" disabled={isDeleting}>
-                                {isDeleting ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Trash2 className="h-4 w-4" />
-                                )}
+                                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                                 <span className="sr-only">Supprimer les doublons</span>
                             </Button>
                         </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Supprimer les doublons</p>
-                        </TooltipContent>
+                        <TooltipContent><p>Supprimer les doublons</p></TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                       <AlertDialogHeader>
                           <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                              Cette action va rechercher tous les agents avec le même matricule et supprimer les doublons. Cette action est irréversible.
-                          </AlertDialogDescription>
+                          <AlertDialogDescription>Cette action va rechercher tous les agents avec le même matricule et supprimer les doublons. Cette action est irréversible.</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                           <AlertDialogCancel>Annuler</AlertDialogCancel>
@@ -387,52 +355,29 @@ export default function AgentsPage({ params, searchParams }: { params: {}, searc
               <TableHead>Grade</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Disponibilité</TableHead>
-              <TableHead>
-                <span className="sr-only">Actions</span>
-              </TableHead>
+              <TableHead><span className="sr-only">Actions</span></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {agentsLoading || missionsLoading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center">Chargement des agents...</TableCell>
-              </TableRow>
-            ) : (
+              <TableRow><TableCell colSpan={5} className="text-center">Chargement des agents...</TableCell></TableRow>
+            ) : filteredAgents.length > 0 ? (
               filteredAgents.map((agent) => {
-                const fullName = `${agent.firstName} ${agent.lastName}`;
                 const isAgentOnMission = agent.availability === 'En mission';
-
                 return (
                   <TableRow key={agent.id} onClick={() => setSelectedAgent(agent)} className="cursor-pointer">
                     <TableCell>
-                      <div className="font-medium">
-                        {fullName}
-                        <div className="text-sm text-muted-foreground">
-                          {agent.registrationNumber}
-                        </div>
-                      </div>
+                      <div className="font-medium">{agent.firstName} {agent.lastName}</div>
+                      <div className="text-sm text-muted-foreground">{agent.registrationNumber}</div>
                     </TableCell>
-                    <TableCell>
-                      {agent.rank}
-                    </TableCell>
-                    <TableCell>
-                      {agent.contact}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getBadgeVariant(agent.availability)}>
-                        {agent.availability}
-                      </Badge>
-                    </TableCell>
+                    <TableCell>{agent.rank}</TableCell>
+                    <TableCell>{agent.contact}</TableCell>
+                    <TableCell><Badge variant={getBadgeVariant(agent.availability)}>{agent.availability}</Badge></TableCell>
                     <TableCell>
                       {!isObserver && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button
-                              aria-haspopup="true"
-                              size="icon"
-                              variant="ghost"
-                              onClick={(e) => e.stopPropagation()}
-                            >
+                            <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
                               <MoreHorizontal className="h-4 w-4" />
                               <span className="sr-only">Toggle menu</span>
                             </Button>
@@ -441,11 +386,7 @@ export default function AgentsPage({ params, searchParams }: { params: {}, searc
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onSelect={() => setEditingAgent(agent)}>Modifier</DropdownMenuItem>
                             <DropdownMenuItem 
-                              onSelect={() => {
-                                if (!isAgentOnMission) {
-                                  setAgentToDelete(agent)
-                                }
-                              }}
+                              onSelect={() => !isAgentOnMission && setAgentToDelete(agent)}
                               disabled={isAgentOnMission}
                               className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                             >
@@ -458,13 +399,8 @@ export default function AgentsPage({ params, searchParams }: { params: {}, searc
                   </TableRow>
                 );
               })
-            )}
-            {!agentsLoading && filteredAgents.length === 0 && (
-                <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                        Aucun agent trouvé.
-                    </TableCell>
-                </TableRow>
+            ) : (
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
@@ -486,11 +422,7 @@ export default function AgentsPage({ params, searchParams }: { params: {}, searc
         <AgentDetailsSheet
           agent={{...selectedAgent, availability: getAgentAvailability(selectedAgent, missions)}}
           isOpen={!!selectedAgent}
-          onOpenChange={(open) => {
-            if (!open) {
-              setSelectedAgent(null);
-            }
-          }}
+          onOpenChange={(open) => !open && setSelectedAgent(null)}
         />
       )}
 
@@ -500,8 +432,7 @@ export default function AgentsPage({ params, searchParams }: { params: {}, searc
             <AlertDialogHeader>
               <AlertDialogTitle>Êtes-vous absolument sûr?</AlertDialogTitle>
               <AlertDialogDescription>
-                Cette action est irréversible. L'agent{' '}
-                <span className="font-semibold">{`${agentToDelete.firstName} ${agentToDelete.lastName}`}</span> sera définitivement supprimé.
+                Cette action est irréversible. L'agent <span className="font-semibold">{`${agentToDelete.firstName} ${agentToDelete.lastName}`}</span> sera définitivement supprimé.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
