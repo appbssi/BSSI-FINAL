@@ -3,7 +3,7 @@
 
 import { useUser } from '@/firebase';
 import { Loader2 } from 'lucide-react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import React, { useEffect } from 'react';
 
 const publicPaths = ['/login', '/'];
@@ -15,6 +15,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (isUserLoading) {
@@ -22,23 +23,24 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
 
     const isPublicPath = publicPaths.includes(pathname);
+    const forceLogin = searchParams.get('force') === 'true';
 
     // If the user is not logged in and not on a public path, redirect to login
     if (!user && !isPublicPath) {
       router.push('/login');
     }
 
-    // If the user is logged in, redirect from /login to /dashboard
-    if (user && pathname === '/login') {
+    // If the user is logged in, redirect from /login to /dashboard, unless forced
+    if (user && pathname === '/login' && !forceLogin) {
       router.push('/dashboard');
     }
 
-  }, [user, isUserLoading, router, pathname]);
+  }, [user, isUserLoading, router, pathname, searchParams]);
 
   // Show a loader while determining auth state if we are not on a public path
   // or if we are about to be redirected from the login page.
   const isProtectedPathLoading = !isUserLoading && !user && !publicPaths.includes(pathname);
-  const isRedirectingFromLogin = !isUserLoading && user && pathname === '/login';
+  const isRedirectingFromLogin = !isUserLoading && user && pathname === '/login' && searchParams.get('force') !== 'true';
 
   if (isUserLoading || isProtectedPathLoading || isRedirectingFromLogin) {
     return (

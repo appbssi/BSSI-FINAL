@@ -23,7 +23,7 @@ export default function LandingPage() {
   const [currentImage, setCurrentImage] = useState(0);
   const router = useRouter();
   const { logo, isLogoLoading } = useLogo();
-  const { isUserLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const isMounted = useIsMounted();
 
   useEffect(() => {
@@ -34,6 +34,16 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleEnterClick = () => {
+    if (user) {
+      // If user is logged in, force navigation to login page
+      router.push('/login?force=true');
+    } else {
+      // If user is not logged in, just go to login
+      router.push('/login');
+    }
+  };
+  
   if (!isMounted || isUserLoading) {
     return (
        <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
@@ -78,7 +88,7 @@ export default function LandingPage() {
         </p>
         <Button 
             className="mt-10 px-8 py-6 text-lg font-semibold"
-            onClick={() => router.push('/login')}
+            onClick={handleEnterClick}
         >
           Entrer
         </Button>
