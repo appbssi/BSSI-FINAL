@@ -142,77 +142,89 @@ export default function LoginPage(props: any) {
   };
   
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className={cn(
-          "w-full max-w-sm",
-          hasError ? "neon-error-box" : "soft-shadow"
-      )}>
-        <CardHeader className="text-center">
-            <Link href="/" passHref>
-                <Button variant="ghost" size="icon" className="absolute top-4 left-4">
-                    <Home className="h-5 w-5" />
-                </Button>
-            </Link>
-            <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
-                <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary/20">
-                    {isLogoLoading ? (
-                      <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                    ) : logo ? (
-                      <Image src={logo} alt="Logo" fill className="rounded-full object-cover" />
-                    ) : (
-                      <Rocket className="h-10 w-10 text-primary" />
-                    )}
-                </div>
-            </div>
-          <CardTitle>sBSSI</CardTitle>
-          <CardDescription>Connectez-vous pour accéder à votre tableau de bord</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Login</FormLabel>
-                    <FormControl>
-                      <Input type="text" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mot de passe</FormLabel>
-                    <div className="relative">
-                      <FormControl>
-                        <Input type={showPassword ? 'text' : 'password'} {...field} className="pr-10" />
-                      </FormControl>
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground"
-                      >
-                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
+    <div className="relative min-h-screen w-full">
+      {logo && (
+        <Image
+            src={logo}
+            alt="Arrière-plan"
+            fill
+            className="object-cover"
+            priority
+        />
+      )}
+      <div className="absolute inset-0 bg-black/95" />
+      <div className="relative flex min-h-screen items-center justify-center p-4">
+          <Card className={cn(
+              "w-full max-w-sm bg-card/80 backdrop-blur-sm",
+              hasError ? "neon-error-box" : "soft-shadow"
+          )}>
+            <CardHeader className="text-center">
+                <Link href="/" passHref>
+                    <Button variant="ghost" size="icon" className="absolute top-4 left-4 text-card-foreground hover:bg-white/10">
+                        <Home className="h-5 w-5" />
+                    </Button>
+                </Link>
+                <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
+                    <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary/20">
+                        {isLogoLoading ? (
+                        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                        ) : logo ? (
+                        <Image src={logo} alt="Logo" fill className="rounded-full object-cover" />
+                        ) : (
+                        <Rocket className="h-10 w-10 text-primary" />
+                        )}
                     </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Se connecter
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                </div>
+              <CardTitle>sBSSI</CardTitle>
+              <CardDescription>Connectez-vous pour accéder à votre tableau de bord</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Login</FormLabel>
+                        <FormControl>
+                          <Input type="text" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mot de passe</FormLabel>
+                        <div className="relative">
+                          <FormControl>
+                            <Input type={showPassword ? 'text' : 'password'} {...field} className="pr-10" />
+                          </FormControl>
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground"
+                          >
+                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          </button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Se connecter
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+      </div>
     </div>
   );
 }
