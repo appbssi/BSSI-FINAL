@@ -24,8 +24,8 @@ import { Button } from '@/components/ui/button';
 import { RegisterAgentForm } from '@/components/agents/register-agent-form';
 import type { Agent, Mission, Availability } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, deleteDoc, doc } from 'firebase/firestore';
+import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
 import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
@@ -55,6 +55,8 @@ import {
   DialogContent,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { logActivity } from '@/lib/activity-logger';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 
 export default function AgentsPage() {
@@ -140,15 +142,23 @@ export default function AgentsPage() {
 
     setIsDeleting(true);
 
-    deleteAgent(firestore, agentToDelete, missions);
-    
-    toast({
-      title: 'Agent supprimé',
-      description: `L'agent ${agentToDelete.firstName} ${agentToDelete.lastName} a été supprimé.`,
+    const agentRef = doc(firestore, 'agents', agentToDelete.id);
+    deleteDoc(agentRef).then(() => {
+        toast({
+          title: 'Agent supprimé',
+          description: `L'agent ${agentToDelete.firstName} ${agentToDelete.lastName} a été supprimé.`,
+        });
+        logActivity(firestore, `L'agent ${agentToDelete.firstName} ${agentToDelete.lastName} a été supprimé.`, 'Agent', '/agents');
+    }).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: agentRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    }).finally(() => {
+        setIsDeleting(false);
+        setAgentToDelete(null); // Close the dialog
     });
-
-    setIsDeleting(false);
-    setAgentToDelete(null); // Close the dialog
   };
 
   const handleDeduplicate = async () => {
