@@ -158,47 +158,6 @@ export default function DashboardPage() {
         <div className="lg:col-span-2">
             <Card className="bg-white text-black">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><BarChart className="h-5 w-5"/>Missions en cours ({isLoading ? '...' : ongoingMissionsCount})</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ScrollArea className="h-72">
-                      {isLoading ? (
-                         <div className="flex justify-center items-center h-full">
-                            <p>Chargement des missions...</p>
-                        </div>
-                      ) : ongoingMissions.length > 0 ? (
-                        <div className="space-y-4">
-                          {ongoingMissions.map((mission, index) => (
-                            <div key={mission.id}>
-                              <div className="flex flex-col space-y-2">
-                                <p className="font-semibold">{mission.name}</p>
-                                <div className="flex items-center gap-4 text-sm text-gray-500">
-                                  <div className="flex items-center gap-1.5">
-                                    <MapPin className="h-4 w-4" />
-                                    <span>{mission.location}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    <Calendar className="h-4 w-4" />
-                                    <span>{mission.startDate.toDate().toLocaleDateString('fr-FR')} - {mission.endDate.toDate().toLocaleDateString('fr-FR')}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              {index < ongoingMissions.length - 1 && <Separator className="my-4" />}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                         <div className="flex justify-center items-center h-full text-gray-500">
-                            <p>Aucune mission en cours.</p>
-                        </div>
-                      )}
-                    </ScrollArea>
-                </CardContent>
-            </Card>
-        </div>
-        <div>
-            <Card className="bg-white text-black">
-                <CardHeader>
                     <CardTitle className="flex items-center gap-2"><PieChartIcon className="h-5 w-5"/>Activité des Agents</CardTitle>
                 </CardHeader>
                 <CardContent>
