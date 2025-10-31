@@ -162,7 +162,7 @@ export default function DashboardPage() {
          <Card className="col-span-12 bg-white text-black">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <BarChart className="h-5 w-5" />
+                    <Newspaper className="h-5 w-5" />
                     Mission en cours ({ongoingMissionsCount})
                 </CardTitle>
             </CardHeader>
