@@ -26,6 +26,7 @@ import { UserNav } from './user-nav';
 import { useLogo } from '@/context/logo-context';
 import Image from 'next/image';
 import { useRole } from '@/hooks/use-role';
+import { useIsMounted } from '@/hooks/use-is-mounted';
 
 type NavItem = {
   href: string;
@@ -46,11 +47,16 @@ export function SidebarNav() {
   const pathname = usePathname();
   const { logo, isLogoLoading } = useLogo();
   const { role } = useRole();
+  const isMounted = useIsMounted();
 
   const filteredNavItems = navItems.filter(item => {
     if (!item.roles) return true;
     return role ? item.roles.includes(role) : false;
   });
+
+  if (!isMounted) {
+    return null; 
+  }
 
   return (
     <>
