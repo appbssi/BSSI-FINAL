@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -69,7 +70,6 @@ export function SidebarNav() {
         <div className="flex p-2 bg-gray-800">
             <div className="flex py-3 px-2 items-center">
                 <p className="text-2xl text-green-500 font-semibold">BSSI</p>
-                <p className="ml-2 font-semibold italic text-white">App</p>
             </div>
         </div>
         <div className="flex justify-center mt-4">
