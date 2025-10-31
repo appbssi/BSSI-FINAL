@@ -41,7 +41,7 @@ const OBSERVER_PASS = 'admin';
 const SECRETARIAT_PASS = 'bssiB';
 
 
-export default function LoginPage() {
+export default function LoginPage(props: any) {
   const { toast } = useToast();
   const auth = useAuth();
   const router = useRouter();
@@ -117,7 +117,7 @@ export default function LoginPage() {
           priority
         />
       )}
-      <div className="absolute inset-0 bg-black/95" />
+      <div className="absolute inset-0 bg-black/92" />
       <Card className={cn(
           "z-10 w-full max-w-sm relative bg-background/80 backdrop-blur-sm",
           hasError ? "neon-error-box" : "neon-orange-box"
