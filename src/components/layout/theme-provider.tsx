@@ -3,19 +3,8 @@
 
 import { useEffect, useState } from 'react';
 
+// This component is kept for potential future use (e.g., re-introducing themes)
+// but currently it just renders its children as the theme is hardcoded to light.
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-    // Force le thème clair en retirant la classe 'dark'
-    document.documentElement.classList.remove('dark');
-  }, []);
-
-  if (!isMounted) {
-    // Évite les problèmes d'hydratation en ne rendant rien côté serveur
-    return null;
-  }
-
   return <>{children}</>;
 }
