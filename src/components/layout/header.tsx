@@ -10,7 +10,7 @@ export function Header() {
   const { role } = useRole();
   const displayRole = useMemo(() => {
     if (!role) return '';
-    if (role === 'admin') return 'Lieutenant';
+    if (role === 'admin') return 'Admin';
     return role.charAt(0).toUpperCase() + role.slice(1);
   }, [role]);
 
