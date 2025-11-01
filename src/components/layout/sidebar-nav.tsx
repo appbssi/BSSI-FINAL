@@ -78,28 +78,12 @@ export function SidebarNav() {
       )}
       <div className={cn("relative z-10 flex flex-col h-full", logo ? "" : "")}>
         <SidebarHeader>
-          <div className="flex p-2 bg-sidebar-accent/50 backdrop-blur-sm">
+          <div className="flex w-full justify-center p-2 bg-sidebar-accent/50 backdrop-blur-sm">
               <div className="flex w-full justify-center py-3 px-2 items-center">
-                   <p className="text-3xl font-semibold">
+                   <p className="text-3xl font-semibold text-center">
                       <span className="text-primary">s</span>
                       <span className="text-sidebar-foreground">BSSI</span>
                   </p>
-              </div>
-          </div>
-          <div className="flex justify-center mt-4">
-              <div className="text-center">
-                  {isLogoLoading ? (
-                      <Loader2 className="h-24 w-24 animate-spin text-primary" />
-                  ) : (
-                      <Image 
-                          className="hidden h-24 w-24 rounded-full sm:block object-cover mr-2 border-4 border-primary"
-                          src={logo || "https://image.flaticon.com/icons/png/512/149/149071.png"} 
-                          alt="User Avatar"
-                          width={96}
-                          height={96}
-                      />
-                  )}
-                  <p className="font-bold text-base text-sidebar-foreground pt-2 text-center w-24 drop-shadow-md">{userName}</p>
               </div>
           </div>
         </SidebarHeader>
