@@ -117,8 +117,8 @@ export default function LoginPage() {
   
   return (
     <div className="relative h-screen w-full overflow-hidden">
-       {logo && <Image src={logo} alt="Background" fill className="object-cover opacity-98" priority />}
-       <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" />
+       {logo && <Image src={logo} alt="Background" fill className="object-cover opacity-[.99]" priority />}
+       <div className="absolute inset-0 bg-white/10 backdrop-blur-sm" />
       <div className="relative z-10 flex min-h-screen w-full items-center justify-center p-4">
         <Card className={cn("w-full max-w-sm bg-background/90 backdrop-blur-sm", hasError ? "neon-error-box" : "soft-shadow")}>
             <CardHeader className="text-center">
