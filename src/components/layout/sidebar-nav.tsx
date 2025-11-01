@@ -83,9 +83,9 @@ export function SidebarNav() {
                    {isLogoLoading ? (
                         <Loader2 className="h-8 w-8 animate-spin" />
                     ) : logo ? (
-                        <Image src={logo} alt="Logo" width={32} height={32} className="rounded-full" />
+                        <Image src={logo} alt="Logo" width={40} height={40} className="rounded-full" />
                     ) : null}
-                   <p className="text-3xl font-semibold text-center">
+                   <p className="text-4xl font-semibold text-center">
                       <span className="text-primary">s</span>
                       <span className="text-sidebar-foreground">BSSI</span>
                   </p>
