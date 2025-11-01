@@ -8,8 +8,9 @@ import { useMemo } from 'react';
 
 export function Header() {
   const { role } = useRole();
-  const capitalizedRole = useMemo(() => {
+  const displayRole = useMemo(() => {
     if (!role) return '';
+    if (role === 'admin') return 'Lieutenant';
     return role.charAt(0).toUpperCase() + role.slice(1);
   }, [role]);
 
@@ -26,8 +27,8 @@ export function Header() {
         </div>
 
       <div className="flex items-center gap-4">
-        {capitalizedRole && (
-            <span className="text-sm font-semibold text-foreground">{capitalizedRole}</span>
+        {displayRole && (
+            <span className="text-sm font-semibold text-foreground">{displayRole}</span>
         )}
         <RecentActivitiesDialog />
         <UserNav />
