@@ -79,8 +79,8 @@ export function SidebarNav() {
       <div className={cn("relative z-10 flex flex-col h-full", logo ? "" : "")}>
         <SidebarHeader>
           <div className="flex p-2 bg-sidebar-accent/50 backdrop-blur-sm">
-              <div className="flex py-3 px-2 items-center">
-                   <p className="text-2xl font-semibold">
+              <div className="flex w-full justify-center py-3 px-2 items-center">
+                   <p className="text-3xl font-semibold">
                       <span className="text-primary">s</span>
                       <span className="text-sidebar-foreground">BSSI</span>
                   </p>
