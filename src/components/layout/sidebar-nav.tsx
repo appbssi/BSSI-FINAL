@@ -79,7 +79,12 @@ export function SidebarNav() {
       <div className={cn("relative z-10 flex flex-col h-full", logo ? "" : "")}>
         <SidebarHeader>
           <div className="flex w-full justify-center p-2 bg-sidebar-accent/50 backdrop-blur-sm">
-              <div className="flex w-full justify-center py-3 px-2 items-center">
+              <div className="flex w-full justify-center py-3 px-2 items-center gap-2">
+                   {isLogoLoading ? (
+                        <Loader2 className="h-8 w-8 animate-spin" />
+                    ) : logo ? (
+                        <Image src={logo} alt="Logo" width={32} height={32} className="rounded-full" />
+                    ) : null}
                    <p className="text-3xl font-semibold text-center">
                       <span className="text-primary">s</span>
                       <span className="text-sidebar-foreground">BSSI</span>
