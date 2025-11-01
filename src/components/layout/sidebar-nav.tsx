@@ -81,11 +81,11 @@ export function SidebarNav() {
           <div className="flex w-full justify-center p-2 bg-sidebar-accent/50 backdrop-blur-sm">
               <div className="flex w-full justify-center py-3 px-2 items-center gap-2">
                    {isLogoLoading ? (
-                        <Loader2 className="h-14 w-14 animate-spin" />
+                        <Loader2 className="h-12 w-12 animate-spin" />
                     ) : logo ? (
-                        <Image src={logo} alt="Logo" width={56} height={56} className="rounded-full" />
+                        <Image src={logo} alt="Logo" width={48} height={48} className="rounded-full" />
                     ) : null}
-                   <p className="text-5xl font-semibold text-center">
+                   <p className="text-4xl font-semibold text-center">
                       <span className="text-primary">s</span>
                       <span className="text-sidebar-foreground">BSSI</span>
                   </p>
