@@ -120,7 +120,7 @@ export default function LoginPage() {
        {logo && <Image src={logo} alt="Background" fill className="object-cover opacity-15" priority />}
        <div className="absolute inset-0 bg-white/10 backdrop-blur-sm" />
       <div className="relative z-10 flex min-h-screen w-full items-center justify-center p-4">
-        <Card className={cn("w-full max-w-sm bg-background/95 backdrop-blur-sm shadow-2xl", hasError ? "neon-error-box" : "")}>
+        <Card className={cn("w-full max-w-sm bg-background/95 backdrop-blur-sm shadow-2xl border-2 border-[#556B2F]", hasError ? "neon-error-box" : "")}>
             <CardHeader className="text-center">
                 <Link href="/" passHref>
                     <Button variant="ghost" size="icon" className="absolute top-4 left-4 text-card-foreground hover:bg-black/10">
