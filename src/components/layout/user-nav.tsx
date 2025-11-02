@@ -25,7 +25,7 @@ export function UserNav() {
   const handleLogout = async () => {
     await signOut(auth);
     clearRole();
-    router.push('/login');
+    router.push('/');
   };
   
   const capitalizedRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : '';

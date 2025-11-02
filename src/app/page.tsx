@@ -2,13 +2,32 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useToast } from '@/hooks/use-toast';
+import { signInAnonymously } from 'firebase/auth';
+import { useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLogo } from '@/context/logo-context';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
 import { useIsMounted } from '@/hooks/use-is-mounted';
+import { setRole } from '@/hooks/use-role';
+import { FirebaseError } from 'firebase/app';
+
 
 const images = [
   'https://i.imgur.com/kPlJEwW.jpeg',
@@ -18,12 +37,32 @@ const images = [
   'https://i.imgur.com/p0CP2p6.jpeg',
 ];
 
+const loginSchema = z.object({
+  email: z.string().min(1, 'Veuillez saisir votre login.'),
+  password: z.string().min(1, 'Le mot de passe est requis.'),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+
+const ADMIN_LOGIN = 'bssi';
+const ADMIN_PASS = 'bssiA';
+const OBSERVER_PASS = 'admin';
+const SECRETARIAT_PASS = 'bssiB';
+
+
 export default function LandingPage() {
   const [currentImage, setCurrentImage] = useState(0);
-  const router = useRouter();
+  const [showLogin, setShowLogin] = useState(false);
   const { logo, isLogoLoading } = useLogo();
   const { isUserLoading } = useUser();
   const isMounted = useIsMounted();
+  const { toast } = useToast();
+  const auth = useAuth();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -34,9 +73,58 @@ export default function LandingPage() {
   }, []);
 
   const handleEnterClick = () => {
-    router.push('/login');
+    setShowLogin(true);
   };
   
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+  });
+
+  const onSubmit = async (data: LoginFormValues) => {
+    setIsLoading(true);
+    setHasError(false);
+    try {
+      const { email: login, password } = data;
+      let userRole: 'admin' | 'observer' | 'secretariat' | null = null;
+
+      if (login.toLowerCase() === ADMIN_LOGIN) {
+        if (password === ADMIN_PASS) userRole = 'admin';
+        else if (password === OBSERVER_PASS) userRole = 'observer';
+        else if (password === SECRETARIAT_PASS) userRole = 'secretariat';
+      }
+
+      if (userRole) {
+        setRole(userRole);
+        await signInAnonymously(auth);
+        router.push('/dashboard');
+      } else {
+         setHasError(true);
+         toast({
+            variant: 'destructive',
+            title: 'Erreur de connexion',
+            description: "Les identifiants fournis sont invalides.",
+        });
+      }
+    } catch (error) {
+      setHasError(true);
+      console.error('Login Error:', error);
+      const description = error instanceof FirebaseError 
+        ? "Impossible de se connecter au service. Veuillez réessayer." 
+        : "Une erreur inconnue est survenue.";
+      toast({ variant: 'destructive', title: 'Erreur de connexion', description });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: any, value: string) => {
+    if (hasError) {
+      setHasError(false);
+    }
+    field.onChange(value);
+  }
+
   if (!isMounted || isUserLoading || isLogoLoading) {
     return (
        <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
@@ -61,28 +149,102 @@ export default function LandingPage() {
         />
       ))}
       <div className="absolute inset-0 bg-black/60" />
+
       <div className="relative z-10 flex h-full flex-col items-center justify-center text-center text-white">
-        <div className="mx-auto mb-6 h-28 w-28 flex items-center justify-center">
-            <div className="relative h-24 w-24">
-                {isLogoLoading ? (
-                    <Loader2 className="h-full w-full animate-spin text-primary" />
-                ) : logo ? (
-                    <Image src={logo} alt="Logo" fill className="rounded-full object-cover" />
-                ) : null}
+        
+        <div className={cn("transition-all duration-500", showLogin ? 'opacity-0 scale-95' : 'opacity-100 scale-100')}>
+            <div className="mx-auto mb-6 h-28 w-28 flex items-center justify-center">
+                <div className="relative h-24 w-24">
+                    {isLogoLoading ? (
+                        <Loader2 className="h-full w-full animate-spin text-primary" />
+                    ) : logo ? (
+                        <Image src={logo} alt="Logo" fill className="rounded-full object-cover" />
+                    ) : null}
+                </div>
             </div>
+            <h1 className="text-5xl font-bold tracking-tight text-shadow-lg sm:text-6xl md:text-7xl" style={{fontFamily: 'Montserrat, sans-serif', textShadow: '2px 2px 8px rgba(0,0,0,0.7)'}}>
+                sBSSI
+            </h1>
+            <p className="mt-4 max-w-2xl text-lg text-primary-foreground/80" style={{textShadow: '1px 1px 4px rgba(0,0,0,0.5)'}}>
+                Système de Brigade Spéciale de Surveillance et d'Intervention
+            </p>
+            <Button 
+                className="mt-10 px-8 py-6 text-lg font-semibold"
+                onClick={handleEnterClick}
+            >
+            Entrer
+            </Button>
         </div>
-        <h1 className="text-5xl font-bold tracking-tight text-shadow-lg sm:text-6xl md:text-7xl" style={{fontFamily: 'Montserrat, sans-serif', textShadow: '2px 2px 8px rgba(0,0,0,0.7)'}}>
-            sBSSI
-        </h1>
-        <p className="mt-4 max-w-2xl text-lg text-primary-foreground/80" style={{textShadow: '1px 1px 4px rgba(0,0,0,0.5)'}}>
-            Système de Brigade Spéciale de Surveillance et d'Intervention
-        </p>
-        <Button 
-            className="mt-10 px-8 py-6 text-lg font-semibold"
-            onClick={handleEnterClick}
-        >
-          Entrer
-        </Button>
+
+        {showLogin && (
+            <div className="w-full max-w-sm animate-fade-in-up">
+                <Card className={cn("text-left text-card-foreground w-full max-w-sm bg-background/95 backdrop-blur-sm shadow-2xl border-2 border-[#556B2F]", hasError ? "neon-error-box" : "")}>
+                    <CardHeader className="text-center">
+                        <div className="mx-auto mb-4 h-24 w-24 flex items-center justify-center">
+                            <div className="relative h-20 w-20">
+                                {isLogoLoading ? (
+                                <Loader2 className="h-full w-full animate-spin text-primary" />
+                                ) : logo ? (
+                                <Image src={logo} alt="Logo" fill className="rounded-full object-cover" />
+                                ) : null}
+                            </div>
+                        </div>
+                        <CardTitle>sBSSI</CardTitle>
+                        <CardDescription>Connectez-vous pour accéder à votre tableau de bord</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Login</FormLabel>
+                                <FormControl>
+                                <Input 
+                                    type="text" 
+                                    {...field}
+                                    onChange={(e) => handleInputChange(field, e.target.value)}
+                                />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="password"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Mot de passe</FormLabel>
+                                <div className="relative">
+                                <FormControl>
+                                <Input 
+                                    type={showPassword ? 'text' : 'password'} 
+                                    {...field} 
+                                    className="pr-10" 
+                                    onChange={(e) => handleInputChange(field, e.target.value)}
+                                />
+                                </FormControl>
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
+                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Se connecter
+                        </Button>
+                        </form>
+                    </Form>
+                    </CardContent>
+                </Card>
+            </div>
+        )}
       </div>
     </div>
   );

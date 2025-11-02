@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import React, { useEffect } from 'react';
 
-const publicPaths = ['/login', '/'];
+const publicPaths = ['/'];
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -27,9 +27,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     } 
     // If the user is not logged in...
     else {
-      // and they are trying to access a protected page, redirect them to the login page.
+      // and they are trying to access a protected page, redirect them to the landing page.
       if (!isPublicPath) {
-        router.push('/login');
+        router.push('/');
       }
     }
 
