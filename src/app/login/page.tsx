@@ -180,6 +180,7 @@ export default function LoginPage() {
                                 type="text" 
                                 {...field}
                                 onChange={(e) => handleInputChange(field, e.target.value)}
+                                className="rounded-full"
                             />
                             </FormControl>
                             <FormMessage />
@@ -197,7 +198,7 @@ export default function LoginPage() {
                             <Input 
                                 type={showPassword ? 'text' : 'password'} 
                                 {...field} 
-                                className="pr-10" 
+                                className="pr-10 rounded-full" 
                                 onChange={(e) => handleInputChange(field, e.target.value)}
                             />
                             </FormControl>
@@ -209,7 +210,7 @@ export default function LoginPage() {
                         </FormItem>
                         )}
                     />
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    <Button type="submit" className="w-full rounded-full" disabled={isLoading}>
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Se connecter
                     </Button>
