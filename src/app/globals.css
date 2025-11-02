@@ -33,7 +33,6 @@ body {
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 24.6 95% 53.1%;
-    --radius: 0.5rem;
     --chart-1: 142.1 76.2% 36.3%;
     --chart-2: 221.2 83.2% 53.3%;
     --chart-3: 0 84.2% 60.2%;
@@ -120,10 +119,12 @@ body {
       box-shadow: 0 0 5px hsl(var(--error-color)),
                   0 0 10px hsl(var(--error-color)),
                   0 0 15px hsl(var(--error-color));
+      border-color: hsl(var(--error-color) / 0.8);
     }
     50% {
       box-shadow: 0 0 2px hsl(var(--error-color)),
                   0 0 5px hsl(var(--error-color));
+      border-color: hsl(var(--error-color) / 0.4);
     }
   }
 
