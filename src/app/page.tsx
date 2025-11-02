@@ -78,7 +78,7 @@ export default function LandingPage() {
             Système de Brigade Spéciale de Surveillance et d'Intervention
         </p>
         <Button 
-            className="mt-10 px-8 py-6 text-lg font-semibold border-2 border-[#556B2F]"
+            className="mt-10 px-8 py-6 text-lg font-semibold border-2 border-[#556B2F] blinking-border"
             onClick={handleEnterClick}
         >
           Entrer
