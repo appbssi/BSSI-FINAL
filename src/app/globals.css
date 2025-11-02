@@ -105,10 +105,6 @@ body {
     animation: rotate 1.2s linear infinite alternate-reverse;
   }
 
-  .blinking-border {
-    animation: blink-border-animation 1000ms infinite ease-in-out;
-  }
-
   @keyframes rotate {
     100% { transform: rotate(360deg)}
   }
@@ -122,17 +118,6 @@ body {
     50% {
       box-shadow: 0 0 2px hsl(var(--error-color)),
                   0 0 5px hsl(var(--error-color));
-    }
-  }
-
-  @keyframes blink-border-animation {
-    0%, 100% {
-      border-color: #556B2F;
-      box-shadow: 0 0 3px #556B2F, 0 0 5px #556B2F;
-    }
-    50% {
-      border-color: rgba(85, 107, 47, 0.5);
-      box-shadow: none;
     }
   }
 }
