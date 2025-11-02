@@ -107,7 +107,7 @@ export default function DashboardPage() {
         <h2 className="mr-5 text-lg font-medium truncate">Tableau de bord</h2>
       </div>
       <div className="grid grid-cols-12 gap-6 mt-5">
-        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white text-black">
+        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white text-black rounded-2xl">
           <CardContent className="p-5">
             <div className="flex justify-between">
               <Users className="h-7 w-7 text-blue-400" />
@@ -120,7 +120,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white text-black">
+        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white text-black rounded-2xl">
           <CardContent className="p-5">
             <div className="flex justify-between">
               <Shield className="h-7 w-7 text-yellow-400" />
@@ -133,7 +133,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white text-black">
+        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white text-black rounded-2xl">
           <CardContent className="p-5">
             <div className="flex justify-between">
               <UserCheck className="h-7 w-7 text-pink-600" />
@@ -146,7 +146,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white text-black">
+        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white text-black rounded-2xl">
           <CardContent className="p-5">
             <div className="flex justify-between">
               <CheckCircle className="h-7 w-7 text-green-400" />
@@ -159,7 +159,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-         <Card className="col-span-12 bg-white text-black">
+         <Card className="col-span-12 bg-white text-black rounded-2xl">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Newspaper className="h-5 w-5" />
