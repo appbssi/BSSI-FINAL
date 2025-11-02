@@ -82,7 +82,7 @@ export default function LandingPage() {
                 Système de Brigade Spéciale de Surveillance et d'Intervention
             </p>
             <Button 
-                className="mt-10 px-8 py-6 text-lg font-semibold floating-card rounded-xl"
+                className="mt-10 px-8 py-6 text-lg font-semibold rounded-xl"
                 onClick={handleEnterClick}
             >
             Entrer

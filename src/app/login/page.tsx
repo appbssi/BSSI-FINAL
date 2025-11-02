@@ -151,7 +151,7 @@ export default function LoginPage() {
             >
                 <Home />
             </Button>
-            <Card className={cn("text-left text-card-foreground w-full max-w-sm bg-background/95 backdrop-blur-sm shadow-2xl border-2 border-[#556B2F] rounded-xl floating-card", hasError && "neon-error-box")}>
+            <Card className={cn("text-left text-card-foreground w-full max-w-sm bg-background/95 backdrop-blur-sm shadow-2xl border-2 border-[#556B2F] rounded-xl", hasError && "neon-error-box")}>
                 <CardHeader className="text-center">
                     <div className="mx-auto mb-4 h-24 w-24 flex items-center justify-center">
                         <div className="relative h-20 w-20">
