@@ -70,10 +70,8 @@ body {
   }
   .neon-error-box {
     --error-color: 0 72% 51%; /* rouge foncé */
-    box-shadow: 0 0 5px hsl(var(--error-color)), 
-                0 0 10px hsl(var(--error-color)),
-                0 0 15px hsl(var(--error-color));
     border-color: hsl(var(--error-color) / 0.8);
+    animation: blink-error 1.2s infinite ease-in-out;
   }
   .neon-orange-input:focus-visible {
     box-shadow: 0 0 5px hsl(var(--primary)), 
@@ -109,5 +107,17 @@ body {
 
   @keyframes rotate {
     100% { transform: rotate(360deg)}
+  }
+
+  @keyframes blink-error {
+    0%, 100% {
+      box-shadow: 0 0 5px hsl(var(--error-color)),
+                  0 0 10px hsl(var(--error-color)),
+                  0 0 15px hsl(var(--error-color));
+    }
+    50% {
+      box-shadow: 0 0 2px hsl(var(--error-color)),
+                  0 0 5px hsl(var(--error-color));
+    }
   }
 }
