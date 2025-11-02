@@ -34,7 +34,7 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsP
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="rounded-2xl">
         <DialogHeader>
           <DialogTitle>Détails de l'agent</DialogTitle>
           <DialogDescription>
