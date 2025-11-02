@@ -114,6 +114,13 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  const handleInputChange = (field: any, value: string) => {
+    if (hasError) {
+      setHasError(false);
+    }
+    field.onChange(value);
+  }
   
   return (
     <div className="relative h-screen w-full overflow-hidden">
@@ -148,7 +155,13 @@ export default function LoginPage() {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Login</FormLabel>
-                        <FormControl><Input type="text" {...field} /></FormControl>
+                        <FormControl>
+                          <Input 
+                            type="text" 
+                            {...field}
+                            onChange={(e) => handleInputChange(field, e.target.value)}
+                          />
+                        </FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -160,7 +173,14 @@ export default function LoginPage() {
                     <FormItem>
                         <FormLabel>Mot de passe</FormLabel>
                         <div className="relative">
-                        <FormControl><Input type={showPassword ? 'text' : 'password'} {...field} className="pr-10" /></FormControl>
+                        <FormControl>
+                          <Input 
+                            type={showPassword ? 'text' : 'password'} 
+                            {...field} 
+                            className="pr-10" 
+                            onChange={(e) => handleInputChange(field, e.target.value)}
+                          />
+                        </FormControl>
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
                             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                         </button>
