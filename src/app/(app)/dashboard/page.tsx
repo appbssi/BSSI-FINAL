@@ -107,7 +107,7 @@ export default function DashboardPage() {
         <h2 className="mr-5 text-lg font-medium truncate">Tableau de bord</h2>
       </div>
       <div className="grid grid-cols-12 gap-6 mt-5">
-        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white text-black rounded-2xl">
+        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-[#556B2F] text-white rounded-2xl">
           <CardContent className="p-5">
             <div className="flex justify-between">
               <Users className="h-7 w-7 text-blue-400" />
@@ -115,12 +115,12 @@ export default function DashboardPage() {
             <div className="ml-2 w-full flex-1">
               <div>
                 <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : totalAgents}</div>
-                <div className="mt-1 text-base text-gray-600">Agents au Total</div>
+                <div className="mt-1 text-base text-gray-200">Agents au Total</div>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white text-black rounded-2xl">
+        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-[#556B2F] text-white rounded-2xl">
           <CardContent className="p-5">
             <div className="flex justify-between">
               <Shield className="h-7 w-7 text-yellow-400" />
@@ -128,12 +128,12 @@ export default function DashboardPage() {
             <div className="ml-2 w-full flex-1">
               <div>
                 <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : agentsOnMission}</div>
-                <div className="mt-1 text-base text-gray-600">Agents en Mission</div>
+                <div className="mt-1 text-base text-gray-200">Agents en Mission</div>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white text-black rounded-2xl">
+        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-[#556B2F] text-white rounded-2xl">
           <CardContent className="p-5">
             <div className="flex justify-between">
               <UserCheck className="h-7 w-7 text-pink-600" />
@@ -141,12 +141,12 @@ export default function DashboardPage() {
             <div className="ml-2 w-full flex-1">
               <div>
                 <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : availableAgents}</div>
-                <div className="mt-1 text-base text-gray-600">Agents Disponibles</div>
+                <div className="mt-1 text-base text-gray-200">Agents Disponibles</div>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white text-black rounded-2xl">
+        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-[#556B2F] text-white rounded-2xl">
           <CardContent className="p-5">
             <div className="flex justify-between">
               <CheckCircle className="h-7 w-7 text-green-400" />
@@ -154,12 +154,12 @@ export default function DashboardPage() {
             <div className="ml-2 w-full flex-1">
               <div>
                 <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : completedMissions}</div>
-                <div className="mt-1 text-base text-gray-600">Missions Terminées</div>
+                <div className="mt-1 text-base text-gray-200">Missions Terminées</div>
               </div>
             </div>
           </CardContent>
         </Card>
-         <Card className="col-span-12 bg-white text-black rounded-2xl">
+         <Card className="col-span-12 bg-[#556B2F] text-white rounded-2xl">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Newspaper className="h-5 w-5" />
@@ -179,21 +179,21 @@ export default function DashboardPage() {
                                     <DialogTrigger asChild key={mission.id} onClick={() => setSelectedMission(mission)}>
                                         <div className="p-4 rounded-lg border bg-background/50 cursor-pointer hover:bg-accent transition-colors">
                                             <div className="flex justify-between items-start">
-                                                <h4 className="font-semibold">{mission.name}</h4>
+                                                <h4 className="font-semibold text-black">{mission.name}</h4>
                                                 <Badge variant={getBadgeVariant(mission.displayStatus)}>{mission.displayStatus}</Badge>
                                             </div>
                                             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-muted-foreground mt-2">
                                                 <div className="flex items-center gap-2">
                                                     <MapPin className="h-4 w-4" />
-                                                    <span>{mission.location}</span>
+                                                    <span className='text-black'>{mission.location}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Users className="h-4 w-4" />
-                                                    <span>{mission.assignedAgentIds.length} agent(s)</span>
+                                                    <span className='text-black'>{mission.assignedAgentIds.length} agent(s)</span>
                                                 </div>
                                                 <div className="flex items-center gap-2 col-span-2">
                                                     <Calendar className="h-4 w-4" />
-                                                    <span>
+                                                    <span className='text-black'>
                                                         {mission.startDate.toDate().toLocaleDateString('fr-FR')} - {mission.endDate.toDate().toLocaleDateString('fr-FR')}
                                                     </span>
                                                 </div>
@@ -213,7 +213,7 @@ export default function DashboardPage() {
                         </div>
                     </ScrollArea>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center h-40 text-center text-gray-200">
                         <Newspaper className="h-10 w-10 mb-2" />
                         <p>Aucune mission en cours pour le moment.</p>
                     </div>
