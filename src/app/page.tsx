@@ -65,7 +65,7 @@ export default function LandingPage() {
 
       <div className="relative z-10 flex h-full flex-col items-center justify-center text-center text-white p-4">
         
-        <div className="transition-all duration-500 opacity-100 scale-100 floating-card">
+        <div className="transition-all duration-500 opacity-100 scale-100">
             <div className="mx-auto mb-6 h-28 w-28 flex items-center justify-center">
                 <div className="relative h-24 w-24">
                     {isLogoLoading ? (
@@ -82,7 +82,7 @@ export default function LandingPage() {
                 Système de Brigade Spéciale de Surveillance et d'Intervention
             </p>
             <Button 
-                className="mt-10 px-8 py-6 text-lg font-semibold"
+                className="mt-10 px-8 py-6 text-lg font-semibold floating-card rounded-xl"
                 onClick={handleEnterClick}
             >
             Entrer
