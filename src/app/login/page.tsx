@@ -163,7 +163,7 @@ export default function LoginPage() {
                             ) : null}
                         </div>
                     </div>
-                    <CardTitle>sBSSI</CardTitle>
+                    <CardTitle><span className="text-destructive">s</span>BSSI</CardTitle>
                     <CardDescription>Connectez-vous pour accéder à votre tableau de bord</CardDescription>
                 </CardHeader>
                 <CardContent>
