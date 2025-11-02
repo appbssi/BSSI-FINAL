@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -88,9 +87,9 @@ export default function LoginPage() {
       }
 
       if (userRole) {
-        setRole(userRole);
         await signInAnonymously(auth);
-        router.push('/dashboard');
+        setRole(userRole);
+        // The AuthGuard will handle the redirection
       } else {
          setHasError(true);
          toast({
