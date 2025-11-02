@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -40,6 +40,13 @@ const ADMIN_PASS = 'bssiA';
 const OBSERVER_PASS = 'admin';
 const SECRETARIAT_PASS = 'bssiB';
 
+const images = [
+  'https://i.imgur.com/kPlJEwW.jpeg',
+  'https://i.imgur.com/VidHWmL.jpeg',
+  'https://i.imgur.com/aEXY1F2.jpeg',
+  'https://i.imgur.com/ZnJVbg4.jpeg',
+  'https://i.imgur.com/p0CP2p6.jpeg',
+];
 
 export default function LoginPage() {
   const { logo, isLogoLoading } = useLogo();
@@ -51,6 +58,15 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [currentImage, setCurrentImage] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImage((prevImage) => (prevImage + 1) % images.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -111,13 +127,19 @@ export default function LoginPage() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden flex items-center justify-center">
-      <Image
-        src="https://i.imgur.com/kPlJEwW.jpeg"
-        alt="Military background"
-        fill
-        className="object-cover"
-        priority
-      />
+      {images.map((src, index) => (
+        <Image
+          key={src}
+          src={src}
+          alt="Military background"
+          fill
+          className={cn(
+            'object-cover transition-opacity duration-1000',
+            index === currentImage ? 'opacity-100' : 'opacity-0'
+          )}
+          priority
+        />
+      ))}
       <div className="absolute inset-0 bg-black/60" />
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center p-4">
         <div className="w-full max-w-sm animate-fade-in-up">
