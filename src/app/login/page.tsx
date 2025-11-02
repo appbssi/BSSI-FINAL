@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,7 +22,7 @@ import {
 } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLogo } from '@/context/logo-context';
-import { Loader2, Eye, EyeOff, Home } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
 import { useIsMounted } from '@/hooks/use-is-mounted';
@@ -143,14 +144,6 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-black/60" />
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center p-4">
         <div className="w-full max-w-sm animate-fade-in-up">
-            <Button
-                variant="outline"
-                size="icon"
-                className="absolute top-4 left-4 bg-background/50 text-foreground/80 hover:bg-background/70"
-                onClick={() => router.push('/')}
-            >
-                <Home />
-            </Button>
             <Card className={cn("dark text-left text-card-foreground w-full max-w-sm bg-background/80 backdrop-blur-sm shadow-2xl border-2 border-[#556B2F] rounded-xl floating-card", hasError && "neon-error-box")}>
                 <CardHeader className="text-center">
                     <div className="mx-auto mb-4 h-24 w-24 flex items-center justify-center">
