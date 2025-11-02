@@ -76,7 +76,7 @@ export default function LandingPage() {
                 </div>
             </div>
             <h1 className="text-5xl font-bold tracking-tight text-shadow-lg sm:text-6xl md:text-7xl" style={{fontFamily: 'Montserrat, sans-serif', textShadow: '2px 2px 8px rgba(0,0,0,0.7)'}}>
-                sBSSI
+                <span className="text-destructive">s</span>BSSI
             </h1>
             <p className="mt-4 max-w-2xl text-lg text-primary-foreground/80" style={{textShadow: '1px 1px 4px rgba(0,0,0,0.5)'}}>
                 Système de Brigade Spéciale de Surveillance et d'Intervention
