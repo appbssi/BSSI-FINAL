@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -48,6 +47,13 @@ const images = [
   'https://i.imgur.com/ZnJVbg4.jpeg',
   'https://i.imgur.com/p0CP2p6.jpeg',
 ];
+
+const CrocodileIcon = () => (
+  <svg viewBox="0 0 100 50" className="crocodile-icon" fill="hsl(var(--primary))">
+    <path d="M99,25 C99,10 80,5 60,15 L60,10 C60,5 55,5 55,10 L50,10 C45,5 40,5 40,10 L40,15 C20,5 1,10 1,25 C1,40 20,45 40,35 L40,40 C40,45 45,45 50,40 L55,40 C55,45 60,45 60,40 L60,35 C80,45 99,40 99,25 Z M20,25 A5,5 0 1,1 10,25 A5,5 0 0,1 20,25z M80,25 A5,5 0 1,1 70,25 A5,5 0 0,1 80,25z"/>
+  </svg>
+);
+
 
 export default function LoginPage() {
   const { logo, isLogoLoading } = useLogo();
@@ -143,6 +149,9 @@ export default function LoginPage() {
       ))}
       <div className="absolute inset-0 bg-black/60" />
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center p-4">
+        <div className="crocodile-orbit-container">
+            <CrocodileIcon />
+        </div>
         <div className="w-full max-w-sm animate-fade-in-up">
             <Card className={cn("dark text-left text-card-foreground w-full max-w-sm bg-background/80 backdrop-blur-md shadow-2xl border-2 border-[#556B2F] rounded-xl floating-card", hasError && "neon-error-box")}>
                 <CardHeader className="text-center">
