@@ -106,7 +106,7 @@ body {
   }
 
   .blinking-border {
-    animation: blink-border-animation 1.5s infinite ease-in-out;
+    animation: blink-border-animation 500ms infinite ease-in-out;
   }
 
   @keyframes rotate {
