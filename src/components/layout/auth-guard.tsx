@@ -19,23 +19,18 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     const isPublicPath = publicPaths.includes(pathname);
 
-    // If user is logged in but on the public landing/login page,
-    // log them out to force re-authentication.
     if (user && isPublicPath) {
-      signOut(auth);
-      // The onAuthStateChanged listener will handle the user state change
-      // and keep them on the login page.
-      return; 
+       router.push('/dashboard');
     }
 
-    // If user is not logged in and not on a public path, redirect to login.
     if (!user && !isPublicPath) {
       router.push('/');
     }
   }, [user, isUserLoading, router, pathname, auth]);
 
   // Show loader during auth check or when redirecting.
-  const showLoader = isUserLoading || (!user && !publicPaths.includes(pathname));
+  const isPublicPath = publicPaths.includes(pathname);
+  const showLoader = isUserLoading || (user && isPublicPath) || (!user && !isPublicPath);
 
   if (showLoader) {
     return (
