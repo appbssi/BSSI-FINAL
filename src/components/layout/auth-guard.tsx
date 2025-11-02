@@ -1,44 +1,41 @@
 'use client';
 
-import { useUser } from '@/firebase';
+import { useUser, useAuth } from '@/firebase';
 import { Loader2 } from 'lucide-react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import React, { useEffect } from 'react';
+import { signOut } from 'firebase/auth';
 
 const publicPaths = ['/'];
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (isUserLoading) return;
 
     const isPublicPath = publicPaths.includes(pathname);
 
-    // If the user is logged in...
-    if (user) {
-      // and they are on a public page (like login or landing), redirect them to the dashboard.
-      if (isPublicPath) {
-        router.push('/dashboard');
-      }
-    } 
-    // If the user is not logged in...
-    else {
-      // and they are trying to access a protected page, redirect them to the landing page.
-      if (!isPublicPath) {
-        router.push('/');
-      }
+    // If user is logged in but on the public landing/login page,
+    // log them out to force re-authentication.
+    if (user && isPublicPath) {
+      signOut(auth);
+      // The onAuthStateChanged listener will handle the user state change
+      // and keep them on the login page.
+      return; 
     }
 
-  }, [user, isUserLoading, router, pathname]);
+    // If user is not logged in and not on a public path, redirect to login.
+    if (!user && !isPublicPath) {
+      router.push('/');
+    }
+  }, [user, isUserLoading, router, pathname, auth]);
 
-  // Determine if the loader should be shown
-  const showLoader = isUserLoading || 
-    (!user && !publicPaths.includes(pathname)) || 
-    (user && publicPaths.includes(pathname));
+  // Show loader during auth check or when redirecting.
+  const showLoader = isUserLoading || (!user && !publicPaths.includes(pathname));
 
   if (showLoader) {
     return (
