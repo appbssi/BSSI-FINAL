@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import React, { useEffect } from 'react';
 import { signOut } from 'firebase/auth';
 
-const publicPaths = ['/'];
+const publicPaths = ['/', '/login'];
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
