@@ -268,8 +268,8 @@ export default function AgentsPage() {
         <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
       </div>
       
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-1 items-center gap-2">
+       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex-1 space-y-4 md:space-y-0">
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -279,14 +279,14 @@ export default function AgentsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-           <div className="flex items-center gap-2">
+           <div className="flex items-center gap-2 flex-wrap">
             <Button size="sm" variant={availabilityFilter === 'all' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('all')}>Tous</Button>
             <Button size="sm" variant={availabilityFilter === 'Disponible' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('Disponible')}>Disponibles</Button>
             <Button size="sm" variant={availabilityFilter === 'En mission' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En mission')}>En mission</Button>
             <Button size="sm" variant={availabilityFilter === 'En congé' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En congé')}>En congé</Button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
            <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
@@ -348,7 +348,7 @@ export default function AgentsPage() {
         </div>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

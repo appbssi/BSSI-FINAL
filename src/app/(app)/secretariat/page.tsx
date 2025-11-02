@@ -209,7 +209,7 @@ export default function SecretariatPage({ params, searchParams }: { params: {}, 
         <h1 className="text-3xl font-bold tracking-tight">Secrétariat - Registre des Visiteurs</h1>
       </div>
       
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -219,7 +219,7 @@ export default function SecretariatPage({ params, searchParams }: { params: {}, 
               onChange={(e) => setSearchQuery(e.target.value)}
             />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
            <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
@@ -236,7 +236,7 @@ export default function SecretariatPage({ params, searchParams }: { params: {}, 
              <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
                 <DialogTrigger asChild>
                     <Button>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer un visiteur
+                        <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
                     </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -253,7 +253,7 @@ export default function SecretariatPage({ params, searchParams }: { params: {}, 
         </div>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

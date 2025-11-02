@@ -106,8 +106,8 @@ export default function DashboardPage() {
       <div className="flex items-center h-10">
         <h2 className="mr-5 text-lg font-medium truncate">Tableau de bord</h2>
       </div>
-      <div className="grid grid-cols-12 gap-6 mt-5">
-        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y rounded-2xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-5">
+        <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
           <CardContent className="p-5">
             <div className="flex justify-between">
               <Users className="h-7 w-7 text-blue-400" />
@@ -120,7 +120,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y rounded-2xl">
+        <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
           <CardContent className="p-5">
             <div className="flex justify-between">
               <Shield className="h-7 w-7 text-yellow-400" />
@@ -133,7 +133,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y rounded-2xl">
+        <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
           <CardContent className="p-5">
             <div className="flex justify-between">
               <UserCheck className="h-7 w-7 text-pink-600" />
@@ -146,7 +146,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="transform hover:scale-105 transition duration-300 col-span-12 sm:col-span-6 xl:col-span-3 intro-y rounded-2xl">
+        <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
           <CardContent className="p-5">
             <div className="flex justify-between">
               <CheckCircle className="h-7 w-7 text-green-400" />
@@ -159,7 +159,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-         <Card className="col-span-12 rounded-2xl">
+         <Card className="col-span-1 sm:col-span-2 lg:col-span-4 rounded-2xl">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Newspaper className="h-5 w-5" />
@@ -182,7 +182,7 @@ export default function DashboardPage() {
                                                 <h4 className="font-semibold">{mission.name}</h4>
                                                 <Badge variant={getBadgeVariant(mission.displayStatus)}>{mission.displayStatus}</Badge>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-muted-foreground mt-2">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm text-muted-foreground mt-2">
                                                 <div className="flex items-center gap-2">
                                                     <MapPin className="h-4 w-4" />
                                                     <span>{mission.location}</span>
@@ -191,7 +191,7 @@ export default function DashboardPage() {
                                                     <Users className="h-4 w-4" />
                                                     <span>{mission.assignedAgentIds.length} agent(s)</span>
                                                 </div>
-                                                <div className="flex items-center gap-2 col-span-2">
+                                                <div className="flex items-center gap-2 col-span-1 sm:col-span-2">
                                                     <Calendar className="h-4 w-4" />
                                                     <span>
                                                         {mission.startDate.toDate().toLocaleDateString('fr-FR')} - {mission.endDate.toDate().toLocaleDateString('fr-FR')}
