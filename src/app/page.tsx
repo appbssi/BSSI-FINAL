@@ -150,7 +150,7 @@ export default function LandingPage() {
       ))}
       <div className="absolute inset-0 bg-black/60" />
 
-      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center text-center text-white p-4">
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-start pt-20 sm:pt-28 text-center text-white p-4">
         
         <div className={cn("transition-all duration-500", showLogin ? 'opacity-0 scale-95' : 'opacity-100 scale-100')}>
             <div className="mx-auto mb-6 h-28 w-28 flex items-center justify-center">
