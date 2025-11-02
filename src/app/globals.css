@@ -69,11 +69,11 @@ body {
     border-color: hsl(var(--primary) / 0.5);
   }
   .neon-error-box {
-    --error-blue: 210 100% 50%; /* Define a blue color */
-    box-shadow: 0 0 5px hsl(var(--error-blue)), 
-                0 0 10px hsl(var(--error-blue)),
-                0 0 15px hsl(var(--error-blue));
-    border-color: hsl(var(--error-blue) / 0.5);
+    --error-color: 0 72% 51%; /* rouge foncé */
+    box-shadow: 0 0 5px hsl(var(--error-color)), 
+                0 0 10px hsl(var(--error-color)),
+                0 0 15px hsl(var(--error-color));
+    border-color: hsl(var(--error-color) / 0.8);
   }
   .neon-orange-input:focus-visible {
     box-shadow: 0 0 5px hsl(var(--primary)), 
