@@ -190,43 +190,4 @@ body {
     }
   }
 
-  .crocodile-orbit-container {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 28rem; /* Adjust size to be larger than the card */
-    height: 38rem; /* Adjust size to be larger than the card */
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    animation: orbit 15s linear infinite;
-  }
-
-  @keyframes orbit {
-    from {
-      transform: translate(-50%, -50%) rotate(0deg);
-    }
-    to {
-      transform: translate(-50%, -50%) rotate(360deg);
-    }
-  }
-
-  .crocodile-icon {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60px;
-    height: 60px;
-    animation: counter-rotate 15s linear infinite;
-  }
-
-  @keyframes counter-rotate {
-    from {
-      transform: translateX(-50%) rotate(0deg);
-    }
-    to {
-      transform: translateX(-50%) rotate(-360deg);
-    }
-  }
-
 }
