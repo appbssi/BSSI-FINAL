@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -159,28 +160,6 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="col-span-1 sm:col-span-2 lg:col-span-2 rounded-2xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart className="h-5 w-5" />
-              Activité des Agents
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AgentActivityChart />
-          </CardContent>
-        </Card>
-        <Card className="col-span-1 sm:col-span-2 lg:col-span-2 rounded-2xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Newspaper className="h-5 w-5" />
-              Répartition des Missions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <MissionOutcomesChart />
-          </CardContent>
-        </Card>
          <Card className="col-span-1 sm:col-span-2 lg:col-span-4 rounded-2xl">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -241,6 +220,28 @@ export default function DashboardPage() {
                     </div>
                 )}
             </CardContent>
+        </Card>
+        <Card className="col-span-1 sm:col-span-2 lg:col-span-2 rounded-2xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart className="h-5 w-5" />
+              Activité des Agents
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AgentActivityChart />
+          </CardContent>
+        </Card>
+        <Card className="col-span-1 sm:col-span-2 lg:col-span-2 rounded-2xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Newspaper className="h-5 w-5" />
+              Répartition des Missions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MissionOutcomesChart />
+          </CardContent>
         </Card>
       </div>
     </div>

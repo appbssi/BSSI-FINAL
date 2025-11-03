@@ -183,12 +183,12 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   }, [allAgents, allMissions, startDate, endDate]);
 
   return (
-    <div className="p-0 sm:p-6">
+    <div className="p-0">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {currentStep === 1 && (
                 <div className="space-y-4">
-                    <h3 className="text-xl font-semibold">1. Détails de la mission</h3>
+                    <h3 className="text-lg font-semibold">1. Détails de la mission</h3>
                     <FormField
                     control={form.control}
                     name="name"
@@ -337,7 +337,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
             
             {currentStep === 2 && (
               <div className="space-y-4">
-                <h3 className="text-xl font-semibold">2. Assigner les agents</h3>
+                <h3 className="text-lg font-semibold">2. Assigner les agents</h3>
                 <p className="text-sm text-muted-foreground">Sélectionnez les agents à assigner à cette mission. Seuls les agents disponibles pour les dates choisies sont affichés.</p>
                 
                 <Controller
