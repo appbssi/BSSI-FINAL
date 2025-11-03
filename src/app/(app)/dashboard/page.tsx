@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -30,6 +29,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { MissionDetailsDialog } from '@/components/missions/mission-details-dialog';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { AgentActivityChart, MissionOutcomesChart } from '@/components/reports/charts';
 
 export default function DashboardPage() {
   const firestore = useFirestore();
@@ -157,6 +157,28 @@ export default function DashboardPage() {
                 <div className="mt-1 text-base text-muted-foreground">Missions Terminées</div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+        <Card className="col-span-1 sm:col-span-2 lg:col-span-2 rounded-2xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart className="h-5 w-5" />
+              Activité des Agents
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AgentActivityChart />
+          </CardContent>
+        </Card>
+        <Card className="col-span-1 sm:col-span-2 lg:col-span-2 rounded-2xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Newspaper className="h-5 w-5" />
+              Répartition des Missions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MissionOutcomesChart />
           </CardContent>
         </Card>
          <Card className="col-span-1 sm:col-span-2 lg:col-span-4 rounded-2xl">
