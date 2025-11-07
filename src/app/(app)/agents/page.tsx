@@ -281,52 +281,8 @@ export default function AgentsPage() {
             />
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
-                    <FileDown className="mr-2 h-4 w-4" /> Exporter
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuLabel>Choisir un format</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={handleExportPDF}>Exporter en PDF</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={handleExportXLSX}>Exporter en XLSX</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
             {!isObserver && (
               <>
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                              <Button variant="outline" size="icon" disabled={isDeleting}>
-                                  {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                                  <span className="sr-only">Supprimer les doublons</span>
-                              </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>Supprimer les doublons</p></TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                            <AlertDialogDescription>Cette action va rechercher tous les agents avec le même matricule et supprimer les doublons. Cette action est irréversible.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Annuler</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeduplicate}>Continuer</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-                <ImportAgentsDialog>
-                  <Button variant="outline">
-                    <FileUp className="mr-2 h-4 w-4" /> Importer
-                  </Button>
-                </ImportAgentsDialog>
                 <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
                   <DialogTrigger asChild>
                     <Button>
@@ -337,7 +293,52 @@ export default function AgentsPage() {
                     <RegisterAgentForm onAgentRegistered={() => setRegisterOpen(false)} />
                   </DialogContent>
                 </Dialog>
+                <ImportAgentsDialog>
+                  <Button variant="outline">
+                    <FileUp className="mr-2 h-4 w-4" /> Importer
+                  </Button>
+                </ImportAgentsDialog>
               </>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <FileDown className="mr-2 h-4 w-4" /> Exporter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>Choisir un format</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={handleExportPDF}>Exporter en PDF</DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleExportXLSX}>Exporter en XLSX</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {!isObserver && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                          <Button variant="outline" size="icon" disabled={isDeleting}>
+                              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                              <span className="sr-only">Supprimer les doublons</span>
+                          </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Supprimer les doublons</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                        <AlertDialogDescription>Cette action va rechercher tous les agents avec le même matricule et supprimer les doublons. Cette action est irréversible.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeduplicate}>Continuer</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
           </div>
         </div>
