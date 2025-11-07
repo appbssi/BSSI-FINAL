@@ -9,7 +9,6 @@ import {
 import { FirebaseClientProvider } from '@/firebase';
 import { AuthGuard } from '@/components/layout/auth-guard';
 import { LogoProvider } from '@/context/logo-context';
-import { Suspense } from 'react';
 import Loading from './loading';
 
 
@@ -25,9 +24,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <SidebarInset>
               <Header />
               <main className="p-4 sm:p-6 lg:p-8">
-                <Suspense fallback={<Loading />}>
-                  {children}
-                </Suspense>
+                {children}
               </main>
             </SidebarInset>
           </SidebarProvider>
