@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -40,7 +41,7 @@ export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl rounded-2xl">
         <DialogHeader>
           <DialogTitle>{mission.name}</DialogTitle>
           <DialogDescription>Détails complets de la mission.</DialogDescription>
