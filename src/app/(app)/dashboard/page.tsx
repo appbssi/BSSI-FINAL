@@ -178,7 +178,7 @@ export default function DashboardPage() {
                             <Dialog>
                                 {ongoingMissions.map((mission) => (
                                     <DialogTrigger asChild key={mission.id} onClick={() => setSelectedMission(mission)}>
-                                        <div className="p-4 rounded-lg border bg-card cursor-pointer hover:bg-accent transition-colors">
+                                        <div className="p-4 rounded-xl border bg-card cursor-pointer hover:bg-accent transition-colors">
                                             <div className="flex justify-between items-start">
                                                 <h4 className="font-semibold">{mission.name}</h4>
                                                 <Badge variant={getBadgeVariant(mission.displayStatus)}>{mission.displayStatus}</Badge>
