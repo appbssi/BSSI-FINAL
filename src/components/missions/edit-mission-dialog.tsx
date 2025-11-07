@@ -23,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { CalendarIcon, Loader2, Check } from 'lucide-react';
+import { CalendarIcon, Loader2, Check, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
@@ -84,6 +84,7 @@ interface EditMissionDialogProps {
 export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMissionDialogProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const [agentSearch, setAgentSearch] = useState('');
 
   const form = useForm<MissionFormValues>({
     resolver: zodResolver(missionSchema),
@@ -184,12 +185,8 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
 
         const hasConflict = allMissions.some(m => {
             if (m.id === mission.id) return false;
-            if (m.status === 'Terminée' || m.status === 'Annulée') {
-                return false;
-            }
-            if (!m.assignedAgentIds.includes(agent.id)) {
-                return false;
-            }
+            if (m.status === 'Terminée' || m.status === 'Annulée') return false;
+            if (!m.assignedAgentIds.includes(agent.id)) return false;
             
             const missionStart = m.startDate.toDate();
             const missionEnd = m.endDate.toDate();
@@ -201,6 +198,12 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
       })
       .sort((a,b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
   }, [startDate, endDate, allAgents, allMissions, mission]);
+
+  const filteredAgents = useMemo(() => {
+    return availableAgents.filter(agent => 
+      `${agent.firstName} ${agent.lastName} ${agent.registrationNumber}`.toLowerCase().includes(agentSearch.toLowerCase())
+    );
+  }, [availableAgents, agentSearch]);
 
 
   return (
@@ -353,72 +356,89 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
                 </div>
             )}
             
-            <Controller
-                control={form.control}
-                name="assignedAgentIds"
-                render={({ field }) => (
+            <FormField
+              control={form.control}
+              name="assignedAgentIds"
+              render={() => (
                 <FormItem>
-                    <FormLabel>Agents assignés</FormLabel>
-                     <ScrollArea className="h-60 w-full rounded-md border">
-                        <div className="p-4 space-y-2">
-                        {agentsLoading || missionsLoading ? (
-                            <div className="flex items-center justify-center p-8">
-                                <Loader2 className="animate-spin h-8 w-8 text-muted-foreground"/>
-                            </div>
-                        ) : availableAgents.length > 0 ? (
-                            availableAgents.map((agent) => {
-                                const isChecked = field.value?.includes(agent.id);
-                                const isCurrentlyAssigned = (mission.assignedAgentIds || []).includes(agent.id);
-                                
-                                const hasConflict = allMissions.some(m => {
-                                    if (m.id === mission.id) return false;
-                                    if (m.status === 'Terminée' || m.status === 'Annulée') return false;
-                                    if (!m.assignedAgentIds.includes(agent.id)) return false;
+                  <FormLabel>Agents assignés</FormLabel>
+                   <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-10"
+                      placeholder="Rechercher un agent..."
+                      value={agentSearch}
+                      onChange={(e) => setAgentSearch(e.target.value)}
+                    />
+                  </div>
+                  <Controller
+                    control={form.control}
+                    name="assignedAgentIds"
+                    render={({ field }) => (
+                      <>
+                        <ScrollArea className="h-60 w-full rounded-md border">
+                            <div className="p-4 space-y-2">
+                            {agentsLoading || missionsLoading ? (
+                                <div className="flex items-center justify-center p-8">
+                                    <Loader2 className="animate-spin h-8 w-8 text-muted-foreground"/>
+                                </div>
+                            ) : filteredAgents.length > 0 ? (
+                                filteredAgents.map((agent) => {
+                                    const isChecked = field.value?.includes(agent.id);
+                                    const isCurrentlyAssigned = (mission.assignedAgentIds || []).includes(agent.id);
                                     
-                                    const missionStart = m.startDate.toDate();
-                                    const missionEnd = m.endDate.toDate();
-                                    
-                                    return startDate < missionEnd && endDate > missionStart;
-                                });
+                                    const hasConflict = allMissions.some(m => {
+                                        if (m.id === mission.id) return false;
+                                        if (m.status === 'Terminée' || m.status === 'Annulée') return false;
+                                        if (!m.assignedAgentIds.includes(agent.id)) return false;
+                                        
+                                        const missionStart = m.startDate.toDate();
+                                        const missionEnd = m.endDate.toDate();
+                                        
+                                        return startDate < missionEnd && endDate > missionStart;
+                                    });
 
-                                const isDisabled = !isCurrentlyAssigned && (agent.onLeave || hasConflict);
+                                    const isDisabled = !isCurrentlyAssigned && (agent.onLeave || hasConflict);
 
-                                return (
-                                    <div
-                                        key={agent.id}
-                                        className={cn("flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 hover:bg-accent hover:text-accent-foreground", isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer")}
-                                        onClick={() => {
-                                            if(isDisabled) return;
-                                            const currentValues = field.value || [];
-                                            const newValue = isChecked
-                                                ? currentValues.filter((id) => id !== agent.id)
-                                                : [...currentValues, agent.id];
-                                            field.onChange(newValue);
-                                        }}
-                                    >
-                                        <div className={cn("h-5 w-5 flex items-center justify-center rounded border", isChecked ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground/50")}>
-                                          {isChecked && <Check className="h-4 w-4" />}
-                                        </div>
-                                        <div className="font-medium flex-1">
-                                            {agent.firstName} {agent.lastName}
-                                            <div className="text-sm text-muted-foreground">
-                                               {agent.rank} | {agent.registrationNumber}
+                                    return (
+                                        <div
+                                            key={agent.id}
+                                            className={cn("flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 hover:bg-accent hover:text-accent-foreground", isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer")}
+                                            onClick={() => {
+                                                if(isDisabled) return;
+                                                const currentValues = field.value || [];
+                                                const newValue = isChecked
+                                                    ? currentValues.filter((id) => id !== agent.id)
+                                                    : [...currentValues, agent.id];
+                                                field.onChange(newValue);
+                                            }}
+                                        >
+                                            <div className={cn("h-5 w-5 flex items-center justify-center rounded border", isChecked ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground/50")}>
+                                              {isChecked && <Check className="h-4 w-4" />}
                                             </div>
+                                            <div className="font-medium flex-1">
+                                                {agent.firstName} {agent.lastName}
+                                                <div className="text-sm text-muted-foreground">
+                                                  {agent.rank} | {agent.registrationNumber}
+                                                </div>
+                                            </div>
+                                             <Badge variant={isDisabled ? 'destructive' : 'outline'}>
+                                                {agent.onLeave ? 'En congé' : hasConflict ? 'Conflit' : 'Disponible'}
+                                             </Badge>
                                         </div>
-                                         <Badge variant={isDisabled ? 'destructive' : 'outline'}>
-                                            {agent.onLeave ? 'En congé' : hasConflict ? 'Conflit' : 'Disponible'}
-                                         </Badge>
-                                    </div>
-                                );
-                            })
-                        ) : (
-                            <p className="text-center text-muted-foreground p-8">Aucun agent disponible.</p>
-                        )}
-                        </div>
-                    </ScrollArea>
+                                    );
+                                })
+                            ) : (
+                                <p className="text-center text-muted-foreground p-8">Aucun agent disponible.</p>
+                            )}
+                            </div>
+                        </ScrollArea>
+                      </>
+                    )}
+                  />
                    <FormMessage />
                 </FormItem>
-                )}
+              )}
             />
 
             <div className="flex justify-end pt-4">

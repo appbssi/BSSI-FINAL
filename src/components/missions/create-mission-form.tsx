@@ -14,7 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { CalendarIcon, Loader2, Check } from 'lucide-react';
+import { CalendarIcon, Loader2, Check, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
@@ -70,6 +70,7 @@ type MissionFormValues = z.infer<typeof missionSchema>;
 
 export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () => void }) {
   const [currentStep, setCurrentStep] = useState(1);
+  const [agentSearch, setAgentSearch] = useState('');
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -181,6 +182,12 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
       })
       .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
   }, [allAgents, allMissions, startDate, endDate]);
+
+  const filteredAgents = useMemo(() => {
+    return availableAgents.filter(agent => 
+      `${agent.firstName} ${agent.lastName} ${agent.registrationNumber}`.toLowerCase().includes(agentSearch.toLowerCase())
+    );
+  }, [availableAgents, agentSearch]);
 
   return (
     <div className="p-0">
@@ -340,6 +347,16 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                 <h3 className="text-lg font-semibold">2. Assigner les agents</h3>
                 <p className="text-sm text-muted-foreground">Sélectionnez les agents à assigner à cette mission. Seuls les agents disponibles pour les dates choisies sont affichés.</p>
                 
+                 <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    className="pl-10"
+                    placeholder="Rechercher un agent..."
+                    value={agentSearch}
+                    onChange={(e) => setAgentSearch(e.target.value)}
+                  />
+                </div>
+
                 <Controller
                   control={form.control}
                   name="assignedAgentIds"
@@ -352,8 +369,8 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                     <div className="flex items-center justify-center p-8">
                                         <Loader2 className="animate-spin h-8 w-8 text-muted-foreground"/>
                                     </div>
-                                ) : availableAgents.length > 0 ? (
-                                    availableAgents.map((agent) => {
+                                ) : filteredAgents.length > 0 ? (
+                                    filteredAgents.map((agent) => {
                                         const isChecked = field.value?.includes(agent.id);
                                         return (
                                             <div
