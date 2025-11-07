@@ -271,14 +271,22 @@ export default function AgentsPage() {
       
       <div className="space-y-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="relative w-full md:max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-10"
-              placeholder="Rechercher par nom..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="flex flex-wrap items-center gap-4 flex-1">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-10"
+                placeholder="Rechercher par nom..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button size="sm" variant={availabilityFilter === 'all' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('all')}>Tous</Button>
+              <Button size="sm" variant={availabilityFilter === 'Disponible' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('Disponible')}>Disponibles</Button>
+              <Button size="sm" variant={availabilityFilter === 'En mission' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En mission')}>En mission</Button>
+              <Button size="sm" variant={availabilityFilter === 'En congé' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En congé')}>En congé</Button>
+            </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
             {!isObserver && (
@@ -341,12 +349,6 @@ export default function AgentsPage() {
               </AlertDialog>
             )}
           </div>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-            <Button size="sm" variant={availabilityFilter === 'all' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('all')}>Tous</Button>
-            <Button size="sm" variant={availabilityFilter === 'Disponible' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('Disponible')}>Disponibles</Button>
-            <Button size="sm" variant={availabilityFilter === 'En mission' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En mission')}>En mission</Button>
-            <Button size="sm" variant={availabilityFilter === 'En congé' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En congé')}>En congé</Button>
         </div>
       </div>
 
@@ -451,3 +453,5 @@ export default function AgentsPage() {
     </div>
   );
 }
+
+    
