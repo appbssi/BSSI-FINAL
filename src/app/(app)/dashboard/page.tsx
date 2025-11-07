@@ -160,7 +160,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-         <Card className="col-span-1 sm:col-span-2 lg:col-span-4 rounded-2xl">
+         <Card className="col-span-1 sm:col-span-2 lg:col-span-2 rounded-2xl">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Newspaper className="h-5 w-5" />
@@ -230,17 +230,6 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <AgentActivityChart />
-          </CardContent>
-        </Card>
-        <Card className="col-span-1 sm:col-span-2 lg:col-span-2 rounded-2xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Newspaper className="h-5 w-5" />
-              Répartition des Missions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <MissionOutcomesChart />
           </CardContent>
         </Card>
       </div>
