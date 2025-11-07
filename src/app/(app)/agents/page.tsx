@@ -269,9 +269,8 @@ export default function AgentsPage() {
         <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
       </div>
       
-      <div className="space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-4 flex-1">
+       <div className="space-y-4">
+        <div className="flex items-center justify-between gap-4">
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -281,74 +280,74 @@ export default function AgentsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Button size="sm" variant={availabilityFilter === 'all' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('all')}>Tous</Button>
-              <Button size="sm" variant={availabilityFilter === 'Disponible' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('Disponible')}>Disponibles</Button>
-              <Button size="sm" variant={availabilityFilter === 'En mission' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En mission')}>En mission</Button>
-              <Button size="sm" variant={availabilityFilter === 'En congé' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En congé')}>En congé</Button>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap justify-end">
-            {!isObserver && (
-              <>
-                <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
+            <div className="flex items-center gap-2">
+              {!isObserver && (
+                <>
+                  <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <RegisterAgentForm onAgentRegistered={() => setRegisterOpen(false)} />
+                    </DialogContent>
+                  </Dialog>
+                  <ImportAgentsDialog>
+                    <Button variant="outline">
+                      <FileUp className="mr-2 h-4 w-4" /> Importer
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <RegisterAgentForm onAgentRegistered={() => setRegisterOpen(false)} />
-                  </DialogContent>
-                </Dialog>
-                <ImportAgentsDialog>
+                  </ImportAgentsDialog>
+                </>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <Button variant="outline">
-                    <FileUp className="mr-2 h-4 w-4" /> Importer
+                    <FileDown className="mr-2 h-4 w-4" /> Exporter
                   </Button>
-                </ImportAgentsDialog>
-              </>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <FileDown className="mr-2 h-4 w-4" /> Exporter
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuLabel>Choisir un format</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={handleExportPDF}>Exporter en PDF</DropdownMenuItem>
-                <DropdownMenuItem onSelect={handleExportXLSX}>Exporter en XLSX</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {!isObserver && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                          <Button variant="outline" size="icon" disabled={isDeleting}>
-                              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                              <span className="sr-only">Supprimer les doublons</span>
-                          </Button>
-                      </TooltipTrigger>
-                      <TooltipContent><p>Supprimer les doublons</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                        <AlertDialogDescription>Cette action va rechercher tous les agents avec le même matricule et supprimer les doublons. Cette action est irréversible.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeduplicate}>Continuer</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-          </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuLabel>Choisir un format</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={handleExportPDF}>Exporter en PDF</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={handleExportXLSX}>Exporter en XLSX</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {!isObserver && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="outline" size="icon" disabled={isDeleting}>
+                                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                <span className="sr-only">Supprimer les doublons</span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Supprimer les doublons</p></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                      <AlertDialogHeader>
+                          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                          <AlertDialogDescription>Cette action va rechercher tous les agents avec le même matricule et supprimer les doublons. Cette action est irréversible.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDeduplicate}>Continuer</AlertDialogAction>
+                      </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
+        </div>
+        <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Filtrer par:</span>
+            <Button size="sm" variant={availabilityFilter === 'all' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('all')}>Tous</Button>
+            <Button size="sm" variant={availabilityFilter === 'Disponible' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('Disponible')}>Disponibles</Button>
+            <Button size="sm" variant={availabilityFilter === 'En mission' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En mission')}>En mission</Button>
+            <Button size="sm" variant={availabilityFilter === 'En congé' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En congé')}>En congé</Button>
         </div>
       </div>
 
