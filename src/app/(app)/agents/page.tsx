@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { FileUp, MoreHorizontal, PlusCircle, Search, Trash2, Loader2, FileDown, ShieldAlert } from 'lucide-react';
+import { FileUp, MoreHorizontal, PlusCircle, Search, Trash2, Loader2, FileDown } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,9 +72,6 @@ export default function AgentsPage() {
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'Disponible' | 'En mission' | 'En congé'>('all');
   const { toast } = useToast();
   const [now, setNow] = useState(new Date());
-  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
-  const [deleteAllConfirmText, setDeleteAllConfirmText] = useState('');
-
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60000);
@@ -156,50 +153,6 @@ export default function AgentsPage() {
         setIsDeleting(false);
         setAgentToDelete(null); // Close the dialog
     });
-  };
-
-    const handleDeleteAllAgents = async () => {
-    if (!firestore || !agents) return;
-
-    const agentsOnMission = agents.some(agent => getAgentAvailability(agent, missions || []) === 'En mission');
-
-    if (agentsOnMission) {
-      toast({
-        variant: 'destructive',
-        title: 'Action impossible',
-        description: "Au moins un agent est en mission. Vous ne pouvez pas supprimer tous les agents.",
-      });
-      setShowDeleteAllConfirm(false);
-      setDeleteAllConfirmText('');
-      return;
-    }
-
-    setIsDeleting(true);
-    try {
-      const batch = writeBatch(firestore);
-      const agentsSnapshot = await getDocs(collection(firestore, 'agents'));
-      agentsSnapshot.forEach(doc => {
-        batch.delete(doc.ref);
-      });
-      await batch.commit();
-
-      toast({
-        title: 'Tous les agents ont été supprimés',
-        description: 'La liste des agents est maintenant vide.',
-      });
-       logActivity(firestore, 'Tous les agents ont été supprimés.', 'Agent', '/agents');
-    } catch (error) {
-      console.error("Erreur lors de la suppression de tous les agents: ", error);
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de la suppression de tous les agents.',
-      });
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteAllConfirm(false);
-      setDeleteAllConfirmText('');
-    }
   };
 
   const handleDeduplicate = async () => {
@@ -360,7 +313,6 @@ export default function AgentsPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
               {!isObserver && (
-                <>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <TooltipProvider>
@@ -386,35 +338,6 @@ export default function AgentsPage() {
                       </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-                 <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                       <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="destructive" size="icon" disabled={isDeleting || (agents?.length ?? 0) === 0}>
-                                    <ShieldAlert className="h-4 w-4" />
-                                    <span className="sr-only">Supprimer tous les agents</span>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Supprimer tous les agents</p></TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Cette action est extrêmement dangereuse et irréversible. Vous allez supprimer <strong>tous</strong> les agents.
-                                Si un agent est en mission, cette action sera bloquée.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Annuler</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => setShowDeleteAllConfirm(true)}>Je comprends, continuer</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
               )}
             </div>
         </div>
@@ -524,38 +447,6 @@ export default function AgentsPage() {
           </AlertDialogContent>
         </AlertDialog>
       )}
-
-        {showDeleteAllConfirm && (
-        <AlertDialog open={showDeleteAllConfirm} onOpenChange={setShowDeleteAllConfirm}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Confirmation finale requise</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Pour confirmer la suppression de <strong>tous les agents</strong>, veuillez taper "SUPPRIMER" dans le champ ci-dessous.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <Input 
-                    value={deleteAllConfirmText}
-                    onChange={(e) => setDeleteAllConfirmText(e.target.value)}
-                    placeholder='SUPPRIMER'
-                    className="my-4"
-                />
-                <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => { setShowDeleteAllConfirm(false); setDeleteAllConfirmText(''); }}>Annuler</AlertDialogCancel>
-                    <AlertDialogAction 
-                        onClick={handleDeleteAllAgents} 
-                        disabled={deleteAllConfirmText !== 'SUPPRIMER' || isDeleting}
-                        className="bg-destructive hover:bg-destructive/90"
-                    >
-                         {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                        Confirmer la suppression
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-      )}
     </div>
   );
 }
-
-    
