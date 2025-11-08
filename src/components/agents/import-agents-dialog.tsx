@@ -26,7 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Agent } from '@/lib/types';
 import { useFirestore, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { collection, doc, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, doc, writeBatch, getDocs, query, where } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import * as z from 'zod';
 import { logActivity } from '@/lib/activity-logger';
@@ -35,7 +35,9 @@ type AgentImportData = Omit<Agent, 'id' | 'onLeave'>;
 
 const contactSchema = z.string()
   .transform(val => val.replace(/\D/g, ''))
-  .pipe(z.string().min(8, "Le contact doit contenir au moins 8 chiffres.").max(14, "Le contact ne peut pas dépasser 14 chiffres."));
+  .pipe(z.string().min(8, "Le contact doit contenir au moins 8 chiffres.").max(14, "Le contact ne peut pas dépasser 14 chiffres."))
+  .optional()
+  .or(z.literal(''));
 
 
 export function ImportAgentsDialog({ children }: { children: React.ReactNode }) {
@@ -49,14 +51,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
     const file = event.target.files?.[0];
     if (!file || !firestore) return;
 
-    setAgentsToImport([]); 
-
-    // Fetch existing agents to check for duplicates
-    const agentsRef = collection(firestore, 'agents');
-    const querySnapshot = await getDocs(agentsRef);
-    const existingAgents = querySnapshot.docs.map(doc => doc.data() as Omit<Agent, 'id'>);
-    const existingRegNumbers = new Set(existingAgents.filter(a => a.registrationNumber).map(a => a.registrationNumber));
-    const existingContacts = new Set(existingAgents.filter(a => a.contact).map(a => a.contact));
+    setAgentsToImport([]);
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -72,14 +67,13 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         }) as any[];
 
 
-        const seenInFileReg = new Set<string>();
-        const seenInFileContact = new Set<string>();
-        let duplicatesInFile = 0;
-        let duplicatesInDb = 0;
         let invalidContacts = 0;
         const validAgents: AgentImportData[] = [];
 
         for (const row of json) {
+          if (!row.fullName && !row.registrationNumber) {
+            continue; // Skip rows that don't have at least a name or a registration number
+          }
           const rawContact = String(row.contact || '').trim();
           const contactValidation = contactSchema.safeParse(rawContact);
           // Allow empty contacts, but sanitize if present
@@ -93,61 +87,45 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
               address: String(row.address || '').trim(),
           };
 
-          if (!agent.fullName) {
-              continue;
-          }
-
           if (rawContact && !contactValidation.success) {
             invalidContacts++;
             continue;
           }
 
-          let isDuplicate = false;
-          if (agent.registrationNumber) {
-            if (existingRegNumbers.has(agent.registrationNumber) || seenInFileReg.has(agent.registrationNumber)) {
-              isDuplicate = true;
-            }
-          }
-          if (!isDuplicate && agent.contact) {
-            if (existingContacts.has(agent.contact) || seenInFileContact.has(agent.contact)) {
-              isDuplicate = true;
-            }
+          if (!agent.fullName) {
+              continue;
           }
 
-          if(isDuplicate) {
-            duplicatesInDb++;
-            continue;
-          }
-
-          if (agent.registrationNumber) seenInFileReg.add(agent.registrationNumber);
-          if (agent.contact) seenInFileContact.add(agent.contact);
           validAgents.push(agent);
         }
 
-        if (duplicatesInDb > 0 || duplicatesInFile > 0 || invalidContacts > 0) {
-            let messages = [];
-            if (duplicatesInDb > 0) messages.push(`${duplicatesInDb} agent(s) existant(s) déjà ou en double ont été ignoré(s).`);
-            if (invalidContacts > 0) messages.push(`${invalidContacts} agent(s) avec un format de contact invalide ont été ignoré(s).`);
-            
+        if (invalidContacts > 0) {
             toast({
                 title: 'Données ignorées',
-                description: messages.join(' '),
+                description: `${invalidContacts} agent(s) avec un format de contact invalide ont été ignoré(s).`,
             });
         }
-
-        if(validAgents.length === 0){
-            if(duplicatesInDb === 0 && duplicatesInFile === 0 && invalidContacts === 0) {
-              toast({
-                  variant: 'destructive',
-                  title: 'Fichier invalide ou vide',
-                  description: "Le fichier ne contient aucun agent valide ou les colonnes ne sont pas correctes. Attendu: fullName, registrationNumber, rank, contact, address",
-              });
+        
+        if (validAgents.length === 0) {
+            if (invalidContacts === 0 && json.length > 0) {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Fichier invalide ou vide',
+                    description: "Aucun agent valide trouvé. Assurez-vous que les colonnes sont correctes: fullName, registrationNumber, rank, contact, address.",
+                });
+            } else if (json.length === 0) {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Fichier vide',
+                    description: "Le fichier sélectionné ne contient aucune donnée.",
+                });
             }
             return;
         }
 
         setAgentsToImport(validAgents);
       } catch (error) {
+        console.error(error);
         toast({
             variant: 'destructive',
             title: 'Erreur de lecture',
@@ -163,29 +141,54 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
     
     setIsImporting(true);
     const batch = writeBatch(firestore);
-    const allData = [];
-
-    agentsToImport.forEach(agentData => {
-        const newAgentRef = doc(collection(firestore, 'agents'));
-        const newAgent: Omit<Agent, 'id'> = {
-            ...agentData,
-            onLeave: false,
-        };
-        batch.set(newAgentRef, newAgent);
-        allData.push(newAgent);
+    const agentsRef = collection(firestore, 'agents');
+    
+    // Fetch existing agents to check for duplicates by registration number
+    const q = query(agentsRef, where('registrationNumber', '!=', ''));
+    const querySnapshot = await getDocs(q);
+    const existingAgentsMap = new Map<string, string>(); // registrationNumber -> docId
+    querySnapshot.forEach(doc => {
+        const agent = doc.data() as Agent;
+        if(agent.registrationNumber) {
+            existingAgentsMap.set(agent.registrationNumber, doc.id);
+        }
     });
+
+    let agentsAdded = 0;
+    let agentsUpdated = 0;
+
+    for (const agentData of agentsToImport) {
+        if (agentData.registrationNumber && existingAgentsMap.has(agentData.registrationNumber)) {
+            // Update existing agent
+            const docId = existingAgentsMap.get(agentData.registrationNumber)!;
+            const docRef = doc(firestore, 'agents', docId);
+            batch.update(docRef, {
+              fullName: agentData.fullName,
+              rank: agentData.rank,
+              contact: agentData.contact,
+              address: agentData.address,
+            });
+            agentsUpdated++;
+        } else {
+            // Add new agent
+            const newAgentRef = doc(agentsRef);
+            batch.set(newAgentRef, { ...agentData, onLeave: false });
+            agentsAdded++;
+        }
+    }
 
     batch.commit().then(() => {
         toast({
-            title: 'Importation réussie !',
-            description: `${agentsToImport.length} agents ont été importés avec succès.`,
+            title: 'Importation terminée !',
+            description: `${agentsAdded} agent(s) ajouté(s) et ${agentsUpdated} agent(s) mis à jour.`,
         });
-        logActivity(firestore, `${agentsToImport.length} agents ont été importés via un fichier.`, 'Agent', '/agents');
+        const logMessage = `Importation depuis un fichier : ${agentsAdded} agent(s) ajouté(s), ${agentsUpdated} mis à jour.`;
+        logActivity(firestore, logMessage, 'Agent', '/agents');
     }).catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
             path: 'agents/[batch]',
-            operation: 'create',
-            requestResourceData: allData,
+            operation: 'write',
+            requestResourceData: {info: "Batch import/update operation"},
         });
         errorEmitter.emit('permission-error', permissionError);
     }).finally(() => {
@@ -205,9 +208,10 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Importer des agents depuis Excel</DialogTitle>
+          <DialogTitle>Importer et Mettre à jour des Agents</DialogTitle>
           <DialogDescription>
-            Sélectionnez un fichier .xlsx ou .csv. Assurez-vous que le fichier a les colonnes : fullName, registrationNumber, rank, contact, address. La première ligne sera ignorée.
+            Sélectionnez un fichier .xlsx. Les agents sont identifiés par leur matricule. Les nouveaux agents seront ajoutés, les agents existants seront mis à jour.
+            Colonnes requises : fullName, registrationNumber, rank, contact, address.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -243,8 +247,8 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         <DialogFooter>
           <Button variant="outline" onClick={() => { setIsOpen(false); setAgentsToImport([]); }}>Annuler</Button>
           <Button onClick={handleImport} disabled={agentsToImport.length === 0 || isImporting}>
-            {isImporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Importer {agentsToImport.length > 0 ? `(${agentsToImport.length} agents)` : ''}
+            {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isImporting ? 'Traitement...' : `Importer et Mettre à jour (${agentsToImport.length})`}
           </Button>
         </DialogFooter>
       </DialogContent>
