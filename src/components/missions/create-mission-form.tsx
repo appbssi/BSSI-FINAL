@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, Controller } from 'react-hook-form';
@@ -194,7 +195,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
         } else if (sectionFilter === 'Non assigné') {
             matchesSection = !agent.section || agent.section === 'Non assigné';
         } else {
-            matchesSection = agent.section === sectionFilter;
+            matchesSection = (agent.section || '').toLowerCase() === sectionFilter.toLowerCase();
         }
 
         return matchesSearch && matchesSection;
@@ -451,3 +452,5 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     </div>
   );
 }
+
+    
