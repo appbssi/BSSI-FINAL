@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { RegisterAgentForm } from '@/components/agents/register-agent-form';
-import type { Agent, Mission, Availability } from '@/lib/types';
+import type { Agent, Availability } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, deleteDoc, doc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
@@ -93,12 +93,13 @@ export default function AgentsPage() {
   }, [agents, missions, now]);
 
   const sortedAgents = useMemo(() => {
+    if (!agentsWithAvailability) return [];
     return [...agentsWithAvailability].sort((a, b) => {
       const nameA = a.fullName || '';
       const nameB = b.fullName || '';
       return nameA.localeCompare(nameB);
     });
-  }, [agentsWithAvailability]);
+}, [agentsWithAvailability]);
 
   const filteredAgents = sortedAgents.filter(agent => {
     const matchesSearch = (agent.fullName || '').toLowerCase().includes(searchQuery.toLowerCase());
@@ -267,7 +268,7 @@ export default function AgentsPage() {
         <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
       </div>
       
-       <div className="space-y-4">
+      <div className="space-y-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -353,7 +354,8 @@ export default function AgentsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Agent</TableHead>
+              <TableHead>Nom complet</TableHead>
+              <TableHead>Matricule</TableHead>
               <TableHead>Grade</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Disponibilité</TableHead>
@@ -362,16 +364,14 @@ export default function AgentsPage() {
           </TableHeader>
           <TableBody>
             {agentsLoading || missionsLoading ? (
-              <TableRow><TableCell colSpan={5} className="text-center">Chargement des agents...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center">Chargement des agents...</TableCell></TableRow>
             ) : filteredAgents.length > 0 ? (
               filteredAgents.map((agent) => {
                 const isAgentOnMission = agent.availability === 'En mission';
                 return (
                   <TableRow key={agent.id} onClick={() => setSelectedAgent(agent)} className="cursor-pointer">
-                    <TableCell>
-                      <div className="font-medium">{agent.fullName}</div>
-                      <div className="text-sm text-muted-foreground">{agent.registrationNumber}</div>
-                    </TableCell>
+                    <TableCell className="font-medium">{agent.fullName}</TableCell>
+                    <TableCell>{agent.registrationNumber}</TableCell>
                     <TableCell>{agent.rank}</TableCell>
                     <TableCell>{agent.contact}</TableCell>
                     <TableCell><Badge variant={getBadgeVariant(agent.availability)}>{agent.availability}</Badge></TableCell>
@@ -402,7 +402,7 @@ export default function AgentsPage() {
                 );
               })
             ) : (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
@@ -450,5 +450,3 @@ export default function AgentsPage() {
     </div>
   );
 }
-
-    
