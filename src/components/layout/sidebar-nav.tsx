@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -8,7 +9,6 @@ import {
   CalendarClock,
   Loader2,
   BookUser,
-  BarChart2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -41,7 +41,6 @@ const navItems: NavItem[] = [
   { href: '/missions', label: 'Missions', icon: Rocket, roles: ['admin', 'observer'] },
   { href: '/gatherings', label: 'Rassemblements', icon: CalendarClock, roles: ['admin', 'observer'] },
   { href: '/secretariat', label: 'Secrétariat', icon: BookUser, roles: ['admin', 'secretariat'] },
-  { href: '/reports', label: 'Rapports', icon: BarChart2, roles: ['admin', 'observer'] },
 ];
 
 export function SidebarNav() {
