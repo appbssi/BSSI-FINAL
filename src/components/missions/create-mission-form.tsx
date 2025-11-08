@@ -30,6 +30,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
 import { getAgentAvailability } from '@/lib/agents';
 import { logActivity } from '@/lib/activity-logger';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
@@ -70,6 +71,7 @@ type MissionFormValues = z.infer<typeof missionSchema>;
 export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () => void }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [agentSearch, setAgentSearch] = useState('');
+  const [sectionFilter, setSectionFilter] = useState('all');
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -183,10 +185,12 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   }, [allAgents, allMissions, startDate, endDate]);
 
   const filteredAgents = useMemo(() => {
-    return availableAgents.filter(agent => 
-      `${agent.fullName} ${agent.registrationNumber}`.toLowerCase().includes(agentSearch.toLowerCase())
-    );
-  }, [availableAgents, agentSearch]);
+    return availableAgents.filter(agent => {
+        const matchesSearch = `${agent.fullName} ${agent.registrationNumber}`.toLowerCase().includes(agentSearch.toLowerCase());
+        const matchesSection = sectionFilter === 'all' || agent.section === sectionFilter;
+        return matchesSearch && matchesSection;
+    });
+  }, [availableAgents, agentSearch, sectionFilter]);
 
   return (
     <div className="p-0">
@@ -346,15 +350,33 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                 <h3 className="text-lg font-semibold">2. Assigner les agents</h3>
                 <p className="text-sm text-muted-foreground">Sélectionnez les agents à assigner à cette mission. Seuls les agents disponibles pour les dates choisies sont affichés.</p>
                 
-                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    className="pl-10"
-                    placeholder="Rechercher un agent..."
-                    value={agentSearch}
-                    onChange={(e) => setAgentSearch(e.target.value)}
-                  />
-                </div>
+                 <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-grow">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-10"
+                      placeholder="Rechercher un agent..."
+                      value={agentSearch}
+                      onChange={(e) => setAgentSearch(e.target.value)}
+                    />
+                  </div>
+                  <Select value={sectionFilter} onValueChange={setSectionFilter}>
+                    <SelectTrigger className="w-full sm:w-[200px]">
+                      <SelectValue placeholder="Filtrer par section" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">TOUTES LES SECTIONS</SelectItem>
+                      <SelectItem value="Armurerie">ARMURERIE</SelectItem>
+                      <SelectItem value="Administration">ADMINISTRATION</SelectItem>
+                      <SelectItem value="Officier">OFFICIER</SelectItem>
+                      <SelectItem value="Adjudants">ADJUDANTS</SelectItem>
+                      <SelectItem value="FAUNE">FAUNE</SelectItem>
+                      <SelectItem value="CONDUCTEUR">CONDUCTEUR</SelectItem>
+                      <SelectItem value="SECTION FEMININE">SECTION FEMININE</SelectItem>
+                      <SelectItem value="Non assigné">NON ASSIGNÉ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                 </div>
 
                 <Controller
                   control={form.control}
