@@ -110,7 +110,9 @@ export default function AgentsPage() {
 }, [agentsWithAvailability]);
 
   const filteredAgents = sortedAgents.filter(agent => {
-    const matchesSearch = (agent.fullName || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = (agent.fullName || '').toLowerCase().includes(searchLower) ||
+                          (agent.registrationNumber || '').toLowerCase().includes(searchLower);
     const matchesAvailability = availabilityFilter === 'all' || agent.availability === availabilityFilter;
     const matchesSection = sectionFilter === 'all' || agent.section === sectionFilter;
     return matchesSearch && matchesAvailability && matchesSection;
@@ -284,7 +286,7 @@ export default function AgentsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 className="pl-10"
-                placeholder="Rechercher par nom..."
+                placeholder="Rechercher par nom ou matricule..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
