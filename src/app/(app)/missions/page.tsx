@@ -19,6 +19,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -336,11 +343,18 @@ export default function MissionsPage() {
               />
             </div>
              <div className="flex items-center gap-2 flex-wrap">
-                <Button size="sm" variant={statusFilter === 'all' ? 'default' : 'outline'} onClick={() => setStatusFilter('all')}>Toutes</Button>
-                <Button size="sm" variant={statusFilter === 'Planification' ? 'default' : 'outline'} onClick={() => setStatusFilter('Planification')}>Planifiées</Button>
-                <Button size="sm" variant={statusFilter === 'En cours' ? 'default' : 'outline'} onClick={() => setStatusFilter('En cours')}>En cours</Button>
-                <Button size="sm" variant={statusFilter === 'Terminée' ? 'default' : 'outline'} onClick={() => setStatusFilter('Terminée')}>Terminées</Button>
-                <Button size="sm" variant={statusFilter === 'Annulée' ? 'default' : 'outline'} onClick={() => setStatusFilter('Annulée')}>Annulées</Button>
+                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as MissionStatus | 'all')}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filtrer par statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes</SelectItem>
+                    <SelectItem value="Planification">Planifiées</SelectItem>
+                    <SelectItem value="En cours">En cours</SelectItem>
+                    <SelectItem value="Terminée">Terminées</SelectItem>
+                    <SelectItem value="Annulée">Annulées</SelectItem>
+                  </SelectContent>
+                </Select>
             </div>
         </div>
         </div>
