@@ -114,7 +114,7 @@ export default function AgentsPage() {
     const matchesSearch = (agent.fullName || '').toLowerCase().includes(searchLower) ||
                           (agent.registrationNumber || '').toLowerCase().includes(searchLower);
     const matchesAvailability = availabilityFilter === 'all' || agent.availability === availabilityFilter;
-    const matchesSection = sectionFilter === 'all' || agent.section === sectionFilter;
+    const matchesSection = sectionFilter === 'all' || (agent.section || '').toLowerCase() === sectionFilter.toLowerCase();
     return matchesSearch && matchesAvailability && matchesSection;
   });
 
