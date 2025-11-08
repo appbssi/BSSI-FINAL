@@ -62,7 +62,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         const worksheet = workbook.Sheets[sheetName];
         
         const json = XLSX.utils.sheet_to_json(worksheet, {
-            header: ["fullName", "registrationNumber", "rank", "contact", "address"],
+            header: ["fullName", "registrationNumber", "rank", "contact", "address", "section"],
             range: 1 // Skip the header row
         }) as any[];
 
@@ -85,6 +85,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
               rank: String(row.rank || '').trim(),
               contact: sanitizedContact,
               address: String(row.address || '').trim(),
+              section: String(row.section || 'Non assigné').trim() as Agent['section'],
           };
 
           if (rawContact && !contactValidation.success) {
@@ -111,7 +112,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
                  toast({
                     variant: 'destructive',
                     title: 'Fichier invalide ou vide',
-                    description: "Aucun agent valide trouvé. Assurez-vous que les colonnes sont correctes: fullName, registrationNumber, rank, contact, address.",
+                    description: "Aucun agent valide trouvé. Assurez-vous que les colonnes sont correctes: fullName, registrationNumber, rank, contact, address, section.",
                 });
             } else if (json.length === 0) {
                  toast({
@@ -167,6 +168,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
               rank: agentData.rank,
               contact: agentData.contact,
               address: agentData.address,
+              section: agentData.section,
             });
             agentsUpdated++;
         } else {
@@ -211,7 +213,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
           <DialogTitle>Importer et Mettre à jour des Agents</DialogTitle>
           <DialogDescription>
             Sélectionnez un fichier .xlsx. Les agents sont identifiés par leur matricule. Les nouveaux agents seront ajoutés, les agents existants seront mis à jour.
-            Colonnes requises : fullName, registrationNumber, rank, contact, address.
+            Colonnes requises : fullName, registrationNumber, rank, contact, address, section.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -227,6 +229,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
                                 <TableHead>Grade</TableHead>
                                 <TableHead>Contact</TableHead>
                                 <TableHead>Adresse</TableHead>
+                                <TableHead>Section</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -237,6 +240,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
                                     <TableCell>{agent.rank}</TableCell>
                                     <TableCell>{agent.contact}</TableCell>
                                     <TableCell>{agent.address}</TableCell>
+                                    <TableCell>{agent.section}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
