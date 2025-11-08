@@ -187,7 +187,16 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   const filteredAgents = useMemo(() => {
     return availableAgents.filter(agent => {
         const matchesSearch = `${agent.fullName} ${agent.registrationNumber}`.toLowerCase().includes(agentSearch.toLowerCase());
-        const matchesSection = sectionFilter === 'all' || agent.section === sectionFilter;
+        
+        let matchesSection;
+        if (sectionFilter === 'all') {
+            matchesSection = true;
+        } else if (sectionFilter === 'Non assigné') {
+            matchesSection = !agent.section || agent.section === 'Non assigné';
+        } else {
+            matchesSection = agent.section === sectionFilter;
+        }
+
         return matchesSearch && matchesSection;
     });
   }, [availableAgents, agentSearch, sectionFilter]);
