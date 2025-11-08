@@ -1,4 +1,3 @@
-
 'use client';
 
 import { collection, getDocs, writeBatch, Firestore, doc, deleteDoc, WriteBatch } from "firebase/firestore";
@@ -80,7 +79,7 @@ export function deleteAgent(firestore: Firestore, agent: Agent, missions: Missio
     batch.delete(agentRef);
 
     batch.commit().then(() => {
-        logActivity(firestore, `L'agent ${agent.firstName} ${agent.lastName} a été supprimé.`, 'Agent', '/agents');
+        logActivity(firestore, `L'agent ${agent.fullName} a été supprimé.`, 'Agent', '/agents');
     }).catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
             path: agentRef.path,

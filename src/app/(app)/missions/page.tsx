@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -62,12 +61,12 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
     const { logo } = useLogo();
     
     const sortedAgents = useMemo(() => 
-        [...agents].sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName)),
+        [...agents].sort((a, b) => a.fullName.localeCompare(b.fullName)),
         [agents]
     );
 
     const filteredAgents = sortedAgents.filter(agent => 
-        `${agent.firstName} ${agent.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
+        agent.fullName.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const handleExportPDF = () => {
@@ -105,10 +104,9 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
             currentY += 8;
 
             autoTable(doc, {
-                head: [['Prénom', 'Nom', 'Grade', 'Contact']],
+                head: [['Nom complet', 'Grade', 'Contact']],
                 body: filteredAgents.map(agent => [
-                    agent.firstName,
-                    agent.lastName,
+                    agent.fullName,
                     agent.rank,
                     agent.contact,
                 ]),
@@ -141,8 +139,7 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
 
     const handleExportXLSX = () => {
         const dataToExport = filteredAgents.map(agent => ({
-            'Prénom': agent.firstName,
-            'Nom': agent.lastName,
+            'Nom complet': agent.fullName,
             'Grade': agent.rank,
             'Contact': agent.contact,
         }));
@@ -195,7 +192,7 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
                             {filteredAgents.length > 0 ? (
                                 filteredAgents.map(agent => (
                                     <TableRow key={agent.id}>
-                                        <TableCell className="font-medium">{agent.firstName} {agent.lastName}</TableCell>
+                                        <TableCell className="font-medium">{agent.fullName}</TableCell>
                                         <TableCell>{agent.rank}</TableCell>
                                         <TableCell>{agent.contact}</TableCell>
                                     </TableRow>

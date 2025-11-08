@@ -2,8 +2,7 @@ import { Timestamp } from 'firebase/firestore';
 
 export type Agent = {
   id: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   registrationNumber: string;
   rank: string;
   contact: string;

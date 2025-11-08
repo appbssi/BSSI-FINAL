@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm, Controller } from 'react-hook-form';
@@ -180,12 +179,12 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
 
         return !hasConflict;
       })
-      .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
+      .sort((a, b) => a.fullName.localeCompare(b.fullName));
   }, [allAgents, allMissions, startDate, endDate]);
 
   const filteredAgents = useMemo(() => {
     return availableAgents.filter(agent => 
-      `${agent.firstName} ${agent.lastName} ${agent.registrationNumber}`.toLowerCase().includes(agentSearch.toLowerCase())
+      `${agent.fullName} ${agent.registrationNumber}`.toLowerCase().includes(agentSearch.toLowerCase())
     );
   }, [availableAgents, agentSearch]);
 
@@ -388,7 +387,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                                                   {isChecked && <Check className="h-4 w-4" />}
                                                 </div>
                                                 <div className="font-medium flex-1">
-                                                    {agent.firstName} {agent.lastName}
+                                                    {agent.fullName}
                                                     <div className="text-sm text-muted-foreground">
                                                         {agent.rank} | {agent.registrationNumber} | {agent.contact}
                                                     </div>

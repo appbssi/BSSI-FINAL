@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -94,14 +93,12 @@ export default function AgentsPage() {
 
   const sortedAgents = useMemo(() => {
     return [...agentsWithAvailability].sort((a, b) => {
-      const firstNameComparison = a.firstName.localeCompare(b.firstName);
-      if (firstNameComparison !== 0) return firstNameComparison;
-      return a.lastName.localeCompare(b.lastName);
+      return a.fullName.localeCompare(b.fullName);
     });
   }, [agentsWithAvailability]);
 
   const filteredAgents = sortedAgents.filter(agent => {
-    const matchesSearch = `${agent.firstName} ${agent.lastName}`.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = agent.fullName.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter = availabilityFilter === 'all' || agent.availability === availabilityFilter;
     return matchesSearch && matchesFilter;
   });
@@ -139,9 +136,9 @@ export default function AgentsPage() {
     deleteDoc(agentRef).then(() => {
         toast({
           title: 'Agent supprimé',
-          description: `L'agent ${agentToDelete.firstName} ${agentToDelete.lastName} a été supprimé.`,
+          description: `L'agent ${agentToDelete.fullName} a été supprimé.`,
         });
-        logActivity(firestore, `L'agent ${agentToDelete.firstName} ${agentToDelete.lastName} a été supprimé.`, 'Agent', '/agents');
+        logActivity(firestore, `L'agent ${agentToDelete.fullName} a été supprimé.`, 'Agent', '/agents');
     }).catch(serverError => {
         const permissionError = new FirestorePermissionError({
             path: agentRef.path,
@@ -177,8 +174,7 @@ export default function AgentsPage() {
 
   const handleExportXLSX = () => {
     const dataToExport = filteredAgents.map(agent => ({
-        'Prénom': agent.firstName,
-        'Nom': agent.lastName,
+        'Nom complet': agent.fullName,
         'Matricule': agent.registrationNumber,
         'Grade': agent.rank,
         'Contact': agent.contact,
@@ -226,10 +222,9 @@ export default function AgentsPage() {
         currentY += 8;
 
         autoTable(doc, {
-            head: [['Prénom', 'Nom', 'Matricule', 'Grade', 'Contact', 'Disponibilité']],
+            head: [['Nom complet', 'Matricule', 'Grade', 'Contact', 'Disponibilité']],
             body: filteredAgents.map(agent => [
-                agent.firstName,
-                agent.lastName,
+                agent.fullName,
                 agent.registrationNumber,
                 agent.rank,
                 agent.contact,
@@ -270,7 +265,7 @@ export default function AgentsPage() {
       </div>
       
        <div className="space-y-4">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -280,7 +275,7 @@ export default function AgentsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
               {!isObserver && (
                 <>
                   <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
@@ -371,7 +366,7 @@ export default function AgentsPage() {
                 return (
                   <TableRow key={agent.id} onClick={() => setSelectedAgent(agent)} className="cursor-pointer">
                     <TableCell>
-                      <div className="font-medium">{agent.firstName} {agent.lastName}</div>
+                      <div className="font-medium">{agent.fullName}</div>
                       <div className="text-sm text-muted-foreground">{agent.registrationNumber}</div>
                     </TableCell>
                     <TableCell>{agent.rank}</TableCell>
@@ -436,7 +431,7 @@ export default function AgentsPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Êtes-vous absolument sûr?</AlertDialogTitle>
               <AlertDialogDescription>
-                Cette action est irréversible. L'agent <span className="font-semibold">{`${agentToDelete.firstName} ${agentToDelete.lastName}`}</span> sera définitivement supprimé.
+                Cette action est irréversible. L'agent <span className="font-semibold">{agentToDelete.fullName}</span> sera définitivement supprimé.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

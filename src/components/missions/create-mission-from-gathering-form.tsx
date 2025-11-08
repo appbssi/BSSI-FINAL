@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm, Controller } from 'react-hook-form';
@@ -147,7 +146,7 @@ export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCan
 
             return !isOverlapping;
         })
-        .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
+        .sort((a, b) => a.fullName.localeCompare(b.fullName));
   }, [allAgents, allMissions, startDate, endDate, agents]);
 
 
@@ -301,7 +300,7 @@ export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCan
                                                 {isChecked && <Check className="h-4 w-4" />}
                                             </div>
                                             <div className="font-medium flex-1">
-                                                {agent.firstName} {agent.lastName}
+                                                {agent.fullName}
                                                 <div className="text-sm text-muted-foreground">{agent.rank} | {agent.registrationNumber}</div>
                                             </div>
                                         </div>

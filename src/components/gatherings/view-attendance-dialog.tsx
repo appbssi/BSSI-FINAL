@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -55,7 +54,7 @@ export function ViewAttendanceDialog({ isOpen, onOpenChange, gathering, agentsBy
       }
     });
 
-    const sortFn = (a: Agent, b: Agent) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName);
+    const sortFn = (a: Agent, b: Agent) => a.fullName.localeCompare(b.fullName);
     
     return {
       presentAgents: present.sort(sortFn),
@@ -140,18 +139,17 @@ export function ViewAttendanceDialog({ isOpen, onOpenChange, gathering, agentsBy
         agents = absentAgents;
     } else {
         listTitle = 'Liste de Présence Complète';
-        agents = [...presentAgents, ...absentAgents].sort((a,b) => a.firstName.localeCompare(b.firstName));
+        agents = [...presentAgents, ...absentAgents].sort((a,b) => a.fullName.localeCompare(b.fullName));
     }
 
     const body = agents.map(agent => [
-        agent.firstName,
-        agent.lastName,
+        agent.fullName,
         agent.registrationNumber,
         agent.rank,
         ...(listType === 'all' ? [gathering.absentAgentIds.includes(agent.id) ? 'Absent' : 'Présent'] : [])
     ]);
 
-    const head = ['Prénom', 'Nom', 'Matricule', 'Grade'];
+    const head = ['Nom complet', 'Matricule', 'Grade'];
     if (listType === 'all') {
         head.push('Statut');
     }
@@ -174,7 +172,7 @@ export function ViewAttendanceDialog({ isOpen, onOpenChange, gathering, agentsBy
                     {agents.length > 0 ? (
                         agents.map(agent => (
                             <TableRow key={agent.id}>
-                                <TableCell>{agent.firstName} {agent.lastName}</TableCell>
+                                <TableCell>{agent.fullName}</TableCell>
                                 <TableCell>{agent.registrationNumber}</TableCell>
                                 <TableCell>{agent.rank}</TableCell>
                             </TableRow>

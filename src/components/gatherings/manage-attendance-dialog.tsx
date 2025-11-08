@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useMemo } from 'react';
@@ -65,7 +64,7 @@ export function ManageAttendanceDialog({ isOpen, onOpenChange, gathering, agents
     return gathering.assignedAgentIds
       .map(id => agentMap.get(id))
       .filter((agent): agent is Agent => !!agent)
-      .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
+      .sort((a, b) => a.fullName.localeCompare(b.fullName));
   }, [agents, gathering.assignedAgentIds]);
 
   const onSubmit = async (data: AttendanceFormValues) => {
@@ -129,7 +128,7 @@ export function ManageAttendanceDialog({ isOpen, onOpenChange, gathering, agents
                                   {isChecked && <Check className="h-4 w-4" />}
                                 </div>
                                 <div className="font-medium flex-1">
-                                  {agent.firstName} {agent.lastName}
+                                  {agent.fullName}
                                   <div className="text-sm text-muted-foreground">{agent.rank}</div>
                                 </div>
                               </div>

@@ -26,8 +26,7 @@ import { Loader2 } from 'lucide-react';
 import { logActivity } from '@/lib/activity-logger';
 
 const agentSchema = z.object({
-  firstName: z.string().min(2, 'Le prénom est requis'),
-  lastName: z.string().min(2, 'Le nom est requis'),
+  fullName: z.string().min(2, 'Le nom complet est requis'),
   registrationNumber: z.string().min(3, 'Le matricule est requis'),
   rank: z.string().min(3, 'Le grade est requis'),
   contact: z.string().length(10, 'Le contact doit contenir exactement 10 chiffres.').regex(/^[0-9]+$/, 'Le contact ne doit contenir que des chiffres.'),
@@ -48,8 +47,7 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
   const form = useForm<AgentFormValues>({
     resolver: zodResolver(agentSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
+      fullName: '',
       registrationNumber: '',
       rank: '',
       contact: '',
@@ -94,9 +92,9 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
         .then(() => {
             toast({
                 title: 'Agent enregistré !',
-                description: `L'agent ${data.firstName} ${data.lastName} a été ajouté avec succès.`,
+                description: `L'agent ${data.fullName} a été ajouté avec succès.`,
             });
-            logActivity(firestore, `L'agent ${data.firstName} ${data.lastName} a été enregistré.`, 'Agent', '/agents');
+            logActivity(firestore, `L'agent ${data.fullName} a été enregistré.`, 'Agent', '/agents');
             form.reset();
             onAgentRegistered();
         })
@@ -130,34 +128,19 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
       </DialogHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-6">
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="firstName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Prénom</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="fullName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nom et Prénom(s)</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}

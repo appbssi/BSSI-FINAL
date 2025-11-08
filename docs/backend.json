@@ -6,13 +6,9 @@
       "type": "object",
       "description": "Represents an agent who can be assigned to missions.",
       "properties": {
-        "firstName": {
+        "fullName": {
           "type": "string",
-          "description": "The agent's first name."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "The agent's last name."
+          "description": "The agent's full name."
         },
         "registrationNumber": {
             "type": "string",
@@ -36,8 +32,7 @@
         }
       },
       "required": [
-        "firstName",
-        "lastName",
+        "fullName",
         "registrationNumber",
         "rank",
         "contact",

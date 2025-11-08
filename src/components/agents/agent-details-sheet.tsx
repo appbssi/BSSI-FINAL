@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -47,7 +46,7 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsP
                     <User className="h-8 w-8" />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-bold">{agent.lastName} {agent.firstName}</h2>
+                    <h2 className="text-2xl font-bold">{agent.fullName}</h2>
                      <p className="text-muted-foreground">{agent.registrationNumber}</p>
                 </div>
             </div>

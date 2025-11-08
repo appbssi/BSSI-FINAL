@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -64,7 +63,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         const worksheet = workbook.Sheets[sheetName];
         
         const json = XLSX.utils.sheet_to_json(worksheet, {
-            header: ["firstName", "lastName", "registrationNumber", "rank", "contact", "address"],
+            header: ["fullName", "registrationNumber", "rank", "contact", "address"],
             range: 1 // Skip the header row
         }) as any[];
 
@@ -76,14 +75,13 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         let invalidContacts = 0;
 
         const parsedAgents: AgentImportData[] = json.map((row) => ({
-            firstName: String(row.firstName || '').trim(),
-            lastName: String(row.lastName || '').trim(),
+            fullName: String(row.fullName || '').trim(),
             registrationNumber: String(row.registrationNumber || '').trim(),
             rank: String(row.rank || '').trim(),
             contact: String(row.contact || '').trim(),
             address: String(row.address || '').trim(),
         })).filter(agent => {
-            if (!agent.firstName || !agent.lastName || !agent.registrationNumber || !agent.contact) {
+            if (!agent.fullName || !agent.registrationNumber || !agent.contact) {
                 return false;
             }
 
@@ -126,7 +124,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
               toast({
                   variant: 'destructive',
                   title: 'Fichier invalide ou vide',
-                  description: "Le fichier ne contient aucun agent valide ou les colonnes ne sont pas correctes. Attendu: firstName, lastName, registrationNumber, rank, contact, address",
+                  description: "Le fichier ne contient aucun agent valide ou les colonnes ne sont pas correctes. Attendu: fullName, registrationNumber, rank, contact, address",
               });
             }
             return;
@@ -193,7 +191,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         <DialogHeader>
           <DialogTitle>Importer des agents depuis Excel</DialogTitle>
           <DialogDescription>
-            Sélectionnez un fichier .xlsx ou .csv. Assurez-vous que le fichier a les colonnes : firstName, lastName, registrationNumber, rank, contact, address. La première ligne sera ignorée.
+            Sélectionnez un fichier .xlsx ou .csv. Assurez-vous que le fichier a les colonnes : fullName, registrationNumber, rank, contact, address. La première ligne sera ignorée.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -204,8 +202,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Prénom</TableHead>
-                                <TableHead>Nom</TableHead>
+                                <TableHead>Nom et Prénom(s)</TableHead>
                                 <TableHead>Matricule</TableHead>
                                 <TableHead>Grade</TableHead>
                                 <TableHead>Contact</TableHead>
@@ -215,8 +212,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
                         <TableBody>
                             {agentsToImport.map((agent, index) => (
                                 <TableRow key={index}>
-                                    <TableCell>{agent.firstName}</TableCell>
-                                    <TableCell>{agent.lastName}</TableCell>
+                                    <TableCell>{agent.fullName}</TableCell>
                                     <TableCell>{agent.registrationNumber}</TableCell>
                                     <TableCell>{agent.rank}</TableCell>
                                     <TableCell>{agent.contact}</TableCell>

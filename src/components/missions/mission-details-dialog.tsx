@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -41,7 +40,7 @@ export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl rounded-2xl">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{mission.name}</DialogTitle>
           <DialogDescription>Détails complets de la mission.</DialogDescription>
@@ -84,7 +83,7 @@ export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: 
                     {agents.length > 0 ? (
                         agents.map(agent => (
                             <div key={agent.id} className="text-sm p-2 bg-muted/50 rounded-md">
-                                <p className="font-medium">{agent.firstName} {agent.lastName}</p>
+                                <p className="font-medium">{agent.fullName}</p>
                                 <p className="text-xs text-muted-foreground">{agent.rank}</p>
                             </div>
                         ))

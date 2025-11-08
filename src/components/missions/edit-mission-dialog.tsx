@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
@@ -196,12 +195,12 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
 
         return isCurrentlyAssigned || !hasConflict;
       })
-      .sort((a,b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
+      .sort((a,b) => a.fullName.localeCompare(b.fullName));
   }, [startDate, endDate, allAgents, allMissions, mission]);
 
   const filteredAgents = useMemo(() => {
     return availableAgents.filter(agent => 
-      `${agent.firstName} ${agent.lastName} ${agent.registrationNumber}`.toLowerCase().includes(agentSearch.toLowerCase())
+      `${agent.fullName} ${agent.registrationNumber}`.toLowerCase().includes(agentSearch.toLowerCase())
     );
   }, [availableAgents, agentSearch]);
 
@@ -417,7 +416,7 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
                                               {isChecked && <Check className="h-4 w-4" />}
                                             </div>
                                             <div className="font-medium flex-1">
-                                                {agent.firstName} {agent.lastName}
+                                                {agent.fullName}
                                                 <div className="text-sm text-muted-foreground">
                                                   {agent.rank} | {agent.registrationNumber}
                                                 </div>
