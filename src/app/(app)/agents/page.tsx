@@ -364,15 +364,15 @@ export default function AgentsPage() {
                 <SelectValue placeholder="Filtrer par section" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Toutes les sections</SelectItem>
-                <SelectItem value="Armurerie">Armurerie</SelectItem>
-                <SelectItem value="Administration">Administration</SelectItem>
-                <SelectItem value="Officier">Officier</SelectItem>
-                <SelectItem value="Adjudants">Adjudants</SelectItem>
+                <SelectItem value="all">TOUTES LES SECTIONS</SelectItem>
+                <SelectItem value="Armurerie">ARMURERIE</SelectItem>
+                <SelectItem value="Administration">ADMINISTRATION</SelectItem>
+                <SelectItem value="Officier">OFFICIER</SelectItem>
+                <SelectItem value="Adjudants">ADJUDANTS</SelectItem>
                 <SelectItem value="FAUNE">FAUNE</SelectItem>
                 <SelectItem value="CONDUCTEUR">CONDUCTEUR</SelectItem>
                 <SelectItem value="SECTION FEMININE">SECTION FEMININE</SelectItem>
-                <SelectItem value="Non assigné">Non assigné</SelectItem>
+                <SelectItem value="Non assigné">NON ASSIGNÉ</SelectItem>
               </SelectContent>
             </Select>
         </div>
