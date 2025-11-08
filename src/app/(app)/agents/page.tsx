@@ -114,7 +114,16 @@ export default function AgentsPage() {
     const matchesSearch = (agent.fullName || '').toLowerCase().includes(searchLower) ||
                           (agent.registrationNumber || '').toLowerCase().includes(searchLower);
     const matchesAvailability = availabilityFilter === 'all' || agent.availability === availabilityFilter;
-    const matchesSection = sectionFilter === 'all' || (agent.section || '').toLowerCase() === sectionFilter.toLowerCase();
+    
+    let matchesSection;
+    if (sectionFilter === 'all') {
+        matchesSection = true;
+    } else if (sectionFilter === 'Non assigné') {
+        matchesSection = !agent.section || agent.section === 'Non assigné';
+    } else {
+        matchesSection = (agent.section || '').toLowerCase() === sectionFilter.toLowerCase();
+    }
+    
     return matchesSearch && matchesAvailability && matchesSection;
   });
 
