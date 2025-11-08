@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -60,13 +61,17 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
     const [searchQuery, setSearchQuery] = useState('');
     const { logo } = useLogo();
     
-    const sortedAgents = useMemo(() => 
-        [...agents].sort((a, b) => a.fullName.localeCompare(b.fullName)),
-        [agents]
-    );
+    const sortedAgents = useMemo(() => {
+        if (!agents) return [];
+        return [...agents].sort((a, b) => {
+            const nameA = a.fullName || '';
+            const nameB = b.fullName || '';
+            return nameA.localeCompare(nameB);
+        });
+    }, [agents]);
 
     const filteredAgents = sortedAgents.filter(agent => 
-        agent.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+        (agent.fullName || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const handleExportPDF = () => {
