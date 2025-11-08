@@ -34,7 +34,7 @@ import { logActivity } from '@/lib/activity-logger';
 type AgentImportData = Omit<Agent, 'id' | 'onLeave'>;
 
 const contactSchema = z.string()
-  .transform(val => val.replace(/\D/g, '')) // Supprime les caractères non numériques
+  .transform(val => val.replace(/\D/g, ''))
   .pipe(z.string().min(8, "Le contact doit contenir au moins 8 chiffres.").max(14, "Le contact ne peut pas dépasser 14 chiffres."));
 
 
@@ -55,8 +55,8 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
     const agentsRef = collection(firestore, 'agents');
     const querySnapshot = await getDocs(agentsRef);
     const existingAgents = querySnapshot.docs.map(doc => doc.data() as Omit<Agent, 'id'>);
-    const existingRegNumbers = new Set(existingAgents.map(a => a.registrationNumber));
-    const existingContacts = new Set(existingAgents.map(a => a.contact));
+    const existingRegNumbers = new Set(existingAgents.filter(a => a.registrationNumber).map(a => a.registrationNumber));
+    const existingContacts = new Set(existingAgents.filter(a => a.contact).map(a => a.contact));
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -82,7 +82,8 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         for (const row of json) {
           const rawContact = String(row.contact || '').trim();
           const contactValidation = contactSchema.safeParse(rawContact);
-          const sanitizedContact = contactValidation.success ? contactValidation.data : '';
+          // Allow empty contacts, but sanitize if present
+          const sanitizedContact = rawContact ? (contactValidation.success ? contactValidation.data : '') : '';
 
           const agent: AgentImportData = {
               fullName: String(row.fullName || '').trim(),
@@ -92,33 +93,40 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
               address: String(row.address || '').trim(),
           };
 
-          if (!agent.fullName || !agent.registrationNumber || !agent.contact) {
+          if (!agent.fullName) {
               continue;
           }
 
-          if (!contactValidation.success) {
-              invalidContacts++;
-              continue;
+          if (rawContact && !contactValidation.success) {
+            invalidContacts++;
+            continue;
           }
 
-          if (existingRegNumbers.has(agent.registrationNumber) || existingContacts.has(agent.contact)) {
-              duplicatesInDb++;
-              continue;
+          let isDuplicate = false;
+          if (agent.registrationNumber) {
+            if (existingRegNumbers.has(agent.registrationNumber) || seenInFileReg.has(agent.registrationNumber)) {
+              isDuplicate = true;
+            }
           }
-          if (seenInFileReg.has(agent.registrationNumber) || seenInFileContact.has(agent.contact)) {
-              duplicatesInFile++;
-              continue;
+          if (!isDuplicate && agent.contact) {
+            if (existingContacts.has(agent.contact) || seenInFileContact.has(agent.contact)) {
+              isDuplicate = true;
+            }
           }
 
-          seenInFileReg.add(agent.registrationNumber);
-          seenInFileContact.add(agent.contact);
+          if(isDuplicate) {
+            duplicatesInDb++;
+            continue;
+          }
+
+          if (agent.registrationNumber) seenInFileReg.add(agent.registrationNumber);
+          if (agent.contact) seenInFileContact.add(agent.contact);
           validAgents.push(agent);
         }
 
         if (duplicatesInDb > 0 || duplicatesInFile > 0 || invalidContacts > 0) {
             let messages = [];
-            if (duplicatesInDb > 0) messages.push(`${duplicatesInDb} agent(s) existant(s) déjà dans la base de données ont été ignoré(s).`);
-            if (duplicatesInFile > 0) messages.push(`${duplicatesInFile} doublon(s) dans le fichier ont été ignoré(s).`);
+            if (duplicatesInDb > 0) messages.push(`${duplicatesInDb} agent(s) existant(s) déjà ou en double ont été ignoré(s).`);
             if (invalidContacts > 0) messages.push(`${invalidContacts} agent(s) avec un format de contact invalide ont été ignoré(s).`);
             
             toast({
