@@ -31,7 +31,7 @@ import { Button } from '@/components/ui/button';
 import { RegisterAgentForm } from '@/components/agents/register-agent-form';
 import type { Agent, Availability } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, deleteDoc, doc, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, deleteDoc, doc, writeBatch, getDocs, query, where } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
@@ -367,6 +367,7 @@ export default function AgentsPage() {
                 <SelectItem value="Administration">Administration</SelectItem>
                 <SelectItem value="Officier">Officier</SelectItem>
                 <SelectItem value="Adjudants">Adjudants</SelectItem>
+                <SelectItem value="FAUNE">FAUNE</SelectItem>
                 <SelectItem value="Non assigné">Non assigné</SelectItem>
               </SelectContent>
             </Select>

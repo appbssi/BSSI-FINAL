@@ -230,6 +230,7 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
                       <SelectItem value="Administration">Administration</SelectItem>
                       <SelectItem value="Officier">Officier</SelectItem>
                       <SelectItem value="Adjudants">Adjudants</SelectItem>
+                      <SelectItem value="FAUNE">FAUNE</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

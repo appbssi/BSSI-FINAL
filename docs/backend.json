@@ -30,7 +30,7 @@
         "section": {
             "type": "string",
             "description": "The section the agent is assigned to.",
-            "enum": ["Armurerie", "Administration", "Officier", "Adjudants", "Non assigné"]
+            "enum": ["Armurerie", "Administration", "Officier", "Adjudants", "FAUNE", "Non assigné"]
         },
         "onLeave": {
           "type": "boolean",

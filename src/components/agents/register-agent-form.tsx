@@ -231,6 +231,7 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
                       <SelectItem value="Administration">Administration</SelectItem>
                       <SelectItem value="Officier">Officier</SelectItem>
                       <SelectItem value="Adjudants">Adjudants</SelectItem>
+                      <SelectItem value="FAUNE">FAUNE</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
