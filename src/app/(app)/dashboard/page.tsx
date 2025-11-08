@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -107,80 +108,64 @@ export default function DashboardPage() {
       <div className="flex items-center h-10">
         <h2 className="mr-5 text-lg font-medium truncate">Tableau de bord</h2>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-5">
         
         {/* Main Stats Cards */}
-        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
-              <CardContent className="p-5">
-                <div className="flex justify-between">
-                  <Users className="h-7 w-7 text-blue-400" />
-                </div>
-                <div className="ml-2 w-full flex-1">
-                  <div>
-                    <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : totalAgents}</div>
-                    <div className="mt-1 text-base text-muted-foreground">Agents au Total</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
-              <CardContent className="p-5">
-                <div className="flex justify-between">
-                  <Shield className="h-7 w-7 text-yellow-400" />
-                </div>
-                <div className="ml-2 w-full flex-1">
-                  <div>
-                    <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : agentsOnMission}</div>
-                    <div className="mt-1 text-base text-muted-foreground">Agents en Mission</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
-              <CardContent className="p-5">
-                <div className="flex justify-between">
-                  <UserCheck className="h-7 w-7 text-pink-600" />
-                </div>
-                <div className="ml-2 w-full flex-1">
-                  <div>
-                    <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : availableAgents}</div>
-                    <div className="mt-1 text-base text-muted-foreground">Agents Disponibles</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
-              <CardContent className="p-5">
-                <div className="flex justify-between">
-                  <CheckCircle className="h-7 w-7 text-green-400" />
-                </div>
-                <div className="ml-2 w-full flex-1">
-                  <div>
-                    <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : completedMissions}</div>
-                    <div className="mt-1 text-base text-muted-foreground">Missions Terminées</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-        </div>
-
-        {/* Recent Activities */}
-        <Card className="lg:col-span-1 rounded-2xl">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Newspaper className="h-5 w-5" />
-                    Activités Récentes
-                </CardTitle>
-                <CardDescription>Journal des dernières actions dans l'application.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <RecentActivities />
-            </CardContent>
+        <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
+          <CardContent className="p-5">
+            <div className="flex justify-between">
+              <Users className="h-7 w-7 text-blue-400" />
+            </div>
+            <div className="ml-2 w-full flex-1">
+              <div>
+                <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : totalAgents}</div>
+                <div className="mt-1 text-base text-muted-foreground">Agents au Total</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
+          <CardContent className="p-5">
+            <div className="flex justify-between">
+              <Shield className="h-7 w-7 text-yellow-400" />
+            </div>
+            <div className="ml-2 w-full flex-1">
+              <div>
+                <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : agentsOnMission}</div>
+                <div className="mt-1 text-base text-muted-foreground">Agents en Mission</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
+          <CardContent className="p-5">
+            <div className="flex justify-between">
+              <UserCheck className="h-7 w-7 text-pink-600" />
+            </div>
+            <div className="ml-2 w-full flex-1">
+              <div>
+                <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : availableAgents}</div>
+                <div className="mt-1 text-base text-muted-foreground">Agents Disponibles</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
+          <CardContent className="p-5">
+            <div className="flex justify-between">
+              <CheckCircle className="h-7 w-7 text-green-400" />
+            </div>
+            <div className="ml-2 w-full flex-1">
+              <div>
+                <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : completedMissions}</div>
+                <div className="mt-1 text-base text-muted-foreground">Missions Terminées</div>
+              </div>
+            </div>
+          </CardContent>
         </Card>
         
         {/* Ongoing Missions */}
-        <Card className="md:col-span-2 lg:col-span-3 rounded-2xl">
+        <Card className="md:col-span-2 lg:col-span-4 rounded-2xl">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5" />
