@@ -1,12 +1,14 @@
+
 import { Timestamp } from 'firebase/firestore';
 
 export type Agent = {
   id: string;
   fullName: string;
-  registrationNumber: string;
+  registrationNumber?: string;
   rank: string;
-  contact: string;
+  contact?: string;
   address: string;
+  section: 'Armurerie' | 'Administration' | 'Officier' | 'Adjudants' | 'Non assigné';
   onLeave: boolean;
   availability?: Availability;
 };

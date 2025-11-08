@@ -20,6 +20,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { RegisterAgentForm } from '@/components/agents/register-agent-form';
 import type { Agent, Availability } from '@/lib/types';
@@ -70,6 +77,7 @@ export default function AgentsPage() {
   const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'Disponible' | 'En mission' | 'En congé'>('all');
+  const [sectionFilter, setSectionFilter] = useState<string>('all');
   const { toast } = useToast();
   const [now, setNow] = useState(new Date());
 
@@ -103,8 +111,9 @@ export default function AgentsPage() {
 
   const filteredAgents = sortedAgents.filter(agent => {
     const matchesSearch = (agent.fullName || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = availabilityFilter === 'all' || agent.availability === availabilityFilter;
-    return matchesSearch && matchesFilter;
+    const matchesAvailability = availabilityFilter === 'all' || agent.availability === availabilityFilter;
+    const matchesSection = sectionFilter === 'all' || agent.section === sectionFilter;
+    return matchesSearch && matchesAvailability && matchesSection;
   });
 
   const getBadgeVariant = (availability?: Availability) => {
@@ -182,6 +191,7 @@ export default function AgentsPage() {
         'Matricule': agent.registrationNumber,
         'Grade': agent.rank,
         'Contact': agent.contact,
+        'Section': agent.section || 'Non assigné',
         'Disponibilité': agent.availability,
     }));
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -226,12 +236,12 @@ export default function AgentsPage() {
         currentY += 8;
 
         autoTable(doc, {
-            head: [['Nom complet', 'Matricule', 'Grade', 'Contact', 'Disponibilité']],
+            head: [['Nom complet', 'Matricule', 'Grade', 'Section', 'Disponibilité']],
             body: filteredAgents.map(agent => [
                 agent.fullName,
                 agent.registrationNumber,
                 agent.rank,
-                agent.contact,
+                agent.section || 'Non assigné',
                 agent.availability,
             ]),
             startY: currentY,
@@ -341,12 +351,25 @@ export default function AgentsPage() {
               )}
             </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-medium">Filtrer par:</span>
-            <Button size="sm" variant={availabilityFilter === 'all' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('all')}>Tous</Button>
-            <Button size="sm" variant={availabilityFilter === 'Disponible' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('Disponible')}>Disponibles</Button>
-            <Button size="sm" variant={availabilityFilter === 'En mission' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En mission')}>En mission</Button>
-            <Button size="sm" variant={availabilityFilter === 'En congé' ? 'default' : 'outline'} onClick={() => setAvailabilityFilter('En congé')}>En congé</Button>
+            <Button size="sm" variant={availabilityFilter === 'all' ? 'secondary' : 'outline'} onClick={() => setAvailabilityFilter('all')}>Tous</Button>
+            <Button size="sm" variant={availabilityFilter === 'Disponible' ? 'secondary' : 'outline'} onClick={() => setAvailabilityFilter('Disponible')}>Disponibles</Button>
+            <Button size="sm" variant={availabilityFilter === 'En mission' ? 'secondary' : 'outline'} onClick={() => setAvailabilityFilter('En mission')}>En mission</Button>
+            <Button size="sm" variant={availabilityFilter === 'En congé' ? 'secondary' : 'outline'} onClick={() => setAvailabilityFilter('En congé')}>En congé</Button>
+            <Select value={sectionFilter} onValueChange={setSectionFilter}>
+              <SelectTrigger className="w-[180px] h-9">
+                <SelectValue placeholder="Filtrer par section" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les sections</SelectItem>
+                <SelectItem value="Armurerie">Armurerie</SelectItem>
+                <SelectItem value="Administration">Administration</SelectItem>
+                <SelectItem value="Officier">Officier</SelectItem>
+                <SelectItem value="Adjudants">Adjudants</SelectItem>
+                <SelectItem value="Non assigné">Non assigné</SelectItem>
+              </SelectContent>
+            </Select>
         </div>
       </div>
 
@@ -357,7 +380,7 @@ export default function AgentsPage() {
               <TableHead>Nom complet</TableHead>
               <TableHead>Matricule</TableHead>
               <TableHead>Grade</TableHead>
-              <TableHead>Contact</TableHead>
+              <TableHead>Section</TableHead>
               <TableHead>Disponibilité</TableHead>
               <TableHead><span className="sr-only">Actions</span></TableHead>
             </TableRow>
@@ -373,7 +396,7 @@ export default function AgentsPage() {
                     <TableCell className="font-medium">{agent.fullName}</TableCell>
                     <TableCell>{agent.registrationNumber}</TableCell>
                     <TableCell>{agent.rank}</TableCell>
-                    <TableCell>{agent.contact}</TableCell>
+                    <TableCell>{agent.section || 'N/A'}</TableCell>
                     <TableCell><Badge variant={getBadgeVariant(agent.availability)}>{agent.availability}</Badge></TableCell>
                     <TableCell>
                       {!isObserver && (

@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -54,6 +55,10 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsP
                 <div className="flex flex-col gap-1">
                     <span className="text-muted-foreground">Grade</span>
                     <p className="font-semibold">{agent.rank}</p>
+                </div>
+                 <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground">Section</span>
+                    <p className="font-semibold">{agent.section || 'Non assigné'}</p>
                 </div>
                 <div className="flex flex-col gap-2">
                     <span className="text-muted-foreground">Disponibilité actuelle</span>

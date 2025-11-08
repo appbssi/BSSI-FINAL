@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -19,6 +20,13 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useFirestore, errorEmitter } from '@/firebase';
@@ -30,12 +38,11 @@ import { logActivity } from '@/lib/activity-logger';
 
 const agentSchema = z.object({
   fullName: z.string().min(2, 'Le nom complet est requis'),
-  registrationNumber: z.string().min(3, 'Le matricule est requis'),
+  registrationNumber: z.string().optional(),
   rank: z.string().min(3, 'Le grade est requis'),
-  contact: z.string()
-    .transform(val => val.replace(/\D/g, '')) // Supprime les caractères non numériques
-    .pipe(z.string().min(8, "Le contact doit contenir au moins 8 chiffres.").max(14, "Le contact ne peut pas dépasser 14 chiffres.")),
+  contact: z.string().transform(val => val.replace(/\D/g, '')).pipe(z.string().min(8, "Le contact doit contenir au moins 8 chiffres.").max(14, "Le contact ne peut pas dépasser 14 chiffres.")).optional().or(z.literal('')),
   address: z.string().min(3, "L'adresse est requise"),
+  section: z.string({ required_error: "Veuillez sélectionner une section."}),
   onLeave: z.boolean(),
 });
 
@@ -55,10 +62,11 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
     resolver: zodResolver(agentSchema),
     defaultValues: {
       fullName: agent.fullName,
-      registrationNumber: agent.registrationNumber,
+      registrationNumber: agent.registrationNumber || '',
       rank: agent.rank,
-      contact: agent.contact,
+      contact: agent.contact || '',
       address: agent.address,
+      section: agent.section || 'Non assigné',
       onLeave: agent.onLeave,
     },
   });
@@ -68,7 +76,7 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
     try {
       const agentsRef = collection(firestore, 'agents');
        // Check for uniqueness of registrationNumber if it has changed
-      if (data.registrationNumber !== agent.registrationNumber) {
+      if (data.registrationNumber && data.registrationNumber !== agent.registrationNumber) {
         const q = query(agentsRef, where("registrationNumber", "==", data.registrationNumber));
         const querySnapshot = await getDocs(q);
 
@@ -82,7 +90,7 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
       }
 
       // Check for uniqueness of contact if it has changed
-      if (data.contact !== agent.contact) {
+      if (data.contact && data.contact !== agent.contact) {
         const q = query(agentsRef, where("contact", "==", data.contact));
         const querySnapshot = await getDocs(q);
 
@@ -204,6 +212,30 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
               )}
             />
           </div>
+          <FormField
+              control={form.control}
+              name="section"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Section</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une section" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Non assigné">Non assigné</SelectItem>
+                      <SelectItem value="Armurerie">Armurerie</SelectItem>
+                      <SelectItem value="Administration">Administration</SelectItem>
+                      <SelectItem value="Officier">Officier</SelectItem>
+                      <SelectItem value="Adjudants">Adjudants</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           <FormField
             control={form.control}
             name="onLeave"

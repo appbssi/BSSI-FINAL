@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -18,6 +19,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { useFirestore, errorEmitter } from '@/firebase';
@@ -27,12 +35,11 @@ import { logActivity } from '@/lib/activity-logger';
 
 const agentSchema = z.object({
   fullName: z.string().min(2, 'Le nom complet est requis'),
-  registrationNumber: z.string().min(3, 'Le matricule est requis'),
+  registrationNumber: z.string().optional(),
   rank: z.string().min(3, 'Le grade est requis'),
-  contact: z.string()
-    .transform(val => val.replace(/\D/g, '')) // Supprime les caractères non numériques
-    .pipe(z.string().min(8, "Le contact doit contenir au moins 8 chiffres.").max(14, "Le contact ne peut pas dépasser 14 chiffres.")),
+  contact: z.string().transform(val => val.replace(/\D/g, '')).pipe(z.string().min(8, "Le contact doit contenir au moins 8 chiffres.").max(14, "Le contact ne peut pas dépasser 14 chiffres.")).optional().or(z.literal('')),
   address: z.string().min(3, "L'adresse est requise"),
+  section: z.string({ required_error: "Veuillez sélectionner une section."}),
 });
 
 type AgentFormValues = z.infer<typeof agentSchema>;
@@ -54,6 +61,7 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
       rank: '',
       contact: '',
       address: '',
+      section: 'Non assigné',
     },
   });
 
@@ -63,26 +71,28 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
     try {
       const agentsRef = collection(firestore, 'agents');
       
-      const regQuery = query(agentsRef, where("registrationNumber", "==", data.registrationNumber));
-      const regQuerySnapshot = await getDocs(regQuery);
-
-      if (!regQuerySnapshot.empty) {
-        form.setError('registrationNumber', {
-          type: 'manual',
-          message: 'Ce matricule est déjà utilisé par un autre agent.',
-        });
-        return; 
+      if (data.registrationNumber) {
+        const regQuery = query(agentsRef, where("registrationNumber", "==", data.registrationNumber));
+        const regQuerySnapshot = await getDocs(regQuery);
+        if (!regQuerySnapshot.empty) {
+          form.setError('registrationNumber', {
+            type: 'manual',
+            message: 'Ce matricule est déjà utilisé par un autre agent.',
+          });
+          return; 
+        }
       }
       
-      const contactQuery = query(agentsRef, where("contact", "==", data.contact));
-      const contactQuerySnapshot = await getDocs(contactQuery);
-      
-      if (!contactQuerySnapshot.empty) {
-          form.setError('contact', {
-              type: 'manual',
-              message: 'Ce contact est déjà utilisé par un autre agent.',
-          });
-          return;
+      if (data.contact) {
+        const contactQuery = query(agentsRef, where("contact", "==", data.contact));
+        const contactQuerySnapshot = await getDocs(contactQuery);
+        if (!contactQuerySnapshot.empty) {
+            form.setError('contact', {
+                type: 'manual',
+                message: 'Ce contact est déjà utilisé par un autre agent.',
+            });
+            return;
+        }
       }
       
       const agentData = {
@@ -203,6 +213,30 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
               )}
             />
           </div>
+           <FormField
+              control={form.control}
+              name="section"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Section</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une section" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Non assigné">Non assigné</SelectItem>
+                      <SelectItem value="Armurerie">Armurerie</SelectItem>
+                      <SelectItem value="Administration">Administration</SelectItem>
+                      <SelectItem value="Officier">Officier</SelectItem>
+                      <SelectItem value="Adjudants">Adjudants</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           <div className="flex justify-end pt-4">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
