@@ -68,9 +68,14 @@ export function CreateGatheringForm({ onGatheringCreated }: CreateGatheringFormP
   const { data: allAgents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
 
   const availableAgents = useMemo(() => {
-    return (allAgents || [])
+    if (!allAgents) return [];
+    return [...allAgents]
       .filter(agent => !agent.onLeave)
-      .sort((a, b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
+      .sort((a, b) => {
+        const nameA = a.fullName || '';
+        const nameB = b.fullName || '';
+        return nameA.localeCompare(nameB);
+      });
   }, [allAgents]);
 
 
@@ -214,7 +219,7 @@ export function CreateGatheringForm({ onGatheringCreated }: CreateGatheringFormP
                                                   {isChecked && <Check className="h-4 w-4" />}
                                                 </div>
                                                 <div className="font-medium flex-1">
-                                                    {agent.firstName} {agent.lastName}
+                                                    {agent.fullName}
                                                     <div className="text-sm text-muted-foreground">{agent.rank} | {agent.registrationNumber}</div>
                                                 </div>
                                             </div>
