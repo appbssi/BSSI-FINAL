@@ -8,7 +8,7 @@ export type Agent = {
   rank: string;
   contact?: string;
   address: string;
-  section: 'Armurerie' | 'Administration' | 'Officier' | 'Adjudants' | 'FAUNE' | 'Non assigné';
+  section: 'Armurerie' | 'Administration' | 'Officier' | 'Adjudants' | 'FAUNE' | 'CONDUCTEUR' | 'SECTION FEMININE' | 'Non assigné';
   onLeave: boolean;
   availability?: Availability;
 };

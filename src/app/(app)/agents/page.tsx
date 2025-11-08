@@ -368,6 +368,8 @@ export default function AgentsPage() {
                 <SelectItem value="Officier">Officier</SelectItem>
                 <SelectItem value="Adjudants">Adjudants</SelectItem>
                 <SelectItem value="FAUNE">FAUNE</SelectItem>
+                <SelectItem value="CONDUCTEUR">CONDUCTEUR</SelectItem>
+                <SelectItem value="SECTION FEMININE">SECTION FEMININE</SelectItem>
                 <SelectItem value="Non assigné">Non assigné</SelectItem>
               </SelectContent>
             </Select>
