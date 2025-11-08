@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -93,12 +94,14 @@ export default function AgentsPage() {
 
   const sortedAgents = useMemo(() => {
     return [...agentsWithAvailability].sort((a, b) => {
-      return a.fullName.localeCompare(b.fullName);
+      const nameA = a.fullName || '';
+      const nameB = b.fullName || '';
+      return nameA.localeCompare(nameB);
     });
   }, [agentsWithAvailability]);
 
   const filteredAgents = sortedAgents.filter(agent => {
-    const matchesSearch = agent.fullName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (agent.fullName || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter = availabilityFilter === 'all' || agent.availability === availabilityFilter;
     return matchesSearch && matchesFilter;
   });
