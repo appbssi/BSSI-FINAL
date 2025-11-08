@@ -32,7 +32,10 @@ import { logActivity } from '@/lib/activity-logger';
 
 type AgentImportData = Omit<Agent, 'id' | 'onLeave'>;
 
-const contactSchema = z.string().length(10, 'Le contact doit contenir exactement 10 chiffres.').regex(/^[0-9]+$/, 'Le contact ne doit contenir que des chiffres.');
+const contactSchema = z.string()
+  .transform(val => val.replace(/\D/g, '')) // Supprime les caractères non numériques
+  .pipe(z.string().min(8, "Le contact doit contenir au moins 8 chiffres.").max(14, "Le contact ne peut pas dépasser 14 chiffres."));
+
 
 export function ImportAgentsDialog({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -73,39 +76,43 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         let duplicatesInFile = 0;
         let duplicatesInDb = 0;
         let invalidContacts = 0;
+        const validAgents: AgentImportData[] = [];
 
-        const parsedAgents: AgentImportData[] = json.map((row) => ({
-            fullName: String(row.fullName || '').trim(),
-            registrationNumber: String(row.registrationNumber || '').trim(),
-            rank: String(row.rank || '').trim(),
-            contact: String(row.contact || '').trim(),
-            address: String(row.address || '').trim(),
-        })).filter(agent => {
-            if (!agent.fullName || !agent.registrationNumber || !agent.contact) {
-                return false;
-            }
+        for (const row of json) {
+          const rawContact = String(row.contact || '').trim();
+          const contactValidation = contactSchema.safeParse(rawContact);
+          const sanitizedContact = contactValidation.success ? contactValidation.data : '';
 
-            // Validate contact format
-            const contactValidation = contactSchema.safeParse(agent.contact);
-            if (!contactValidation.success) {
-                invalidContacts++;
-                return false;
-            }
+          const agent: AgentImportData = {
+              fullName: String(row.fullName || '').trim(),
+              registrationNumber: String(row.registrationNumber || '').trim(),
+              rank: String(row.rank || '').trim(),
+              contact: sanitizedContact,
+              address: String(row.address || '').trim(),
+          };
 
-            // Check for duplicates in DB
-            if (existingRegNumbers.has(agent.registrationNumber) || existingContacts.has(agent.contact)) {
-                duplicatesInDb++;
-                return false;
-            }
-            // Check for duplicates within the file
-            if (seenInFileReg.has(agent.registrationNumber) || seenInFileContact.has(agent.contact)) {
-                duplicatesInFile++;
-                return false;
-            }
-            seenInFileReg.add(agent.registrationNumber);
-            seenInFileContact.add(agent.contact);
-            return true;
-        });
+          if (!agent.fullName || !agent.registrationNumber || !agent.contact) {
+              continue;
+          }
+
+          if (!contactValidation.success) {
+              invalidContacts++;
+              continue;
+          }
+
+          if (existingRegNumbers.has(agent.registrationNumber) || existingContacts.has(agent.contact)) {
+              duplicatesInDb++;
+              continue;
+          }
+          if (seenInFileReg.has(agent.registrationNumber) || seenInFileContact.has(agent.contact)) {
+              duplicatesInFile++;
+              continue;
+          }
+
+          seenInFileReg.add(agent.registrationNumber);
+          seenInFileContact.add(agent.contact);
+          validAgents.push(agent);
+        }
 
         if (duplicatesInDb > 0 || duplicatesInFile > 0 || invalidContacts > 0) {
             let messages = [];
@@ -119,7 +126,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             });
         }
 
-        if(parsedAgents.length === 0){
+        if(validAgents.length === 0){
             if(duplicatesInDb === 0 && duplicatesInFile === 0 && invalidContacts === 0) {
               toast({
                   variant: 'destructive',
@@ -130,7 +137,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             return;
         }
 
-        setAgentsToImport(parsedAgents);
+        setAgentsToImport(validAgents);
       } catch (error) {
         toast({
             variant: 'destructive',

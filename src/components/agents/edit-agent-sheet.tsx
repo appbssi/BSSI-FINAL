@@ -32,7 +32,9 @@ const agentSchema = z.object({
   fullName: z.string().min(2, 'Le nom complet est requis'),
   registrationNumber: z.string().min(3, 'Le matricule est requis'),
   rank: z.string().min(3, 'Le grade est requis'),
-  contact: z.string().length(10, 'Le contact doit contenir exactement 10 chiffres.').regex(/^[0-9]+$/, 'Le contact ne doit contenir que des chiffres.'),
+  contact: z.string()
+    .transform(val => val.replace(/\D/g, '')) // Supprime les caractères non numériques
+    .pipe(z.string().min(8, "Le contact doit contenir au moins 8 chiffres.").max(14, "Le contact ne peut pas dépasser 14 chiffres.")),
   address: z.string().min(3, "L'adresse est requise"),
   onLeave: z.boolean(),
 });

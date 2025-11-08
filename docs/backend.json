@@ -20,7 +20,7 @@
         },
         "contact": {
             "type": "string",
-            "description": "The agent's contact details."
+            "description": "The agent's contact details (digits only)."
         },
         "address": {
             "type": "string",
