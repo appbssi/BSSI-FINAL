@@ -111,8 +111,8 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-5">
         
         {/* Main Stats Cards */}
-        <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
-          <CardContent className="p-5">
+        <div className="animated-border-card">
+          <CardContent className="p-5 h-full w-full">
             <div className="flex justify-between">
               <Users className="h-7 w-7 text-blue-400" />
             </div>
@@ -123,9 +123,9 @@ export default function DashboardPage() {
               </div>
             </div>
           </CardContent>
-        </Card>
-        <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
-          <CardContent className="p-5">
+        </div>
+        <div className="animated-border-card">
+          <CardContent className="p-5 h-full w-full">
             <div className="flex justify-between">
               <Shield className="h-7 w-7 text-yellow-400" />
             </div>
@@ -136,9 +136,9 @@ export default function DashboardPage() {
               </div>
             </div>
           </CardContent>
-        </Card>
-        <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
-          <CardContent className="p-5">
+        </div>
+        <div className="animated-border-card">
+          <CardContent className="p-5 h-full w-full">
             <div className="flex justify-between">
               <UserCheck className="h-7 w-7 text-pink-600" />
             </div>
@@ -149,9 +149,9 @@ export default function DashboardPage() {
               </div>
             </div>
           </CardContent>
-        </Card>
-        <Card className="transform hover:scale-105 transition duration-300 rounded-2xl">
-          <CardContent className="p-5">
+        </div>
+        <div className="animated-border-card">
+          <CardContent className="p-5 h-full w-full">
             <div className="flex justify-between">
               <CheckCircle className="h-7 w-7 text-green-400" />
             </div>
@@ -162,7 +162,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </div>
         
         {/* Ongoing Missions */}
         <Card className="md:col-span-2 lg:col-span-4 rounded-2xl">
