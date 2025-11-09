@@ -370,7 +370,7 @@ export default function AgentsPage() {
             <button className={cn('button-13', availabilityFilter === 'En mission' && 'active')} onClick={() => setAvailabilityFilter('En mission')}>En mission</button>
             <button className={cn('button-13', availabilityFilter === 'En congé' && 'active')} onClick={() => setAvailabilityFilter('En congé')}>En congé</button>
             <Select value={sectionFilter} onValueChange={setSectionFilter}>
-              <SelectTrigger className="w-[180px] h-9">
+              <SelectTrigger className="button-13 !w-[180px]">
                 <SelectValue placeholder="Filtrer par section" />
               </SelectTrigger>
               <SelectContent>
@@ -492,3 +492,4 @@ export default function AgentsPage() {
     
 
     
+
