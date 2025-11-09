@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { addDoc, collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
 import { useFirestore, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Loader2 } from 'lucide-react';
@@ -97,7 +97,8 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
       
       const agentData = {
         ...data,
-        onLeave: false,
+        leaveStartDate: null,
+        leaveEndDate: null,
       };
 
       addDoc(agentsRef, agentData)

@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { FileUp, MoreHorizontal, PlusCircle, Search, FileDown, Briefcase } from 'lucide-react';
+import { FileUp, MoreHorizontal, PlusCircle, Search, FileDown } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +31,7 @@ import { Button } from '@/components/ui/button';
 import { RegisterAgentForm } from '@/components/agents/register-agent-form';
 import type { Agent, Availability } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, deleteDoc, doc, writeBatch, getDocs, query, where, updateDoc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, writeBatch, getDocs, query, where } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
@@ -66,6 +66,7 @@ import { logActivity } from '@/lib/activity-logger';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import { ManageLeaveDialog } from '@/components/agents/manage-leave-dialog';
 
 
 export default function AgentsPage() {
@@ -75,6 +76,7 @@ export default function AgentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isRegisterOpen, setRegisterOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
+  const [leaveAgent, setLeaveAgent] = useState<Agent | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -175,50 +177,6 @@ export default function AgentsPage() {
         setIsDeleting(false);
         setAgentToDelete(null); // Close the dialog
     });
-  };
-
-  const handleToggleLeave = async (agent: Agent) => {
-    if (!firestore) return;
-    
-    const agentRef = doc(firestore, 'agents', agent.id);
-    const newLeaveStatus = !agent.onLeave;
-    const updateData = { onLeave: newLeaveStatus };
-
-    updateDoc(agentRef, updateData).then(() => {
-        toast({
-            title: 'Statut mis à jour',
-            description: `L'agent ${agent.fullName} est maintenant ${newLeaveStatus ? 'en congé' : 'disponible'}.`,
-        });
-        logActivity(firestore, `Le statut de congé de l'agent ${agent.fullName} a été mis à jour.`, 'Agent', '/agents');
-    }).catch((serverError) => {
-        const permissionError = new FirestorePermissionError({
-            path: agentRef.path,
-            operation: 'update',
-            requestResourceData: updateData,
-        });
-        errorEmitter.emit('permission-error', permissionError);
-    });
-};
-
-  const handleDeduplicate = async () => {
-    if (!firestore) return;
-    setIsDeleting(true);
-    try {
-      const deletedCount = await deleteDuplicateAgents(firestore);
-      toast({
-        title: deletedCount > 0 ? 'Doublons supprimés' : 'Aucun doublon trouvé',
-        description: deletedCount > 0 ? `${deletedCount} agent(s) en double ont été supprimé(s).` : "Votre liste d'agents ne contient aucun doublon.",
-      });
-    } catch (error) {
-      console.error("Erreur lors de la suppression des doublons: ", error);
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de la suppression des doublons.',
-      });
-    } finally {
-      setIsDeleting(false);
-    }
   };
 
   const handleExportXLSX = () => {
@@ -423,10 +381,10 @@ export default function AgentsPage() {
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onSelect={() => setEditingAgent(agent)}>Modifier</DropdownMenuItem>
                              <DropdownMenuItem 
-                              onSelect={() => handleToggleLeave(agent)}
+                              onSelect={() => setLeaveAgent(agent)}
                               disabled={isAgentOnMission}
                             >
-                              {agent.onLeave ? 'Rétablir du congé' : 'Mettre en congé'}
+                              Gérer le congé
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
@@ -460,6 +418,14 @@ export default function AgentsPage() {
             />
           </DialogContent>
         </Dialog>
+      )}
+
+      {leaveAgent && (
+        <ManageLeaveDialog
+          agent={leaveAgent}
+          isOpen={!!leaveAgent}
+          onOpenChange={(open) => !open && setLeaveAgent(null)}
+        />
       )}
 
       {selectedAgent && missions && (

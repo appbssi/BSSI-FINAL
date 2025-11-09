@@ -9,7 +9,8 @@ export type Agent = {
   contact?: string;
   address: string;
   section: 'Armurerie' | 'Administration' | 'Officier' | 'Adjudants' | 'FAUNE' | 'CONDUCTEUR' | 'SECTION FEMININE' | 'Non assigné';
-  onLeave: boolean;
+  leaveStartDate?: Timestamp;
+  leaveEndDate?: Timestamp;
   availability?: Availability;
 };
 

@@ -164,7 +164,14 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
     
     return allAgents
       .filter(agent => {
-        if (agent.onLeave) return false;
+        const now = new Date();
+        if (agent.leaveStartDate && agent.leaveEndDate) {
+            const leaveStart = agent.leaveStartDate.toDate();
+            const leaveEnd = agent.leaveEndDate.toDate();
+            if (selectedStart < leaveEnd && selectedEnd > leaveStart) {
+              return false; // Proposed mission overlaps with leave
+            }
+        }
 
         const hasConflict = allMissions.some(mission => {
             if (mission.status === 'Terminée' || mission.status === 'Annulée') {

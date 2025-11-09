@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
@@ -178,7 +179,13 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
 
     return allAgents
       .filter(agent => {
-        if (agent.onLeave) return false;
+        if (agent.leaveStartDate && agent.leaveEndDate) {
+            const leaveStart = agent.leaveStartDate.toDate();
+            const leaveEnd = agent.leaveEndDate.toDate();
+            if (selectedStart < leaveEnd && selectedEnd > leaveStart) {
+              return false; // Proposed mission overlaps with leave
+            }
+        }
         
         const isCurrentlyAssigned = (mission.assignedAgentIds || []).includes(agent.id);
 
@@ -397,7 +404,8 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
                                         return startDate < missionEnd && endDate > missionStart;
                                     });
 
-                                    const isDisabled = !isCurrentlyAssigned && (agent.onLeave || hasConflict);
+                                    const isOnLeave = agent.leaveStartDate && agent.leaveEndDate && startDate < agent.leaveEndDate.toDate() && endDate > agent.leaveStartDate.toDate();
+                                    const isDisabled = !isCurrentlyAssigned && (isOnLeave || hasConflict);
 
                                     return (
                                         <div
@@ -422,7 +430,7 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
                                                 </div>
                                             </div>
                                              <Badge variant={isDisabled ? 'destructive' : 'outline'}>
-                                                {agent.onLeave ? 'En congé' : hasConflict ? 'Conflit' : 'Disponible'}
+                                                {isOnLeave ? 'En congé' : hasConflict ? 'Conflit' : 'Disponible'}
                                              </Badge>
                                         </div>
                                     );

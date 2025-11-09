@@ -32,17 +32,22 @@
             "description": "The section the agent is assigned to.",
             "enum": ["Armurerie", "Administration", "Officier", "Adjudants", "FAUNE", "CONDUCTEUR", "SECTION FEMININE", "Non assigné"]
         },
-        "onLeave": {
-          "type": "boolean",
-          "description": "Indicates if the agent is on leave."
+        "leaveStartDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The start date of the agent's leave."
+        },
+        "leaveEndDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The end date of the agent's leave."
         }
       },
       "required": [
         "fullName",
         "rank",
         "address",
-        "section",
-        "onLeave"
+        "section"
       ]
     },
     "Mission": {

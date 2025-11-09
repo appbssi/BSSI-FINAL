@@ -18,7 +18,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
 import {
   Select,
@@ -32,7 +31,6 @@ import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/fire
 import { useFirestore, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent, Availability } from '@/lib/types';
-import { Switch } from '../ui/switch';
 import { Loader2 } from 'lucide-react';
 import { logActivity } from '@/lib/activity-logger';
 
@@ -43,7 +41,6 @@ const agentSchema = z.object({
   contact: z.string().transform(val => val.replace(/\D/g, '')).pipe(z.string().min(8, "Le contact doit contenir au moins 8 chiffres.").max(14, "Le contact ne peut pas dépasser 14 chiffres.")).optional().or(z.literal('')),
   address: z.string().min(3, "L'adresse est requise"),
   section: z.string({ required_error: "Veuillez sélectionner une section."}),
-  onLeave: z.boolean(),
 });
 
 type AgentFormValues = z.infer<typeof agentSchema>;
@@ -67,7 +64,6 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
       contact: agent.contact || '',
       address: agent.address,
       section: agent.section || 'Non assigné',
-      onLeave: agent.onLeave,
     },
   });
 
@@ -131,7 +127,6 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
   };
 
   const { isSubmitting } = form.formState;
-  const isAgentOnMission = availability === 'En mission';
 
   return (
     <>
@@ -239,32 +234,6 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
                 </FormItem>
               )}
             />
-          <FormField
-            control={form.control}
-            name="onLeave"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">
-                    En congé
-                  </FormLabel>
-                  <FormDescription>
-                    {isAgentOnMission 
-                        ? "Un agent en mission ne peut pas être mis en congé." 
-                        : "Marquer cet agent comme étant en congé. Il ne sera pas disponible pour les missions."
-                    }
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    disabled={isAgentOnMission}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
           <div className="flex justify-end pt-4">
             <Button type="submit" disabled={isSubmitting}>
                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -31,7 +31,8 @@ import { Loader2 } from 'lucide-react';
 import * as z from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 
-type AgentImportData = Omit<Agent, 'id' | 'onLeave'>;
+type AgentImportData = Omit<Agent, 'id' | 'leaveStartDate' | 'leaveEndDate'>;
+
 
 const contactSchema = z.string()
   .transform(val => val.replace(/\D/g, ''))
@@ -174,7 +175,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         } else {
             // Add new agent
             const newAgentRef = doc(agentsRef);
-            batch.set(newAgentRef, { ...agentData, onLeave: false });
+            batch.set(newAgentRef, { ...agentData, leaveStartDate: null, leaveEndDate: null });
             agentsAdded++;
         }
     }

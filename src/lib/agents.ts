@@ -39,7 +39,8 @@ const getDisplayStatus = (mission: Mission): Mission['status'] => {
   };
 
 /**
- * Determines the availability of an agent based on their missions.
+ * Determines the availability of an agent based on their missions and leave status.
+ * An agent is "En congé" if the current date falls within their leave period.
  * An agent is "En mission" if they are assigned to any mission that is 'En cours'.
  * @param agent The agent to check.
  * @param missions A list of all missions.
@@ -47,8 +48,16 @@ const getDisplayStatus = (mission: Mission): Mission['status'] => {
  * @returns The availability status of the agent.
  */
 export function getAgentAvailability(agent: Agent, missions: Mission[], excludeMissionId?: string): Availability {
-  if (agent.onLeave) {
-    return 'En congé';
+  const now = new Date();
+  
+  if (agent.leaveStartDate && agent.leaveEndDate) {
+    const leaveStart = agent.leaveStartDate.toDate();
+    const leaveEnd = agent.leaveEndDate.toDate();
+    leaveStart.setHours(0, 0, 0, 0);
+    leaveEnd.setHours(23, 59, 59, 999);
+    if (now >= leaveStart && now <= leaveEnd) {
+      return 'En congé';
+    }
   }
 
   const isAssignedToActiveMission = missions.some(mission => {
@@ -57,7 +66,6 @@ export function getAgentAvailability(agent: Agent, missions: Mission[], excludeM
     }
     
     const isAgentAssigned = mission.assignedAgentIds.includes(agent.id);
-    // Use the real-time status to determine availability
     const missionStatus = getDisplayStatus(mission); 
     const isMissionInProgress = missionStatus === 'En cours';
 
