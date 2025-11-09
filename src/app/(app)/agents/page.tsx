@@ -306,9 +306,9 @@ export default function AgentsPage() {
                 <>
                   <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
                     <DialogTrigger asChild>
-                      <Button>
+                      <button className="button-13 flex items-center justify-center">
                         <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
-                      </Button>
+                      </button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md">
                       <RegisterAgentForm onAgentRegistered={() => setRegisterOpen(false)} />
@@ -488,3 +488,5 @@ export default function AgentsPage() {
     </div>
   );
 }
+
+    
