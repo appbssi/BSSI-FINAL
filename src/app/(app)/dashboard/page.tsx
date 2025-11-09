@@ -111,7 +111,7 @@ export default function DashboardPage() {
       {(agentsLoading || missionsLoading) ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-             <Card key={i} className="flex flex-col justify-between p-6">
+             <Card key={i} className="flex flex-col justify-between p-6 rounded-2xl">
                 <div className="flex justify-between items-start">
                     <div className="space-y-2">
                         <div className="h-5 w-32 bg-muted rounded-md animate-pulse"></div>
@@ -124,7 +124,7 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          <Card className="rounded-2xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Agents au Total</CardTitle>
               <Users className="h-5 w-5 text-muted-foreground" />
@@ -133,7 +133,7 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold">{stats.totalAgents}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Agents en Mission</CardTitle>
               <Shield className="h-5 w-5 text-muted-foreground" />
@@ -142,7 +142,7 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold">{stats.onMission}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Agents Disponibles</CardTitle>
               <UserCheck className="h-5 w-5 text-muted-foreground" />
@@ -151,7 +151,7 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold">{stats.available}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Missions Terminées</CardTitle>
               <CheckCircle className="h-5 w-5 text-muted-foreground" />
@@ -164,7 +164,7 @@ export default function DashboardPage() {
       )}
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 rounded-2xl">
           <CardHeader>
             <CardTitle>Missions en cours ({ongoingMissions.length})</CardTitle>
           </CardHeader>
@@ -199,7 +199,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="rounded-2xl">
             <CardHeader>
                 <CardTitle>Activités Récentes</CardTitle>
                 <CardDescription>Les dernières actions effectuées dans l'application.</CardDescription>
