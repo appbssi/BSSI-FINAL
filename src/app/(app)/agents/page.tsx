@@ -323,9 +323,9 @@ export default function AgentsPage() {
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
+                  <button className="button-13 flex items-center justify-center">
                     <FileDown className="mr-2 h-4 w-4" /> Exporter
-                  </Button>
+                  </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuLabel>Choisir un format</DropdownMenuLabel>
