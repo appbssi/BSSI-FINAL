@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Users, Search, FileDown } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Users, Search, FileDown, CheckCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -224,6 +224,7 @@ export default function MissionsPage() {
   const { isObserver } = useRole();
   const [isCreateMissionOpen, setCreateMissionOpen] = useState(false);
   const [editingMission, setEditingMission] = useState<Mission | null>(null);
+  const [missionToComplete, setMissionToComplete] = useState<Mission | null>(null);
   const [missionToCancel, setMissionToCancel] = useState<Mission | null>(null);
   const [missionToDelete, setMissionToDelete] = useState<Mission | null>(null);
   const { toast } = useToast();
@@ -279,6 +280,21 @@ export default function MissionsPage() {
       case 'Planification':
       default: return 'secondary';
     }
+  };
+  
+  const handleCompleteMission = async () => {
+    if (!firestore || !missionToComplete) return;
+    const missionRef = doc(firestore, 'missions', missionToComplete.id);
+    const updateData = { status: 'Terminée' as const };
+    
+    updateDoc(missionRef, updateData).then(() => {
+        toast({ title: 'Mission terminée', description: `La mission "${missionToComplete.name}" a été marquée comme terminée.` });
+        logActivity(firestore, `La mission "${missionToComplete.name}" a été terminée.`, 'Mission', '/missions');
+    }).catch((serverError) => {
+        const permissionError = new FirestorePermissionError({ path: missionRef.path, operation: 'update', requestResourceData: updateData });
+        errorEmitter.emit('permission-error', permissionError);
+    });
+    setMissionToComplete(null);
   };
   
   const handleCancelMission = async () => {
@@ -425,7 +441,13 @@ export default function MissionsPage() {
                         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem onSelect={() => setEditingMission(mission)}>Modifier/Prolonger</DropdownMenuItem>
-                          {mission.displayStatus !== 'Annulée' && mission.displayStatus !== 'Terminée' && (
+                          {mission.displayStatus !== 'Terminée' && mission.displayStatus !== 'Annulée' && (
+                            <DropdownMenuItem onSelect={() => setMissionToComplete(mission)}>
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Terminer la mission
+                            </DropdownMenuItem>
+                          )}
+                          {mission.displayStatus !== 'Terminée' && mission.displayStatus !== 'Annulée' && (
                             <DropdownMenuItem onSelect={() => setMissionToCancel(mission)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">Annuler la mission</DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
@@ -449,6 +471,21 @@ export default function MissionsPage() {
           isOpen={!!editingMission}
           onOpenChange={(open) => !open && setEditingMission(null)}
         />
+      )}
+      
+      {missionToComplete && (
+         <AlertDialog open={!!missionToComplete} onOpenChange={(open) => !open && setMissionToComplete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Êtes-vous sûr de vouloir terminer cette mission ?</AlertDialogTitle>
+              <AlertDialogDescription>La mission <span className="font-semibold">{missionToComplete.name}</span> sera marquée comme "Terminée". Cette action est irréversible.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setMissionToComplete(null)}>Retour</AlertDialogCancel>
+              <AlertDialogAction onClick={handleCompleteMission}>Terminer la mission</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
 
       {missionToCancel && (
