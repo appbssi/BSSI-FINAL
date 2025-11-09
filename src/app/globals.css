@@ -175,8 +175,8 @@ body {
     }
   }
   
-  .floating-card {
-    animation: float 6s ease-in-out infinite;
+  .subtle-float {
+    animation: float 8s ease-in-out infinite;
   }
 
   @keyframes float {
@@ -184,7 +184,7 @@ body {
       transform: translateY(0px);
     }
     50% {
-      transform: translateY(-10px);
+      transform: translateY(-8px);
     }
     100% {
       transform: translateY(0px);
@@ -263,4 +263,20 @@ body {
     transform: scaleX(1.4) scaleY(1.6);
     opacity: 0;
   }
+
+  .login-btn {
+    background: linear-gradient(0deg, #3F51B5 0%, #BA68C8 100%);
+    border: none;
+    box-shadow: inset 2px 2px 2px 0px rgba(255,255,255,.5),
+     7px 7px 20px 0px rgba(0,0,0,.1),
+     4px 4px 5px 0px rgba(0,0,0,.1);
+  }
+
+  .login-btn:hover {
+    box-shadow: 4px 4px 6px 0 rgba(255,255,255,.5),
+               -4px -4px 6px 0 rgba(116, 125, 136, .5), 
+               inset -4px -4px 6px 0 rgba(255,255,255,.2),
+               inset 4px 4px 6px 0 rgba(0, 0, 0, .4);
+  }
 }
+

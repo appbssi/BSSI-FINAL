@@ -143,7 +143,7 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-black/60" />
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center p-4">
         <div className="w-full max-w-sm animate-fade-in-up">
-            <Card className={cn("dark text-left text-card-foreground w-full max-w-sm bg-background/80 backdrop-blur-md shadow-2xl border-2 border-[#556B2F] rounded-xl floating-card", hasError && "neon-error-box")}>
+            <Card className={cn("dark text-left text-card-foreground w-full max-w-sm bg-background/80 backdrop-blur-md shadow-2xl border-2 border-[#556B2F] rounded-xl subtle-float", hasError && "neon-error-box")}>
                 <CardHeader className="text-center">
                     <div className="mx-auto mb-4 h-24 w-24 flex items-center justify-center">
                         <div className="relative h-20 w-20">
@@ -201,7 +201,7 @@ export default function LoginPage() {
                         </FormItem>
                         )}
                     />
-                    <Button type="submit" className="w-full rounded-full" disabled={isLoading}>
+                    <Button type="submit" className="w-full login-btn text-white font-semibold" disabled={isLoading}>
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Se connecter
                     </Button>
