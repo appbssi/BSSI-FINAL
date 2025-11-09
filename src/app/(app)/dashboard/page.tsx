@@ -163,8 +163,8 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="lg:col-span-2 rounded-2xl">
+      <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-1">
+        <Card className="lg:col-span-3 rounded-2xl">
           <CardHeader>
             <CardTitle>Missions en cours ({ongoingMissions.length})</CardTitle>
           </CardHeader>
@@ -197,16 +197,6 @@ export default function DashboardPage() {
                 </div>
               )}
           </CardContent>
-        </Card>
-        
-        <Card className="rounded-2xl">
-            <CardHeader>
-                <CardTitle>Activités Récentes</CardTitle>
-                <CardDescription>Les dernières actions effectuées dans l'application.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <RecentActivities />
-            </CardContent>
         </Card>
       </div>
 
