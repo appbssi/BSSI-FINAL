@@ -112,7 +112,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-5">
         
         {/* Main Stats Cards */}
-        <Card className="card-neumorphic rounded-3xl">
+        <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
                   <Users className="h-5 w-5" />
@@ -120,10 +120,10 @@ export default function DashboardPage() {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-4xl font-bold text-slate-700">{isLoading ? '...' : totalAgents}</div>
+                <div className="text-4xl font-bold text-foreground">{isLoading ? '...' : totalAgents}</div>
             </CardContent>
         </Card>
-        <Card className="card-neumorphic rounded-3xl">
+        <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
                   <Shield className="h-5 w-5" />
@@ -131,10 +131,10 @@ export default function DashboardPage() {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-4xl font-bold text-slate-700">{isLoading ? '...' : agentsOnMission}</div>
+                <div className="text-4xl font-bold text-foreground">{isLoading ? '...' : agentsOnMission}</div>
             </CardContent>
         </Card>
-        <Card className="card-neumorphic rounded-3xl">
+        <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
                   <UserCheck className="h-5 w-5" />
@@ -142,10 +142,10 @@ export default function DashboardPage() {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-4xl font-bold text-slate-700">{isLoading ? '...' : availableAgents}</div>
+                <div className="text-4xl font-bold text-foreground">{isLoading ? '...' : availableAgents}</div>
             </CardContent>
         </Card>
-        <Card className="card-neumorphic rounded-3xl">
+        <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
                   <CheckCircle className="h-5 w-5" />
@@ -153,12 +153,12 @@ export default function DashboardPage() {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-4xl font-bold text-slate-700">{isLoading ? '...' : completedMissions}</div>
+                <div className="text-4xl font-bold text-foreground">{isLoading ? '...' : completedMissions}</div>
             </CardContent>
         </Card>
         
         {/* Ongoing Missions */}
-         <Card className="md:col-span-2 lg:col-span-4 rounded-2xl">
+         <Card className="md:col-span-2 lg:col-span-4">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5" />
