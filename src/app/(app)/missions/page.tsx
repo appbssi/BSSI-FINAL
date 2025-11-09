@@ -319,7 +319,9 @@ export default function MissionsPage() {
         {!isObserver && (
           <Dialog open={isCreateMissionOpen} onOpenChange={setCreateMissionOpen}>
             <DialogTrigger asChild>
-              <Button><PlusCircle className="mr-2 h-4 w-4" /> Créer une mission</Button>
+               <button className="button-13 flex items-center justify-center !w-auto px-4">
+                <PlusCircle className="mr-2 h-4 w-4" /> Créer une mission
+              </button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
