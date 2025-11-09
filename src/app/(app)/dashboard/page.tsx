@@ -124,7 +124,7 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="rounded-2xl">
+          <Card className="rounded-2xl transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Agents au Total</CardTitle>
               <Users className="h-5 w-5 text-muted-foreground" />
@@ -133,7 +133,7 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold">{stats.totalAgents}</div>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl">
+          <Card className="rounded-2xl transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Agents en Mission</CardTitle>
               <Shield className="h-5 w-5 text-muted-foreground" />
@@ -142,7 +142,7 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold">{stats.onMission}</div>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl">
+          <Card className="rounded-2xl transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Agents Disponibles</CardTitle>
               <UserCheck className="h-5 w-5 text-muted-foreground" />
@@ -151,7 +151,7 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold">{stats.available}</div>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl">
+          <Card className="rounded-2xl transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Missions Terminées</CardTitle>
               <CheckCircle className="h-5 w-5 text-muted-foreground" />
