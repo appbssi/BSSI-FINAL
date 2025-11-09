@@ -127,7 +127,7 @@ export default function DashboardPage() {
           <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Agents au Total</CardTitle>
-              <Users className="h-5 w-5 text-muted-foreground" />
+              <Users className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalAgents}</div>
@@ -136,7 +136,7 @@ export default function DashboardPage() {
           <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Agents en Mission</CardTitle>
-              <Shield className="h-5 w-5 text-muted-foreground" />
+              <Shield className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.onMission}</div>
@@ -145,7 +145,7 @@ export default function DashboardPage() {
           <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Agents Disponibles</CardTitle>
-              <UserCheck className="h-5 w-5 text-muted-foreground" />
+              <UserCheck className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.available}</div>
@@ -154,7 +154,7 @@ export default function DashboardPage() {
           <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Missions Terminées</CardTitle>
-              <CheckCircle className="h-5 w-5 text-muted-foreground" />
+              <CheckCircle className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.completedMissions}</div>
