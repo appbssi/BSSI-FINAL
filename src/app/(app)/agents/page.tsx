@@ -426,7 +426,6 @@ export default function AgentsPage() {
                               onSelect={() => handleToggleLeave(agent)}
                               disabled={isAgentOnMission}
                             >
-                              <Briefcase className="mr-2 h-4 w-4" />
                               {agent.onLeave ? 'Rétablir du congé' : 'Mettre en congé'}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
