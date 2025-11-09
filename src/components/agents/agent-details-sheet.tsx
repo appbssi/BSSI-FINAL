@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import type { Agent, Availability } from '@/lib/types';
 import { User } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AgentDetailsProps {
   agent: Agent & { availability: Availability };
@@ -34,7 +35,13 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsP
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-2xl sm:max-w-md">
+      <DialogContent className={cn(
+        "rounded-2xl sm:max-w-md",
+        "bg-background/80 backdrop-blur-md shadow-2xl border-white/30",
+        "transition-all duration-500 ease-out",
+        "hover:border-white/60 hover:scale-105",
+        "active:scale-95 active:rotate-1"
+      )}>
         <DialogHeader>
           <DialogTitle>Détails de l'agent</DialogTitle>
           <DialogDescription>
