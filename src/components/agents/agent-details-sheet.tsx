@@ -9,17 +9,21 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import type { Agent, Availability } from '@/lib/types';
-import { User, Shield } from 'lucide-react';
+import type { Agent, Availability, Mission } from '@/lib/types';
+import { User, Shield, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '../ui/scroll-area';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { getDisplayStatus } from '@/lib/missions';
 
 interface AgentDetailsProps {
   agent: Agent & { availability: Availability };
+  missions: Mission[];
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
 }
 
-export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsProps) {
+export function AgentDetailsSheet({ agent, missions, isOpen, onOpenChange }: AgentDetailsProps) {
   const getBadgeVariant = (availability: Availability) => {
     switch (availability) {
       case 'Disponible':
@@ -33,13 +37,15 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsP
     }
   };
 
+  const sortedMissions = [...missions].sort((a, b) => b.startDate.toMillis() - a.startDate.toMillis());
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-2xl sm:max-w-md bg-background/80 backdrop-blur-md shadow-2xl border-white/30 transition-all duration-500 ease-out hover:border-white/60 hover:scale-105 active:scale-95 active:rotate-1">
+      <DialogContent className="rounded-2xl sm:max-w-2xl bg-background/80 backdrop-blur-md shadow-2xl border-white/30">
         <DialogHeader>
           <DialogTitle>Détails de l'agent</DialogTitle>
           <DialogDescription>
-            Informations complètes sur l'agent.
+            Informations complètes et historique des missions de l'agent.
           </DialogDescription>
         </DialogHeader>
         <div className="py-6 space-y-6">
@@ -52,16 +58,26 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsP
                      <p className="text-muted-foreground">{agent.registrationNumber}</p>
                 </div>
             </div>
-            <div className="grid grid-cols-1 gap-6 text-sm">
-                <div className="flex flex-col gap-1">
-                    <span className="text-muted-foreground">Grade</span>
-                    <p className="font-semibold">{agent.rank}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div className="space-y-4">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-muted-foreground">Grade</span>
+                        <p className="font-semibold">{agent.rank}</p>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <span className="text-muted-foreground">Section</span>
+                        <p className="font-semibold">{(agent.section || 'Non assigné').toUpperCase()}</p>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <span className="text-muted-foreground">Contact</span>
+                        <p className="font-semibold">{agent.contact}</p>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <span className="text-muted-foreground">Adresse</span>
+                        <p className="font-semibold">{agent.address}</p>
+                    </div>
                 </div>
-                 <div className="flex flex-col gap-1">
-                    <span className="text-muted-foreground">Section</span>
-                    <p className="font-semibold">{(agent.section || 'Non assigné').toUpperCase()}</p>
-                </div>
-                <div className="flex justify-between items-center">
+                 <div className="space-y-4">
                     <div className="flex flex-col gap-2">
                         <span className="text-muted-foreground">Disponibilité</span>
                         <div>
@@ -70,21 +86,59 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsP
                             </Badge>
                         </div>
                     </div>
-                     <div className="flex flex-col gap-2 items-center">
-                        <span className="text-muted-foreground">Missions</span>
+                     <div className="flex flex-col gap-2">
+                        <span className="text-muted-foreground">Total Missions</span>
                         <div className="flex items-center gap-1 font-bold text-lg">
                            <Shield className="h-5 w-5" />
                            <span>{agent.missionCount || 0}</span>
                         </div>
                     </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                    <span className="text-muted-foreground">Contact</span>
-                    <p className="font-semibold">{agent.contact}</p>
-                </div>
-                <div className="flex flex-col gap-1">
-                    <span className="text-muted-foreground">Adresse</span>
-                    <p className="font-semibold">{agent.address}</p>
+            </div>
+
+            <div className="space-y-2 pt-4">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-muted-foreground"/>
+                    Historique des Missions
+                </h3>
+                <div className="border rounded-lg max-h-60 overflow-hidden">
+                    <ScrollArea className="h-60">
+                         <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Mission</TableHead>
+                                    <TableHead>Dates</TableHead>
+                                    <TableHead>Statut</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {sortedMissions.length > 0 ? (
+                                    sortedMissions.map(mission => (
+                                        <TableRow key={mission.id}>
+                                            <TableCell>
+                                                <div className="font-medium">{mission.name}</div>
+                                                <div className="text-xs text-muted-foreground">{mission.location}</div>
+                                            </TableCell>
+                                            <TableCell className="text-xs">
+                                                {mission.startDate.toDate().toLocaleDateString('fr-FR')} - {mission.endDate.toDate().toLocaleDateString('fr-FR')}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={getDisplayStatus(mission) === 'Terminée' ? 'outline' : getDisplayStatus(mission) === 'Annulée' ? 'destructive' : 'secondary'}>
+                                                    {getDisplayStatus(mission)}
+                                                </Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={3} className="h-24 text-center">
+                                            Aucune mission assignée.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </ScrollArea>
                 </div>
             </div>
         </div>
