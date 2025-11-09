@@ -110,9 +110,9 @@ export default function GatheringsPage({ params, searchParams }: { params: {}, s
         {!isObserver && (
           <Dialog open={isCreateOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <button className="button-13 flex items-center justify-center !w-auto px-4">
                 <PlusCircle className="mr-2 h-4 w-4" /> Créer un rassemblement
-              </Button>
+              </button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
                 <CreateGatheringForm onGatheringCreated={() => setCreateOpen(false)} />
