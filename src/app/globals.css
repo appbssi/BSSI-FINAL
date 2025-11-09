@@ -141,6 +141,14 @@ body {
     height: 64px;
     animation: rotate 1.2s linear infinite alternate-reverse;
   }
+  .card-neumorphic {
+    background: #e8e8e8;
+    box-shadow: inset 20px 20px 60px #c5c5c5, inset -20px -20px 60px #ffffff;
+    transition: all .5s ease-in-out;
+  }
+  .card-neumorphic:hover {
+    transform: translateY(-5px);
+  }
 }
 
 @keyframes rotate {
@@ -356,5 +364,7 @@ body {
     color: hsl(var(--primary-foreground));
     border-color: hsl(var(--primary));
 }
+
+    
 
     

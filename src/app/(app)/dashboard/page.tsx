@@ -32,6 +32,7 @@ import { MissionDetailsDialog } from '@/components/missions/mission-details-dial
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { RecentActivities } from '@/components/dashboard/recent-activities';
+import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
   const firestore = useFirestore();
@@ -111,48 +112,48 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-5">
         
         {/* Main Stats Cards */}
-        <Card>
+        <Card className="card-neumorphic rounded-3xl">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
                   <Users className="h-5 w-5" />
                   Agents au Total
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-4xl font-bold">{isLoading ? '...' : totalAgents}</div>
+                <div className="text-4xl font-bold text-slate-700">{isLoading ? '...' : totalAgents}</div>
             </CardContent>
         </Card>
-        <Card>
+        <Card className="card-neumorphic rounded-3xl">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
                   <Shield className="h-5 w-5" />
                   Agents en Mission
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-4xl font-bold">{isLoading ? '...' : agentsOnMission}</div>
+                <div className="text-4xl font-bold text-slate-700">{isLoading ? '...' : agentsOnMission}</div>
             </CardContent>
         </Card>
-        <Card>
+        <Card className="card-neumorphic rounded-3xl">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
                   <UserCheck className="h-5 w-5" />
                   Agents Disponibles
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-4xl font-bold">{isLoading ? '...' : availableAgents}</div>
+                <div className="text-4xl font-bold text-slate-700">{isLoading ? '...' : availableAgents}</div>
             </CardContent>
         </Card>
-        <Card>
+        <Card className="card-neumorphic rounded-3xl">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
                   <CheckCircle className="h-5 w-5" />
                   Missions Terminées
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-4xl font-bold">{isLoading ? '...' : completedMissions}</div>
+                <div className="text-4xl font-bold text-slate-700">{isLoading ? '...' : completedMissions}</div>
             </CardContent>
         </Card>
         
@@ -238,5 +239,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     
