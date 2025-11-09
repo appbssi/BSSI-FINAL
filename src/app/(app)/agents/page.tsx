@@ -363,7 +363,7 @@ export default function AgentsPage() {
                     <TableCell className="font-medium">{agent.fullName}</TableCell>
                     <TableCell>{agent.registrationNumber}</TableCell>
                     <TableCell>{agent.rank}</TableCell>
-                    <TableCell>{agent.section || 'N/A'}</TableCell>
+                    <TableCell>{(agent.section || 'N/A').toUpperCase()}</TableCell>
                     <TableCell><Badge variant={getBadgeVariant(agent.availability)}>{agent.availability}</Badge></TableCell>
                     <TableCell>
                       {!isObserver && (

@@ -58,7 +58,7 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsP
                 </div>
                  <div className="flex flex-col gap-1">
                     <span className="text-muted-foreground">Section</span>
-                    <p className="font-semibold">{agent.section || 'Non assigné'}</p>
+                    <p className="font-semibold">{(agent.section || 'Non assigné').toUpperCase()}</p>
                 </div>
                 <div className="flex flex-col gap-2">
                     <span className="text-muted-foreground">Disponibilité actuelle</span>
