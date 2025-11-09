@@ -112,62 +112,50 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-5">
         
         {/* Main Stats Cards */}
-        <div className="blob-card">
-          <div className="blob" />
-          <div className="blob-card-bg">
-              <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
                     <Users className="h-5 w-5" />
                     Agents au Total
-                  </CardTitle>
-              </CardHeader>
-              <CardContent>
-                  <div className="text-4xl font-bold text-foreground">{isLoading ? '...' : totalAgents}</div>
-              </CardContent>
-          </div>
-        </div>
-        <div className="blob-card">
-          <div className="blob" />
-          <div className="blob-card-bg">
-              <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="text-4xl font-bold text-foreground">{isLoading ? '...' : totalAgents}</div>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
                     <Shield className="h-5 w-5" />
                     Agents en Mission
-                  </CardTitle>
-              </CardHeader>
-              <CardContent>
-                  <div className="text-4xl font-bold text-foreground">{isLoading ? '...' : agentsOnMission}</div>
-              </CardContent>
-          </div>
-        </div>
-        <div className="blob-card">
-          <div className="blob" />
-          <div className="blob-card-bg">
-              <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="text-4xl font-bold text-foreground">{isLoading ? '...' : agentsOnMission}</div>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
                     <UserCheck className="h-5 w-5" />
                     Agents Disponibles
-                  </CardTitle>
-              </CardHeader>
-              <CardContent>
-                  <div className="text-4xl font-bold text-foreground">{isLoading ? '...' : availableAgents}</div>
-              </CardContent>
-          </div>
-        </div>
-        <div className="blob-card">
-          <div className="blob" />
-          <div className="blob-card-bg">
-              <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="text-4xl font-bold text-foreground">{isLoading ? '...' : availableAgents}</div>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-muted-foreground/80">
                     <CheckCircle className="h-5 w-5" />
                     Missions Terminées
-                  </CardTitle>
-              </CardHeader>
-              <CardContent>
-                  <div className="text-4xl font-bold text-foreground">{isLoading ? '...' : completedMissions}</div>
-              </CardContent>
-          </div>
-        </div>
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="text-4xl font-bold text-foreground">{isLoading ? '...' : completedMissions}</div>
+            </CardContent>
+        </Card>
         
         {/* Ongoing Missions */}
          <Card className="md:col-span-2 lg:col-span-4">
