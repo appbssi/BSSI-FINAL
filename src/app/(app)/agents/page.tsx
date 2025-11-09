@@ -334,32 +334,6 @@ export default function AgentsPage() {
                   <DropdownMenuItem onSelect={handleExportXLSX}>Exporter en XLSX</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              {!isObserver && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                            <button className="button-13 flex items-center justify-center !w-auto px-2" disabled={isDeleting}>
-                                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                            </button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>Supprimer les doublons</p></TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                      <AlertDialogHeader>
-                          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                          <AlertDialogDescription>Cette action va rechercher tous les agents avec le même matricule et supprimer les doublons. Cette action est irréversible.</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                          <AlertDialogCancel>Annuler</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleDeduplicate}>Continuer</AlertDialogAction>
-                      </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
             </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -493,5 +467,7 @@ export default function AgentsPage() {
     
 
 
+
+    
 
     
