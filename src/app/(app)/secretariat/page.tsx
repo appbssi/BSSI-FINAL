@@ -222,9 +222,9 @@ export default function SecretariatPage({ params, searchParams }: { params: {}, 
         <div className="flex items-center gap-2 flex-wrap justify-end">
            <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">
+                <button className="button-13 flex items-center justify-center">
                   <FileDown className="mr-2 h-4 w-4" /> Exporter
-                </Button>
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onSelect={handleExportPDF}>Exporter en PDF</DropdownMenuItem>
@@ -235,9 +235,9 @@ export default function SecretariatPage({ params, searchParams }: { params: {}, 
           {!isObserver && (
              <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
                 <DialogTrigger asChild>
-                    <Button>
+                    <button className="button-13 flex items-center justify-center !w-auto px-4">
                         <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
-                    </Button>
+                    </button>
                 </DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
