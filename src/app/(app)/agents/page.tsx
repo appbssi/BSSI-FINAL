@@ -340,10 +340,9 @@ export default function AgentsPage() {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="outline" size="icon" disabled={isDeleting}>
+                            <button className="button-13 flex items-center justify-center !w-auto px-2" disabled={isDeleting}>
                                 {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                                <span className="sr-only">Supprimer les doublons</span>
-                            </Button>
+                            </button>
                         </TooltipTrigger>
                         <TooltipContent><p>Supprimer les doublons</p></TooltipContent>
                       </Tooltip>
@@ -493,3 +492,6 @@ export default function AgentsPage() {
 
     
 
+
+
+    
