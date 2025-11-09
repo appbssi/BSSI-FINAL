@@ -265,8 +265,9 @@ export default function AgentsPage() {
 
   return (
     <div className="space-y-4">
-      <div>
+      <div className="flex items-baseline gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
+        <span className="text-muted-foreground">({filteredAgents.length} affiché(s))</span>
       </div>
       
       <div className="space-y-4">
