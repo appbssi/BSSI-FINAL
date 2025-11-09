@@ -1,6 +1,7 @@
+
 'use client';
 
-import { collection, getDocs, writeBatch, Firestore, doc, deleteDoc, WriteBatch } from "firebase/firestore";
+import { collection, getDocs, writeBatch, Firestore, doc, deleteDoc, WriteBatch, query, orderBy } from "firebase/firestore";
 import type { Agent, Mission } from "./types";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
@@ -61,6 +62,60 @@ export async function deleteDuplicateAgents(firestore: Firestore): Promise<numbe
   return duplicatesDeleted;
 }
 
+export async function deleteDuplicateAgentsByName(firestore: Firestore): Promise<number> {
+  const agentsRef = collection(firestore, 'agents');
+  // Order by fullName to process duplicates together, and by a timestamp if you have one.
+  // Assuming no creation timestamp, we'll fetch all and process in memory.
+  const snapshot = await getDocs(agentsRef);
+  
+  const agentsByName = new Map<string, Agent[]>();
+
+  // Group agents by full name
+  snapshot.docs.forEach(docSnap => {
+    const agent = { id: docSnap.id, ...docSnap.data() } as Agent;
+    if (agent.fullName) {
+      const existing = agentsByName.get(agent.fullName) || [];
+      existing.push(agent);
+      agentsByName.set(agent.fullName, existing);
+    }
+  });
+
+  const batch = writeBatch(firestore);
+  let duplicatesDeleted = 0;
+
+  for (const [name, agents] of agentsByName.entries()) {
+    if (agents.length > 1) {
+      // For simplicity, we keep the first one fetched.
+      // A better approach would be to sort by a creation date if available.
+      // Here, we just mark all but the first one for deletion.
+      const agentsToDelete = agents.slice(1);
+      
+      for (const agentToDelete of agentsToDelete) {
+        const docRef = doc(firestore, 'agents', agentToDelete.id);
+        batch.delete(docRef);
+        duplicatesDeleted++;
+      }
+    }
+  }
+
+  if (duplicatesDeleted > 0) {
+    await batch.commit().catch(serverError => {
+      const permissionError = new FirestorePermissionError({
+        path: 'agents/[batch]',
+        operation: 'delete',
+        requestResourceData: { info: "Batch delete for name deduplication" },
+      });
+      errorEmitter.emit('permission-error', permissionError);
+      // Rethrow to be caught by the calling function
+      throw serverError;
+    });
+     logActivity(firestore, `${duplicatesDeleted} agent(s) en double par nom ont été supprimés.`, 'Agent', '/agents');
+  }
+
+  return duplicatesDeleted;
+}
+
+
 export function deleteAgent(firestore: Firestore, agent: Agent, missions: Mission[]) {
     if (!agent) return;
 
@@ -88,3 +143,5 @@ export function deleteAgent(firestore: Firestore, agent: Agent, missions: Missio
         errorEmitter.emit('permission-error', permissionError);
     });
 }
+
+    
