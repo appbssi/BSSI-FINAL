@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { FileUp, MoreHorizontal, PlusCircle, Search, FileDown, Trash2 } from 'lucide-react';
+import { FileUp, MoreHorizontal, PlusCircle, Search, FileDown } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,12 +31,10 @@ import { Button } from '@/components/ui/button';
 import { RegisterAgentForm } from '@/components/agents/register-agent-form';
 import type { Agent, Availability } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, deleteDoc, doc, writeBatch, getDocs, query, where } from 'firebase/firestore';
+import { collection, deleteDoc, doc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
-import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
-import { deleteDuplicateAgentsByName } from '@/lib/firestore-utils';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -47,12 +45,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AgentDetailsSheet } from '@/components/agents/agent-details-sheet';
 import { useRole } from '@/hooks/use-role';
 import { useLogo } from '@/context/logo-context';
@@ -67,6 +63,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import { ManageLeaveDialog } from '@/components/agents/manage-leave-dialog';
+import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
 
 
 export default function AgentsPage() {
@@ -80,8 +77,6 @@ export default function AgentsPage() {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isDeduplicating, setIsDeduplicating] = useState(false);
-  const [showDeduplicateConfirm, setShowDeduplicateConfirm] = useState(false);
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'Disponible' | 'En mission' | 'En congé'>('all');
   const [sectionFilter, setSectionFilter] = useState<string>('all');
   const { toast } = useToast();
@@ -179,34 +174,6 @@ export default function AgentsPage() {
         setIsDeleting(false);
         setAgentToDelete(null); // Close the dialog
     });
-  };
-
-  const handleDeduplicate = async () => {
-    if (!firestore) return;
-    setIsDeduplicating(true);
-    try {
-      const duplicatesDeleted = await deleteDuplicateAgentsByName(firestore);
-      if (duplicatesDeleted > 0) {
-        toast({
-          title: 'Dé-doublonnage terminé',
-          description: `${duplicatesDeleted} agent(s) en double ont été supprimé(s).`,
-        });
-      } else {
-        toast({
-          title: 'Aucun doublon trouvé',
-          description: 'Aucun agent avec un nom complet identique n\'a été trouvé.',
-        });
-      }
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de la suppression des doublons.',
-      });
-    } finally {
-      setIsDeduplicating(false);
-      setShowDeduplicateConfirm(false);
-    }
   };
 
   const handleExportXLSX = () => {
@@ -331,9 +298,6 @@ export default function AgentsPage() {
                       <FileUp className="mr-2 h-4 w-4" /> Importer
                     </button>
                   </ImportAgentsDialog>
-                   <button className="button-13 flex items-center justify-center" onClick={() => setShowDeduplicateConfirm(true)}>
-                    Dé-doublonner
-                  </button>
                 </>
               )}
               <DropdownMenu>
@@ -488,28 +452,6 @@ export default function AgentsPage() {
           </AlertDialogContent>
         </AlertDialog>
       )}
-
-      {showDeduplicateConfirm && (
-        <AlertDialog open={showDeduplicateConfirm} onOpenChange={setShowDeduplicateConfirm}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Supprimer les doublons ?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Cette action recherchera les agents ayant le même nom complet et supprimera les doublons, en ne gardant que l'entrée la plus récente pour chaque nom. Cette action est irréversible.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Annuler</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeduplicate} disabled={isDeduplicating}>
-                {isDeduplicating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Confirmer et supprimer
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
     </div>
   );
 }
-
-    
