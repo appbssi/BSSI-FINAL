@@ -111,58 +111,50 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-5">
         
         {/* Main Stats Cards */}
-        <div className="animated-border-card">
-          <CardContent className="p-5 h-full w-full">
-            <div className="flex justify-between">
-              <Users className="h-7 w-7 text-blue-400" />
-            </div>
-            <div className="ml-2 w-full flex-1">
-              <div>
-                <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : totalAgents}</div>
-                <div className="mt-1 text-base text-muted-foreground">Agents au Total</div>
-              </div>
-            </div>
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Agents au Total
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold">{isLoading ? '...' : totalAgents}</div>
           </CardContent>
-        </div>
-        <div className="animated-border-card">
-          <CardContent className="p-5 h-full w-full">
-            <div className="flex justify-between">
-              <Shield className="h-7 w-7 text-yellow-400" />
-            </div>
-            <div className="ml-2 w-full flex-1">
-              <div>
-                <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : agentsOnMission}</div>
-                <div className="mt-1 text-base text-muted-foreground">Agents en Mission</div>
-              </div>
-            </div>
+        </Card>
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Agents en Mission
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold">{isLoading ? '...' : agentsOnMission}</div>
           </CardContent>
-        </div>
-        <div className="animated-border-card">
-          <CardContent className="p-5 h-full w-full">
-            <div className="flex justify-between">
-              <UserCheck className="h-7 w-7 text-pink-600" />
-            </div>
-            <div className="ml-2 w-full flex-1">
-              <div>
-                <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : availableAgents}</div>
-                <div className="mt-1 text-base text-muted-foreground">Agents Disponibles</div>
-              </div>
-            </div>
+        </Card>
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserCheck className="h-5 w-5" />
+              Agents Disponibles
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold">{isLoading ? '...' : availableAgents}</div>
           </CardContent>
-        </div>
-        <div className="animated-border-card">
-          <CardContent className="p-5 h-full w-full">
-            <div className="flex justify-between">
-              <CheckCircle className="h-7 w-7 text-green-400" />
-            </div>
-            <div className="ml-2 w-full flex-1">
-              <div>
-                <div className="mt-3 text-3xl font-bold leading-8">{isLoading ? '...' : completedMissions}</div>
-                <div className="mt-1 text-base text-muted-foreground">Missions Terminées</div>
-              </div>
-            </div>
+        </Card>
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              Missions Terminées
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold">{isLoading ? '...' : completedMissions}</div>
           </CardContent>
-        </div>
+        </Card>
         
         {/* Ongoing Missions */}
         <Card className="md:col-span-2 lg:col-span-4 rounded-2xl">
@@ -226,6 +218,22 @@ export default function DashboardPage() {
                 )}
             </CardContent>
         </Card>
+
+         {/* Recent Activities */}
+        <Card className="md:col-span-2 lg:col-span-4 rounded-2xl">
+           <CardHeader>
+             <CardTitle className="flex items-center gap-2">
+               <Newspaper className="h-5 w-5" />
+               Activités Récentes
+             </CardTitle>
+             <CardDescription>
+                Les dernières actions effectuées dans l'application.
+             </CardDescription>
+           </CardHeader>
+           <CardContent>
+             <RecentActivities />
+           </CardContent>
+         </Card>
       </div>
     </div>
   );
