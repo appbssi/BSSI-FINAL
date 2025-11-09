@@ -44,7 +44,7 @@ import { ViewAttendanceDialog } from '@/components/gatherings/view-attendance-di
 import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
 import { logActivity } from '@/lib/activity-logger';
 
-export default function GatheringsPage({ params, searchParams }: { params: {}, searchParams: {} }) {
+export default function GatheringsPage() {
   const { isObserver } = useRole();
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [selectedGathering, setSelectedGathering] = useState<Gathering | null>(null);
