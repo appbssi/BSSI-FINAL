@@ -285,7 +285,7 @@ export default function AgentsPage() {
                 <>
                   <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
                     <DialogTrigger asChild>
-                      <button className="button-13 flex items-center justify-center">
+                      <button className="button-13 flex items-center justify-center text-primary">
                         <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
                       </button>
                     </DialogTrigger>
@@ -294,7 +294,7 @@ export default function AgentsPage() {
                     </DialogContent>
                   </Dialog>
                   <ImportAgentsDialog>
-                    <button className="button-13 flex items-center justify-center">
+                    <button className="button-13 flex items-center justify-center text-primary">
                       <FileUp className="mr-2 h-4 w-4" /> Importer
                     </button>
                   </ImportAgentsDialog>
@@ -302,7 +302,7 @@ export default function AgentsPage() {
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="button-13 flex items-center justify-center">
+                  <button className="button-13 flex items-center justify-center text-primary">
                     <FileDown className="mr-2 h-4 w-4" /> Exporter
                   </button>
                 </DropdownMenuTrigger>
