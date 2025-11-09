@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import type { Agent, Availability } from '@/lib/types';
-import { User } from 'lucide-react';
+import { User, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AgentDetailsProps {
@@ -61,12 +61,21 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsP
                     <span className="text-muted-foreground">Section</span>
                     <p className="font-semibold">{(agent.section || 'Non assigné').toUpperCase()}</p>
                 </div>
-                <div className="flex flex-col gap-2">
-                    <span className="text-muted-foreground">Disponibilité actuelle</span>
-                    <div>
-                        <Badge variant={getBadgeVariant(agent.availability)}>
-                            {agent.availability}
-                        </Badge>
+                <div className="flex justify-between items-center">
+                    <div className="flex flex-col gap-2">
+                        <span className="text-muted-foreground">Disponibilité</span>
+                        <div>
+                            <Badge variant={getBadgeVariant(agent.availability)}>
+                                {agent.availability}
+                            </Badge>
+                        </div>
+                    </div>
+                     <div className="flex flex-col gap-2 items-center">
+                        <span className="text-muted-foreground">Missions</span>
+                        <div className="flex items-center gap-1 font-bold text-lg">
+                           <Shield className="h-5 w-5" />
+                           <span>{agent.missionCount || 0}</span>
+                        </div>
                     </div>
                 </div>
                 <div className="flex flex-col gap-1">
@@ -83,3 +92,5 @@ export function AgentDetailsSheet({ agent, isOpen, onOpenChange }: AgentDetailsP
     </Dialog>
   );
 }
+
+    

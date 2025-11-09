@@ -12,6 +12,7 @@ export type Agent = {
   leaveStartDate?: Timestamp;
   leaveEndDate?: Timestamp;
   availability?: Availability;
+  missionCount?: number;
 };
 
 export type Availability = 'Disponible' | 'En mission' | 'En congé';
@@ -55,3 +56,5 @@ export type ActivityLog = {
     type: 'Agent' | 'Mission' | 'Rassemblement' | 'Visiteur' | 'Général';
     link?: string;
 }
+
+    

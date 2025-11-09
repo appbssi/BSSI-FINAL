@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { FileUp, MoreHorizontal, PlusCircle, Search, FileDown } from 'lucide-react';
+import { FileUp, MoreHorizontal, PlusCircle, Search, FileDown, Shield } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { RegisterAgentForm } from '@/components/agents/register-agent-form';
-import type { Agent, Availability } from '@/lib/types';
+import type { Agent, Availability, Mission } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, deleteDoc, doc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
@@ -93,22 +93,23 @@ export default function AgentsPage() {
   const { data: agents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
 
-  const agentsWithAvailability: Agent[] = useMemo(() => {
+  const agentsWithDetails: Agent[] = useMemo(() => {
     if (!agents || !missions) return [];
     return agents.map(agent => ({
       ...agent,
-      availability: getAgentAvailability(agent, missions)
+      availability: getAgentAvailability(agent, missions),
+      missionCount: missions.filter(m => m.assignedAgentIds.includes(agent.id)).length,
     }));
   }, [agents, missions, now]);
 
   const sortedAgents = useMemo(() => {
-    if (!agentsWithAvailability) return [];
-    return [...agentsWithAvailability].sort((a, b) => {
+    if (!agentsWithDetails) return [];
+    return [...agentsWithDetails].sort((a, b) => {
       const nameA = a.fullName || '';
       const nameB = b.fullName || '';
       return nameA.localeCompare(nameB);
     });
-}, [agentsWithAvailability]);
+}, [agentsWithDetails]);
 
   const filteredAgents = sortedAgents.filter(agent => {
     const searchLower = searchQuery.toLowerCase();
@@ -184,6 +185,7 @@ export default function AgentsPage() {
         'Contact': agent.contact,
         'Section': agent.section || 'Non assigné',
         'Disponibilité': agent.availability,
+        'Missions': agent.missionCount || 0,
     }));
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
@@ -227,12 +229,13 @@ export default function AgentsPage() {
         currentY += 8;
 
         autoTable(doc, {
-            head: [['Nom complet', 'Matricule', 'Grade', 'Section', 'Disponibilité']],
+            head: [['Nom complet', 'Matricule', 'Grade', 'Section', 'Missions', 'Disponibilité']],
             body: filteredAgents.map(agent => [
                 agent.fullName,
                 agent.registrationNumber,
                 agent.rank,
                 agent.section || 'Non assigné',
+                agent.missionCount || 0,
                 agent.availability,
             ]),
             startY: currentY,
@@ -349,13 +352,14 @@ export default function AgentsPage() {
               <TableHead>Matricule</TableHead>
               <TableHead>Grade</TableHead>
               <TableHead>Section</TableHead>
+              <TableHead>Missions</TableHead>
               <TableHead>Disponibilité</TableHead>
               <TableHead><span className="sr-only">Actions</span></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {agentsLoading || missionsLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center">Chargement des agents...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center">Chargement des agents...</TableCell></TableRow>
             ) : filteredAgents.length > 0 ? (
               filteredAgents.map((agent) => {
                 const isAgentOnMission = agent.availability === 'En mission';
@@ -365,6 +369,12 @@ export default function AgentsPage() {
                     <TableCell>{agent.registrationNumber}</TableCell>
                     <TableCell>{agent.rank}</TableCell>
                     <TableCell>{(agent.section || 'N/A').toUpperCase()}</TableCell>
+                     <TableCell>
+                      <div className="flex items-center justify-center gap-1 font-semibold">
+                        <Shield className="h-4 w-4 text-muted-foreground" />
+                        {agent.missionCount || 0}
+                      </div>
+                    </TableCell>
                     <TableCell><Badge variant={getBadgeVariant(agent.availability)}>{agent.availability}</Badge></TableCell>
                     <TableCell>
                       {!isObserver && (
@@ -400,7 +410,7 @@ export default function AgentsPage() {
                 );
               })
             ) : (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
@@ -428,7 +438,7 @@ export default function AgentsPage() {
 
       {selectedAgent && missions && (
         <AgentDetailsSheet
-          agent={{...selectedAgent, availability: getAgentAvailability(selectedAgent, missions)}}
+          agent={{...selectedAgent, availability: getAgentAvailability(selectedAgent, missions), missionCount: missions.filter(m => m.assignedAgentIds.includes(selectedAgent.id)).length}}
           isOpen={!!selectedAgent}
           onOpenChange={(open) => !open && setSelectedAgent(null)}
         />
@@ -456,5 +466,7 @@ export default function AgentsPage() {
     </div>
   );
 }
+
+    
 
     
