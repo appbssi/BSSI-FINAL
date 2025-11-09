@@ -64,6 +64,7 @@ import {
 } from '@/components/ui/dialog';
 import { logActivity } from '@/lib/activity-logger';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { cn } from '@/lib/utils';
 
 
 export default function AgentsPage() {
@@ -364,10 +365,10 @@ export default function AgentsPage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-medium">Filtrer par:</span>
-            <Button size="sm" variant={availabilityFilter === 'all' ? 'secondary' : 'outline'} onClick={() => setAvailabilityFilter('all')}>Tous</Button>
-            <Button size="sm" variant={availabilityFilter === 'Disponible' ? 'secondary' : 'outline'} onClick={() => setAvailabilityFilter('Disponible')}>Disponibles</Button>
-            <Button size="sm" variant={availabilityFilter === 'En mission' ? 'secondary' : 'outline'} onClick={() => setAvailabilityFilter('En mission')}>En mission</Button>
-            <Button size="sm" variant={availabilityFilter === 'En congé' ? 'secondary' : 'outline'} onClick={() => setAvailabilityFilter('En congé')}>En congé</Button>
+            <button className={cn('button-81', availabilityFilter === 'all' && 'active')} onClick={() => setAvailabilityFilter('all')}>Tous</button>
+            <button className={cn('button-81', availabilityFilter === 'Disponible' && 'active')} onClick={() => setAvailabilityFilter('Disponible')}>Disponibles</button>
+            <button className={cn('button-81', availabilityFilter === 'En mission' && 'active')} onClick={() => setAvailabilityFilter('En mission')}>En mission</button>
+            <button className={cn('button-81', availabilityFilter === 'En congé' && 'active')} onClick={() => setAvailabilityFilter('En congé')}>En congé</button>
             <Select value={sectionFilter} onValueChange={setSectionFilter}>
               <SelectTrigger className="w-[180px] h-9">
                 <SelectValue placeholder="Filtrer par section" />
