@@ -185,7 +185,6 @@ export default function AgentsPage() {
         'Contact': agent.contact,
         'Section': agent.section || 'Non assigné',
         'Disponibilité': agent.availability,
-        'Missions': agent.missionCount || 0,
     }));
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
@@ -229,13 +228,12 @@ export default function AgentsPage() {
         currentY += 8;
 
         autoTable(doc, {
-            head: [['Nom complet', 'Matricule', 'Grade', 'Section', 'Missions', 'Disponibilité']],
+            head: [['Nom complet', 'Matricule', 'Grade', 'Section', 'Disponibilité']],
             body: filteredAgents.map(agent => [
                 agent.fullName,
                 agent.registrationNumber,
                 agent.rank,
                 agent.section || 'Non assigné',
-                agent.missionCount || 0,
                 agent.availability,
             ]),
             startY: currentY,
