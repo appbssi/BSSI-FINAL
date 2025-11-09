@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { FileUp, MoreHorizontal, PlusCircle, Search, Trash2, Loader2, FileDown } from 'lucide-react';
+import { FileUp, MoreHorizontal, PlusCircle, Search, FileDown, Briefcase } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +31,7 @@ import { Button } from '@/components/ui/button';
 import { RegisterAgentForm } from '@/components/agents/register-agent-form';
 import type { Agent, Availability } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, deleteDoc, doc, writeBatch, getDocs, query, where } from 'firebase/firestore';
+import { collection, deleteDoc, doc, writeBatch, getDocs, query, where, updateDoc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { ImportAgentsDialog } from '@/components/agents/import-agents-dialog';
 import { Input } from '@/components/ui/input';
@@ -65,6 +65,7 @@ import {
 import { logActivity } from '@/lib/activity-logger';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
 
 export default function AgentsPage() {
@@ -175,6 +176,29 @@ export default function AgentsPage() {
         setAgentToDelete(null); // Close the dialog
     });
   };
+
+  const handleToggleLeave = async (agent: Agent) => {
+    if (!firestore) return;
+    
+    const agentRef = doc(firestore, 'agents', agent.id);
+    const newLeaveStatus = !agent.onLeave;
+    const updateData = { onLeave: newLeaveStatus };
+
+    updateDoc(agentRef, updateData).then(() => {
+        toast({
+            title: 'Statut mis à jour',
+            description: `L'agent ${agent.fullName} est maintenant ${newLeaveStatus ? 'en congé' : 'disponible'}.`,
+        });
+        logActivity(firestore, `Le statut de congé de l'agent ${agent.fullName} a été mis à jour.`, 'Agent', '/agents');
+    }).catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: agentRef.path,
+            operation: 'update',
+            requestResourceData: updateData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
+};
 
   const handleDeduplicate = async () => {
     if (!firestore) return;
@@ -398,6 +422,14 @@ export default function AgentsPage() {
                           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onSelect={() => setEditingAgent(agent)}>Modifier</DropdownMenuItem>
+                             <DropdownMenuItem 
+                              onSelect={() => handleToggleLeave(agent)}
+                              disabled={isAgentOnMission}
+                            >
+                              <Briefcase className="mr-2 h-4 w-4" />
+                              {agent.onLeave ? 'Rétablir du congé' : 'Mettre en congé'}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem 
                               onSelect={() => !isAgentOnMission && setAgentToDelete(agent)}
                               disabled={isAgentOnMission}
@@ -461,13 +493,3 @@ export default function AgentsPage() {
     </div>
   );
 }
-
-    
-
-    
-
-
-
-    
-
-    
