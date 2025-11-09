@@ -80,16 +80,12 @@ export default function LandingPage() {
             <p className="mt-4 max-w-2xl text-lg text-primary-foreground/80" style={{textShadow: '1px 1px 4px rgba(0,0,0,0.5)'}}>
                 Système de Brigade Spéciale de Surveillance et d'Intervention
             </p>
-             <button className="animated-button mt-10" onClick={handleEnterClick}>
-                <svg viewBox="0 0 24 24" className="arr-2" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
-                </svg>
-                <span className="text">Entrer</span>
-                <span className="circle" />
-                <svg viewBox="0 0 24 24" className="arr-1" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
-                </svg>
-             </button>
+            <button 
+              onClick={handleEnterClick} 
+              className="btn-effect mt-10 inline-block cursor-pointer rounded-full bg-primary px-10 py-4 text-center text-lg font-semibold uppercase text-primary-foreground no-underline"
+            >
+              Entrer
+            </button>
         </div>
 
       </div>
