@@ -111,141 +111,129 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-5">
         
         {/* Main Stats Cards */}
-        <div className="magic-card">
-            <Card className="magic-card-info">
-              <CardHeader>
+        <Card>
+            <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   Agents au Total
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
+            </CardHeader>
+            <CardContent>
                 <div className="text-4xl font-bold">{isLoading ? '...' : totalAgents}</div>
-              </CardContent>
-            </Card>
-        </div>
-        <div className="magic-card">
-            <Card className="magic-card-info">
-              <CardHeader>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
                   Agents en Mission
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
+            </CardHeader>
+            <CardContent>
                 <div className="text-4xl font-bold">{isLoading ? '...' : agentsOnMission}</div>
-              </CardContent>
-            </Card>
-        </div>
-        <div className="magic-card">
-            <Card className="magic-card-info">
-              <CardHeader>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <UserCheck className="h-5 w-5" />
                   Agents Disponibles
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
+            </CardHeader>
+            <CardContent>
                 <div className="text-4xl font-bold">{isLoading ? '...' : availableAgents}</div>
-              </CardContent>
-            </Card>
-        </div>
-        <div className="magic-card">
-            <Card className="magic-card-info">
-              <CardHeader>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5" />
                   Missions Terminées
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
+            </CardHeader>
+            <CardContent>
                 <div className="text-4xl font-bold">{isLoading ? '...' : completedMissions}</div>
-              </CardContent>
-            </Card>
-        </div>
+            </CardContent>
+        </Card>
         
         {/* Ongoing Missions */}
-         <div className="magic-card md:col-span-2 lg:col-span-4">
-            <Card className="magic-card-info">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Shield className="h-5 w-5" />
-                        Missions en cours ({ongoingMissionsCount})
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {isLoading ? (
-                        <div className="flex justify-center items-center h-40">
-                            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                        </div>
-                    ) : ongoingMissions.length > 0 ? (
-                        <ScrollArea className="h-[40vh]">
-                            <div className="space-y-4">
-                                <Dialog>
-                                    {ongoingMissions.map((mission) => (
-                                        <DialogTrigger asChild key={mission.id} onClick={() => setSelectedMission(mission)}>
-                                            <div className="p-4 rounded-xl border bg-card cursor-pointer hover:bg-accent transition-colors">
-                                                <div className="flex justify-between items-start">
-                                                    <h4 className="font-semibold">{mission.name}</h4>
-                                                    <Badge variant={getBadgeVariant(mission.displayStatus)}>{mission.displayStatus}</Badge>
+         <Card className="md:col-span-2 lg:col-span-4 rounded-2xl">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Missions en cours ({ongoingMissionsCount})
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                {isLoading ? (
+                    <div className="flex justify-center items-center h-40">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                ) : ongoingMissions.length > 0 ? (
+                    <ScrollArea className="h-[40vh]">
+                        <div className="space-y-4">
+                            <Dialog>
+                                {ongoingMissions.map((mission) => (
+                                    <DialogTrigger asChild key={mission.id} onClick={() => setSelectedMission(mission)}>
+                                        <div className="p-4 rounded-xl border bg-card cursor-pointer hover:bg-accent transition-colors">
+                                            <div className="flex justify-between items-start">
+                                                <h4 className="font-semibold">{mission.name}</h4>
+                                                <Badge variant={getBadgeVariant(mission.displayStatus)}>{mission.displayStatus}</Badge>
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm text-muted-foreground mt-2">
+                                                <div className="flex items-center gap-2">
+                                                    <MapPin className="h-4 w-4" />
+                                                    <span>{mission.location}</span>
                                                 </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm text-muted-foreground mt-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <MapPin className="h-4 w-4" />
-                                                        <span>{mission.location}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Users className="h-4 w-4" />
-                                                        <span>{mission.assignedAgentIds.length} agent(s)</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 col-span-1 sm:col-span-2">
-                                                        <Calendar className="h-4 w-4" />
-                                                        <span>
-                                                            {mission.startDate.toDate().toLocaleDateString('fr-FR')} - {mission.endDate.toDate().toLocaleDateString('fr-FR')}
-                                                        </span>
-                                                    </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Users className="h-4 w-4" />
+                                                    <span>{mission.assignedAgentIds.length} agent(s)</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 col-span-1 sm:col-span-2">
+                                                    <Calendar className="h-4 w-4" />
+                                                    <span>
+                                                        {mission.startDate.toDate().toLocaleDateString('fr-FR')} - {mission.endDate.toDate().toLocaleDateString('fr-FR')}
+                                                    </span>
                                                 </div>
                                             </div>
-                                        </DialogTrigger>
-                                    ))}
-                                    {selectedMission && (
-                                        <MissionDetailsDialog
-                                            isOpen={!!selectedMission}
-                                            onOpenChange={(open) => !open && setSelectedMission(null)}
-                                            mission={selectedMission}
-                                            agents={assignedAgentsForSelectedMission}
-                                        />
-                                    )}
-                                </Dialog>
-                            </div>
-                        </ScrollArea>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
-                            <Shield className="h-10 w-10 mb-2" />
-                            <p>Aucune mission en cours pour le moment.</p>
+                                        </div>
+                                    </DialogTrigger>
+                                ))}
+                                {selectedMission && (
+                                    <MissionDetailsDialog
+                                        isOpen={!!selectedMission}
+                                        onOpenChange={(open) => !open && setSelectedMission(null)}
+                                        mission={selectedMission}
+                                        agents={assignedAgentsForSelectedMission}
+                                    />
+                                )}
+                            </Dialog>
                         </div>
-                    )}
-                </CardContent>
-            </Card>
-        </div>
+                    </ScrollArea>
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
+                        <Shield className="h-10 w-10 mb-2" />
+                        <p>Aucune mission en cours pour le moment.</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
 
          {/* Recent Activities */}
-        <div className="magic-card md:col-span-2 lg:col-span-4">
-           <Card className="magic-card-info">
-             <CardHeader>
-               <CardTitle className="flex items-center gap-2">
-                 <Newspaper className="h-5 w-5" />
-                 Activités Récentes
-               </CardTitle>
-               <CardDescription>
-                  Les dernières actions effectuées dans l'application.
-               </CardDescription>
-             </CardHeader>
-             <CardContent>
-               <RecentActivities />
-             </CardContent>
-           </Card>
-        </div>
+        <Card className="md:col-span-2 lg:col-span-4">
+           <CardHeader>
+             <CardTitle className="flex items-center gap-2">
+               <Newspaper className="h-5 w-5" />
+               Activités Récentes
+             </CardTitle>
+             <CardDescription>
+                Les dernières actions effectuées dans l'application.
+             </CardDescription>
+           </CardHeader>
+           <CardContent>
+             <RecentActivities />
+           </CardContent>
+        </Card>
       </div>
     </div>
   );
