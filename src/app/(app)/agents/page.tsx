@@ -315,9 +315,9 @@ export default function AgentsPage() {
                     </DialogContent>
                   </Dialog>
                   <ImportAgentsDialog>
-                    <Button variant="outline">
+                    <button className="button-13 flex items-center justify-center">
                       <FileUp className="mr-2 h-4 w-4" /> Importer
-                    </Button>
+                    </button>
                   </ImportAgentsDialog>
                 </>
               )}
@@ -488,5 +488,7 @@ export default function AgentsPage() {
     </div>
   );
 }
+
+    
 
     
