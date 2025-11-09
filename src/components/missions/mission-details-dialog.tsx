@@ -84,7 +84,7 @@ export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: 
                         agents.map(agent => (
                             <div key={agent.id} className="text-sm p-2 bg-muted/50 rounded-md">
                                 <p className="font-medium">{agent.fullName}</p>
-                                <p className="text-xs text-muted-foreground">{agent.rank}</p>
+                                <p className="text-xs text-muted-foreground">{agent.rank} - {agent.section || 'Non assigné'}</p>
                             </div>
                         ))
                     ) : (
