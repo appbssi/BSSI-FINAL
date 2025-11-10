@@ -82,7 +82,7 @@ export default function LandingPage() {
             </p>
             <button 
               onClick={handleEnterClick} 
-              className="btn-effect mt-10 inline-block cursor-pointer rounded-full bg-primary px-10 py-4 text-center text-lg font-semibold uppercase text-primary-foreground no-underline"
+              className="btn-effect mt-10 inline-block cursor-pointer rounded-full bg-primary px-8 py-3 text-center text-base font-semibold uppercase text-primary-foreground no-underline"
             >
               Entrer
             </button>
