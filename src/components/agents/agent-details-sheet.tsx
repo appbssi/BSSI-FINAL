@@ -101,8 +101,8 @@ export function AgentDetailsSheet({ agent, missions, isOpen, onOpenChange }: Age
                     <Calendar className="h-5 w-5 text-muted-foreground"/>
                     Historique des Missions
                 </h3>
-                <div className="border rounded-lg max-h-60 overflow-hidden">
-                    <ScrollArea className="h-60">
+                <div className="border rounded-lg max-h-40 overflow-hidden">
+                    <ScrollArea className="h-40">
                          <Table>
                             <TableHeader>
                                 <TableRow>
