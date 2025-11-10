@@ -41,7 +41,7 @@ export function AgentDetailsSheet({ agent, missions, isOpen, onOpenChange }: Age
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-2xl sm:max-w-2xl bg-background/80 backdrop-blur-md shadow-2xl border-white/30">
+      <DialogContent className="rounded-2xl sm:max-w-md bg-background/80 backdrop-blur-md shadow-2xl border-white/30">
         <DialogHeader>
           <DialogTitle>Détails de l'agent</DialogTitle>
           <DialogDescription>
@@ -146,5 +146,3 @@ export function AgentDetailsSheet({ agent, missions, isOpen, onOpenChange }: Age
     </Dialog>
   );
 }
-
-    
