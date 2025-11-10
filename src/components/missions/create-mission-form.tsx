@@ -385,8 +385,6 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                       <SelectItem value="all">TOUTES LES SECTIONS</SelectItem>
                       <SelectItem value="Armurerie">ARMURERIE</SelectItem>
                       <SelectItem value="Administration">ADMINISTRATION</SelectItem>
-                      <SelectItem value="Officier">OFFICIER</SelectItem>
-                      <SelectItem value="Adjudants">ADJUDANTS</SelectItem>
                       <SelectItem value="FAUNE">FAUNE</SelectItem>
                       <SelectItem value="CONDUCTEUR">CONDUCTEUR</SelectItem>
                       <SelectItem value="SECTION FEMININE">SECTION FEMININE</SelectItem>
