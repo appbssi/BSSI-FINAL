@@ -386,7 +386,6 @@ export default function AgentsPage() {
               <TableHead>Nom complet</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Grade</TableHead>
-              <TableHead>Section</TableHead>
               <TableHead>Missions</TableHead>
               <TableHead>Disponibilité</TableHead>
               <TableHead><span className="sr-only">Actions</span></TableHead>
@@ -406,7 +405,6 @@ export default function AgentsPage() {
                     </TableCell>
                     <TableCell>{agent.contact}</TableCell>
                     <TableCell>{agent.rank}</TableCell>
-                    <TableCell>{agent.section === 'OFFICIER' ? 'N/A' : (agent.section || 'N/A').toUpperCase()}</TableCell>
                      <TableCell>
                       <div className="flex items-center justify-center gap-1 font-semibold">
                         <Shield className="h-4 w-4 text-muted-foreground" />
