@@ -382,7 +382,7 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
                     name="assignedAgentIds"
                     render={({ field }) => (
                       <>
-                        <ScrollArea className="h-60 w-full rounded-md border">
+                        <ScrollArea className="h-48 w-full rounded-md border">
                             <div className="p-4 space-y-2">
                             {agentsLoading || missionsLoading ? (
                                 <div className="flex items-center justify-center p-8">
