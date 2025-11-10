@@ -336,6 +336,9 @@ export default function AgentsPage() {
                 <SelectItem value="FAUNE">FAUNE</SelectItem>
                 <SelectItem value="CONDUCTEUR">CONDUCTEUR</SelectItem>
                 <SelectItem value="SECTION FEMININE">SECTION FEMININE</SelectItem>
+                <SelectItem value="DETACHEMENT NOE">DETACHEMENT NOE</SelectItem>
+                <SelectItem value="DETACHEMENT TINGRELA">DETACHEMENT TINGRELA</SelectItem>
+                <SelectItem value="DETACHEMENT MORONDO">DETACHEMENT MORONDO</SelectItem>
                 <SelectItem value="Non assigné">NON ASSIGNÉ</SelectItem>
               </SelectContent>
             </Select>
@@ -468,9 +471,3 @@ export default function AgentsPage() {
     </div>
   );
 }
-
-    
-
-    
-
-    
