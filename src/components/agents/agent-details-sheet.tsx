@@ -66,7 +66,7 @@ export function AgentDetailsSheet({ agent, missions, isOpen, onOpenChange }: Age
                     </div>
                     <div className="flex flex-col gap-1">
                         <span className="text-muted-foreground">Section</span>
-                        <p className="font-semibold">{(agent.section || 'Non assigné').toUpperCase()}</p>
+                        <p className="font-semibold">{agent.section === 'OFFICIER' ? 'N/A' : (agent.section || 'Non assigné').toUpperCase()}</p>
                     </div>
                     <div className="flex flex-col gap-1">
                         <span className="text-muted-foreground">Contact</span>
@@ -101,8 +101,8 @@ export function AgentDetailsSheet({ agent, missions, isOpen, onOpenChange }: Age
                     <Calendar className="h-5 w-5 text-muted-foreground"/>
                     Historique des Missions
                 </h3>
-                <div className="border rounded-lg max-h-28 overflow-hidden">
-                    <ScrollArea className="h-28">
+                <div className="border rounded-lg max-h-[7rem] overflow-hidden">
+                    <ScrollArea className="h-[7rem]">
                          <Table>
                             <TableHeader>
                                 <TableRow>

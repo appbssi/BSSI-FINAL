@@ -406,7 +406,7 @@ export default function AgentsPage() {
                     </TableCell>
                     <TableCell>{agent.contact}</TableCell>
                     <TableCell>{agent.rank}</TableCell>
-                    <TableCell>{(agent.section || 'N/A').toUpperCase()}</TableCell>
+                    <TableCell>{agent.section === 'OFFICIER' ? 'N/A' : (agent.section || 'N/A').toUpperCase()}</TableCell>
                      <TableCell>
                       <div className="flex items-center justify-center gap-1 font-semibold">
                         <Shield className="h-4 w-4 text-muted-foreground" />
