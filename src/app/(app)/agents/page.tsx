@@ -360,18 +360,7 @@ export default function AgentsPage() {
                   </ImportAgentsDialog>
                 </>
               )}
-              {isAdmin && (
-                <>
-                    <Button onClick={handleUpdateRanks} disabled={isUpdatingRanks} variant="outline" size="sm">
-                    {isUpdatingRanks ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                    MàJ Grades
-                    </Button>
-                    <Button onClick={handleUpdateContacts} disabled={isUpdatingContacts} variant="outline" size="sm">
-                        {isUpdatingContacts ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                        MàJ Contacts
-                    </Button>
-                </>
-              )}
+              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="button-13 flex items-center justify-center text-primary">
