@@ -179,7 +179,7 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
                     </div>
                      <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline"><FileDown className="mr-2 h-4 w-4" /> Exporter</Button>
+                            <button className="button-13"><FileDown className="mr-2 h-4 w-4" /> Exporter</button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                             <DropdownMenuLabel>Choisir un format</DropdownMenuLabel>
