@@ -342,25 +342,24 @@ export default function AgentsPage() {
             </div>
             <div className="flex items-center gap-2 flex-wrap justify-end">
               {!isObserver && (
-                <>
-                  <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
-                    <DialogTrigger asChild>
-                      <button className="button-13 flex items-center justify-center text-primary">
-                        <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <RegisterAgentForm onAgentRegistered={() => setRegisterOpen(false)} />
-                    </DialogContent>
-                  </Dialog>
+                <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
+                  <DialogTrigger asChild>
+                    <button className="button-13 flex items-center justify-center text-primary">
+                      <PlusCircle className="mr-2 h-4 w-4" /> Enregistrer
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <RegisterAgentForm onAgentRegistered={() => setRegisterOpen(false)} />
+                  </DialogContent>
+                </Dialog>
+              )}
+               {!isObserver && (
                   <ImportAgentsDialog>
                     <button className="button-13 flex items-center justify-center text-primary">
                       <FileUp className="mr-2 h-4 w-4" /> Importer
                     </button>
                   </ImportAgentsDialog>
-                </>
               )}
-              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="button-13 flex items-center justify-center text-primary">
@@ -526,3 +525,5 @@ export default function AgentsPage() {
     </div>
   );
 }
+
+    
