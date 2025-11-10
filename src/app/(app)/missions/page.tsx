@@ -63,6 +63,7 @@ import { useLogo } from '@/context/logo-context';
 import { differenceInDays, isSameDay } from 'date-fns';
 import { logActivity } from '@/lib/activity-logger';
 import { getDisplayStatus, MissionWithDisplayStatus } from '@/lib/missions';
+import { useSearchParams } from 'next/navigation';
 
 const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missionName: string }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -218,6 +219,7 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
 
 export default function MissionsPage() {
   const { isObserver } = useRole();
+  const searchParams = useSearchParams();
   const [isCreateMissionOpen, setCreateMissionOpen] = useState(false);
   const [editingMission, setEditingMission] = useState<Mission | null>(null);
   const [missionToComplete, setMissionToComplete] = useState<Mission | null>(null);
@@ -233,6 +235,13 @@ export default function MissionsPage() {
     const timer = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const status = searchParams.get('status');
+    if (status === 'Planification' || status === 'En cours' || status === 'Terminée' || status === 'Annulée') {
+      setStatusFilter(status);
+    }
+  }, [searchParams]);
   
   const missionsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'missions') : null), [firestore]);
   const agentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'agents') : null), [firestore]);

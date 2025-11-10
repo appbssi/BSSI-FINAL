@@ -33,6 +33,7 @@ import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { RecentActivities } from '@/components/dashboard/recent-activities';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const firestore = useFirestore();
@@ -124,42 +125,50 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Agents au Total</CardTitle>
-              <Users className="h-5 w-5 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalAgents}</div>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Agents en Mission</CardTitle>
-              <Shield className="h-5 w-5 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.onMission}</div>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Agents Disponibles</CardTitle>
-              <UserCheck className="h-5 w-5 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.available}</div>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Missions Terminées</CardTitle>
-              <CheckCircle className="h-5 w-5 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.completedMissions}</div>
-            </CardContent>
-          </Card>
+          <Link href="/agents">
+            <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Agents au Total</CardTitle>
+                <Users className="h-5 w-5 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalAgents}</div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/agents?availability=En%20mission">
+            <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Agents en Mission</CardTitle>
+                <Shield className="h-5 w-5 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.onMission}</div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/agents?availability=Disponible">
+            <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Agents Disponibles</CardTitle>
+                <UserCheck className="h-5 w-5 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.available}</div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/missions?status=Terminée">
+            <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Missions Terminées</CardTitle>
+                <CheckCircle className="h-5 w-5 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.completedMissions}</div>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       )}
 

@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Table,
   TableBody,
@@ -69,6 +70,7 @@ import { updateOfficerRanks, prefixContactsWithZero } from '@/lib/firestore-util
 
 export default function AgentsPage() {
   const firestore = useFirestore();
+  const searchParams = useSearchParams();
   const { isObserver, isAdmin } = useRole();
   const { logo } = useLogo();
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,6 +91,13 @@ export default function AgentsPage() {
     const timer = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const availability = searchParams.get('availability');
+    if (availability === 'Disponible' || availability === 'En mission' || availability === 'En congé') {
+      setAvailabilityFilter(availability);
+    }
+  }, [searchParams]);
 
   const agentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'agents') : null), [firestore]);
   const missionsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'missions') : null), [firestore]);
@@ -528,3 +537,4 @@ export default function AgentsPage() {
     
 
     
+
