@@ -1,7 +1,6 @@
-
 'use client';
 
-import { collection, getDocs, writeBatch, Firestore, doc, deleteDoc, WriteBatch, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, writeBatch, Firestore, doc, deleteDoc, WriteBatch, query, orderBy, where, updateDoc } from "firebase/firestore";
 import type { Agent, Mission } from "./types";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
@@ -144,4 +143,33 @@ export function deleteAgent(firestore: Firestore, agent: Agent, missions: Missio
     });
 }
 
+export async function updateOfficerRanks(firestore: Firestore): Promise<number> {
+    if (!firestore) return 0;
     
+    const agentsRef = collection(firestore, 'agents');
+    const q = query(agentsRef, where("section", "==", "Officier"), where("rank", "==", "IEF"));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        return 0;
+    }
+
+    const batch = writeBatch(firestore);
+    querySnapshot.forEach((docSnapshot) => {
+        const agentRef = doc(firestore, 'agents', docSnapshot.id);
+        batch.update(agentRef, { rank: 'OFFI' });
+    });
+
+    await batch.commit().catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: 'agents/[batch]',
+            operation: 'update',
+            requestResourceData: { info: "Batch update officer ranks" },
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+
+    logActivity(firestore, `${querySnapshot.size} grade(s) d'officier(s) ont été mis à jour de 'IEF' à 'OFFI'.`, 'Agent', '/agents');
+    return querySnapshot.size;
+}

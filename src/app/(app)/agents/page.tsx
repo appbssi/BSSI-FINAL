@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { FileUp, MoreHorizontal, PlusCircle, Search, FileDown, Shield } from 'lucide-react';
+import { FileUp, MoreHorizontal, PlusCircle, Search, FileDown, Shield, RefreshCw } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,11 +64,12 @@ import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import { ManageLeaveDialog } from '@/components/agents/manage-leave-dialog';
 import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
+import { updateOfficerRanks } from '@/lib/firestore-utils';
 
 
 export default function AgentsPage() {
   const firestore = useFirestore();
-  const { isObserver } = useRole();
+  const { isObserver, isAdmin } = useRole();
   const { logo } = useLogo();
   const [searchQuery, setSearchQuery] = useState('');
   const [isRegisterOpen, setRegisterOpen] = useState(false);
@@ -77,6 +78,7 @@ export default function AgentsPage() {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdatingRanks, setIsUpdatingRanks] = useState(false);
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'Disponible' | 'En mission' | 'En congé'>('all');
   const [sectionFilter, setSectionFilter] = useState<string>('all');
   const { toast } = useToast();
@@ -176,6 +178,34 @@ export default function AgentsPage() {
         setAgentToDelete(null); // Close the dialog
     });
   };
+
+  const handleUpdateRanks = async () => {
+    if (!firestore) return;
+    setIsUpdatingRanks(true);
+    try {
+        const updatedCount = await updateOfficerRanks(firestore);
+        if (updatedCount > 0) {
+            toast({
+                title: "Mise à jour réussie",
+                description: `${updatedCount} grade(s) d'officier(s) ont été mis à jour.`
+            });
+        } else {
+            toast({
+                title: "Aucune mise à jour",
+                description: "Aucun agent ne correspondait aux critères de mise à jour."
+            });
+        }
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Erreur de mise à jour",
+            description: error.message || "Une erreur est survenue lors de la mise à jour des grades.",
+        });
+    } finally {
+        setIsUpdatingRanks(false);
+    }
+  };
+
 
   const handleExportXLSX = () => {
     const dataToExport = filteredAgents.map(agent => ({
@@ -301,6 +331,12 @@ export default function AgentsPage() {
                     </button>
                   </ImportAgentsDialog>
                 </>
+              )}
+              {isAdmin && (
+                <Button onClick={handleUpdateRanks} disabled={isUpdatingRanks} variant="outline" size="sm">
+                  {isUpdatingRanks ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                  MàJ Grades
+                </Button>
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
