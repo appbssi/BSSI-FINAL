@@ -116,10 +116,9 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
             currentY += 8;
 
             autoTable(doc, {
-                head: [['Nom complet', 'Grade', 'Contact']],
+                head: [['Nom complet', 'Contact']],
                 body: filteredAgents.map(agent => [
                     agent.fullName,
-                    agent.rank,
                     agent.contact,
                 ]),
                 startY: currentY,
@@ -152,7 +151,6 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
     const handleExportXLSX = () => {
         const dataToExport = filteredAgents.map(agent => ({
             'Nom complet': agent.fullName,
-            'Grade': agent.rank,
             'Contact': agent.contact,
         }));
         const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -196,7 +194,6 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Nom Complet</TableHead>
-                                <TableHead>Grade</TableHead>
                                 <TableHead>Contact</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -205,12 +202,11 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
                                 filteredAgents.map(agent => (
                                     <TableRow key={agent.id}>
                                         <TableCell className="font-medium">{agent.fullName}</TableCell>
-                                        <TableCell>{agent.rank}</TableCell>
                                         <TableCell>{agent.contact}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (
-                                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={2} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell></TableRow>
                             )}
                         </TableBody>
                     </Table>
