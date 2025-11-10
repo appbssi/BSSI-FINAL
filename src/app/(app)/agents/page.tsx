@@ -363,7 +363,10 @@ export default function AgentsPage() {
                 const isAgentOnMission = agent.availability === 'En mission';
                 return (
                   <TableRow key={agent.id} onClick={() => setSelectedAgent(agent)} className="cursor-pointer">
-                    <TableCell className="font-medium">{agent.fullName}</TableCell>
+                    <TableCell className="font-medium">
+                        <div>{agent.fullName}</div>
+                        {agent.contact && <div className="text-xs text-muted-foreground">{agent.contact}</div>}
+                    </TableCell>
                     <TableCell>{agent.registrationNumber}</TableCell>
                     <TableCell>{agent.rank}</TableCell>
                     <TableCell>{(agent.section || 'N/A').toUpperCase()}</TableCell>
@@ -465,5 +468,7 @@ export default function AgentsPage() {
     </div>
   );
 }
+
+    
 
     
