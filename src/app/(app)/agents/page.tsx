@@ -347,7 +347,7 @@ export default function AgentsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Nom complet</TableHead>
-              <TableHead>Matricule</TableHead>
+              <TableHead>Contact</TableHead>
               <TableHead>Grade</TableHead>
               <TableHead>Section</TableHead>
               <TableHead>Missions</TableHead>
@@ -365,9 +365,9 @@ export default function AgentsPage() {
                   <TableRow key={agent.id} onClick={() => setSelectedAgent(agent)} className="cursor-pointer">
                     <TableCell className="font-medium">
                         <div>{agent.fullName}</div>
-                        {agent.contact && <div className="text-xs text-muted-foreground">{agent.contact}</div>}
+                        {agent.registrationNumber && <div className="text-xs text-muted-foreground">{agent.registrationNumber}</div>}
                     </TableCell>
-                    <TableCell>{agent.registrationNumber}</TableCell>
+                    <TableCell>{agent.contact}</TableCell>
                     <TableCell>{agent.rank}</TableCell>
                     <TableCell>{(agent.section || 'N/A').toUpperCase()}</TableCell>
                      <TableCell>
@@ -468,6 +468,8 @@ export default function AgentsPage() {
     </div>
   );
 }
+
+    
 
     
 
