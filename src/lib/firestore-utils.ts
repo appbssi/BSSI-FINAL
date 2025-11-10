@@ -1,3 +1,4 @@
+
 'use client';
 
 import { collection, getDocs, writeBatch, Firestore, doc, deleteDoc, WriteBatch, query, orderBy, where, updateDoc } from "firebase/firestore";
@@ -172,4 +173,44 @@ export async function updateOfficerRanks(firestore: Firestore): Promise<number> 
 
     logActivity(firestore, `${querySnapshot.size} grade(s) d'officier(s) ont été mis à jour de 'IEF' à 'OFFI'.`, 'Agent', '/agents');
     return querySnapshot.size;
+}
+
+export async function prefixContactsWithZero(firestore: Firestore): Promise<number> {
+    if (!firestore) return 0;
+
+    const agentsRef = collection(firestore, 'agents');
+    const querySnapshot = await getDocs(agentsRef);
+
+    if (querySnapshot.empty) {
+        return 0;
+    }
+
+    const batch = writeBatch(firestore);
+    let updatedCount = 0;
+
+    querySnapshot.forEach((docSnapshot) => {
+        const agent = docSnapshot.data() as Agent;
+        const agentId = docSnapshot.id;
+
+        if (agent.contact && !agent.contact.startsWith('0')) {
+            const agentRef = doc(firestore, 'agents', agentId);
+            batch.update(agentRef, { contact: `0${agent.contact}` });
+            updatedCount++;
+        }
+    });
+
+    if (updatedCount > 0) {
+        await batch.commit().catch(serverError => {
+            const permissionError = new FirestorePermissionError({
+                path: 'agents/[batch]',
+                operation: 'update',
+                requestResourceData: { info: "Batch update contacts" },
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            throw serverError;
+        });
+        logActivity(firestore, `${updatedCount} contact(s) ont été préfixés avec un '0'.`, 'Agent', '/agents');
+    }
+
+    return updatedCount;
 }

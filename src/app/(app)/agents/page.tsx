@@ -64,7 +64,7 @@ import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import { ManageLeaveDialog } from '@/components/agents/manage-leave-dialog';
 import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
-import { updateOfficerRanks } from '@/lib/firestore-utils';
+import { updateOfficerRanks, prefixContactsWithZero } from '@/lib/firestore-utils';
 
 
 export default function AgentsPage() {
@@ -79,6 +79,7 @@ export default function AgentsPage() {
   const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingRanks, setIsUpdatingRanks] = useState(false);
+  const [isUpdatingContacts, setIsUpdatingContacts] = useState(false);
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'Disponible' | 'En mission' | 'En congé'>('all');
   const [sectionFilter, setSectionFilter] = useState<string>('all');
   const { toast } = useToast();
@@ -203,6 +204,33 @@ export default function AgentsPage() {
         });
     } finally {
         setIsUpdatingRanks(false);
+    }
+  };
+
+  const handleUpdateContacts = async () => {
+    if (!firestore) return;
+    setIsUpdatingContacts(true);
+    try {
+        const updatedCount = await prefixContactsWithZero(firestore);
+        if (updatedCount > 0) {
+            toast({
+                title: "Mise à jour des contacts réussie",
+                description: `${updatedCount} contact(s) ont été mis à jour.`
+            });
+        } else {
+            toast({
+                title: "Aucune mise à jour de contact",
+                description: "Aucun contact ne nécessitait de mise à jour."
+            });
+        }
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Erreur de mise à jour des contacts",
+            description: error.message || "Une erreur est survenue lors de la mise à jour des contacts.",
+        });
+    } finally {
+        setIsUpdatingContacts(false);
     }
   };
 
@@ -333,10 +361,16 @@ export default function AgentsPage() {
                 </>
               )}
               {isAdmin && (
-                <Button onClick={handleUpdateRanks} disabled={isUpdatingRanks} variant="outline" size="sm">
-                  {isUpdatingRanks ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                  MàJ Grades
-                </Button>
+                <>
+                    <Button onClick={handleUpdateRanks} disabled={isUpdatingRanks} variant="outline" size="sm">
+                    {isUpdatingRanks ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                    MàJ Grades
+                    </Button>
+                    <Button onClick={handleUpdateContacts} disabled={isUpdatingContacts} variant="outline" size="sm">
+                        {isUpdatingContacts ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                        MàJ Contacts
+                    </Button>
+                </>
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -393,7 +427,7 @@ export default function AgentsPage() {
           </TableHeader>
           <TableBody>
             {agentsLoading || missionsLoading ? (
-              <TableRow><TableCell colSpan={7} className="text-center">Chargement des agents...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center">Chargement des agents...</TableCell></TableRow>
             ) : filteredAgents.length > 0 ? (
               filteredAgents.map((agent) => {
                 const isAgentOnMission = agent.availability === 'En mission';
@@ -446,7 +480,7 @@ export default function AgentsPage() {
                 );
               })
             ) : (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
