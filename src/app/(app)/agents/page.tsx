@@ -117,7 +117,8 @@ export default function AgentsPage() {
   const filteredAgents = sortedAgents.filter(agent => {
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = (agent.fullName || '').toLowerCase().includes(searchLower) ||
-                          (agent.registrationNumber || '').toLowerCase().includes(searchLower);
+                          (agent.registrationNumber || '').toLowerCase().includes(searchLower) ||
+                          (agent.rank || '').toLowerCase().includes(searchLower);
     const matchesAvailability = availabilityFilter === 'all' || agent.availability === availabilityFilter;
     
     let matchesSection;
@@ -291,7 +292,7 @@ export default function AgentsPage() {
                 agent.fullName,
                 agent.registrationNumber,
                 agent.rank,
-                agent.section || 'Non assigné',
+                agent.section === 'OFFICIER' ? 'N/A' : (agent.section || 'Non assigné').toUpperCase(),
                 agent.availability,
             ]),
             startY: currentY,
@@ -335,7 +336,7 @@ export default function AgentsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 className="pl-10"
-                placeholder="Rechercher par nom ou matricule..."
+                placeholder="Rechercher par nom, matricule ou grade..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -406,7 +407,6 @@ export default function AgentsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Nom complet</TableHead>
-              <TableHead>Contact</TableHead>
               <TableHead>Grade</TableHead>
               <TableHead>Missions</TableHead>
               <TableHead>Disponibilité</TableHead>
@@ -415,7 +415,7 @@ export default function AgentsPage() {
           </TableHeader>
           <TableBody>
             {agentsLoading || missionsLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center">Chargement des agents...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center">Chargement des agents...</TableCell></TableRow>
             ) : filteredAgents.length > 0 ? (
               filteredAgents.map((agent) => {
                 const isAgentOnMission = agent.availability === 'En mission';
@@ -425,7 +425,6 @@ export default function AgentsPage() {
                         <div>{agent.fullName}</div>
                         {agent.registrationNumber && <div className="text-xs text-muted-foreground">{agent.registrationNumber}</div>}
                     </TableCell>
-                    <TableCell>{agent.contact}</TableCell>
                     <TableCell>{agent.rank}</TableCell>
                      <TableCell>
                       <div className="flex items-center justify-center gap-1 font-semibold">
@@ -468,7 +467,7 @@ export default function AgentsPage() {
                 );
               })
             ) : (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
@@ -525,5 +524,7 @@ export default function AgentsPage() {
     </div>
   );
 }
+
+    
 
     
