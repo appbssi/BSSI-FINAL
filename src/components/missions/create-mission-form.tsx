@@ -138,7 +138,11 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
         logActivity(firestore, `La mission "${data.name}" a été créée.`, 'Mission', '/missions');
         
         // Envoyer le webhook
-        sendMissionCreationWebhook(newMissionData);
+        sendMissionCreationWebhook({
+            ...newMissionData,
+            startDate: newMissionData.startDate.toDate().toISOString(),
+            endDate: newMissionData.endDate.toDate().toISOString(),
+        });
 
         form.reset();
         if (onMissionCreated) {

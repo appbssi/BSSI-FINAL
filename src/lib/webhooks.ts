@@ -3,14 +3,19 @@
 
 import type { Mission } from './types';
 
+type MissionWebhookData = Omit<Mission, 'id' | 'status' | 'startDate' | 'endDate'> & {
+    startDate: string;
+    endDate: string;
+};
+
 /**
  * Envoie une notification webhook lors de la création d'une mission.
  * @param missionData - Les données de la mission qui vient d'être créée.
  */
-export async function sendMissionCreationWebhook(missionData: Omit<Mission, 'id' | 'status'>) {
+export async function sendMissionCreationWebhook(missionData: MissionWebhookData) {
   const webhookUrl = 'https://eor81ahsfc5a6tl.m.pipedream.net';
 
-  const description = `Mission prévue à ${missionData.location} du ${missionData.startDate.toDate().toLocaleDateString('fr-FR')} au ${missionData.endDate.toDate().toLocaleDateString('fr-FR')}.`;
+  const description = `Mission prévue à ${missionData.location} du ${new Date(missionData.startDate).toLocaleDateString('fr-FR')} au ${new Date(missionData.endDate).toLocaleDateString('fr-FR')}.`;
 
   const payload = {
     title: missionData.name,

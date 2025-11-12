@@ -110,7 +110,11 @@ export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCan
         });
 
         // Envoyer le webhook
-        sendMissionCreationWebhook(newMissionData);
+        sendMissionCreationWebhook({
+            ...newMissionData,
+            startDate: newMissionData.startDate.toDate().toISOString(),
+            endDate: newMissionData.endDate.toDate().toISOString(),
+        });
 
         form.reset();
         onMissionCreated();
