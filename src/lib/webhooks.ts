@@ -1,11 +1,12 @@
 
 'use server';
 
-import type { Mission } from './types';
+import type { Agent, Mission } from './types';
 
 type MissionWebhookData = Omit<Mission, 'id' | 'status' | 'startDate' | 'endDate'> & {
     startDate: string;
     endDate: string;
+    agents: string[]; // Noms des agents
 };
 
 /**
@@ -20,6 +21,7 @@ export async function sendMissionCreationWebhook(missionData: MissionWebhookData
   const payload = {
     title: missionData.name,
     description: description,
+    agents: missionData.agents,
     created_at: new Date().toISOString(),
   };
 

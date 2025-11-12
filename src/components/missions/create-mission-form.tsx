@@ -107,7 +107,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
   }, [isSingleDayMission, form]);
 
   const onSubmit = async (data: MissionFormValues) => {
-    if (!firestore) return;
+    if (!firestore || !allAgents) return;
     
     const batch = writeBatch(firestore);
 
@@ -137,11 +137,14 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
         });
         logActivity(firestore, `La mission "${data.name}" a été créée.`, 'Mission', '/missions');
         
+        const agentNames = data.assignedAgentIds.map(id => allAgents.find(a => a.id === id)?.fullName || 'Inconnu');
+
         // Envoyer le webhook
         sendMissionCreationWebhook({
             ...newMissionData,
             startDate: newMissionData.startDate.toDate().toISOString(),
             endDate: newMissionData.endDate.toDate().toISOString(),
+            agents: agentNames,
         });
 
         form.reset();

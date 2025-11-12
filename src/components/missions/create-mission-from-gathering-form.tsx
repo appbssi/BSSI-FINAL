@@ -82,7 +82,7 @@ export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCan
   const { data: allMissions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
 
   const onSubmit = async (data: MissionFormValues) => {
-    if (!firestore) return;
+    if (!firestore || !allAgents) return;
     
     const batch = writeBatch(firestore);
     const missionsCollection = collection(firestore, 'missions');
@@ -109,11 +109,17 @@ export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCan
             description: `La mission "${data.name}" a été créée avec les agents sélectionnés.`,
         });
 
+        const agentNames = finalAgentIds.map(id => {
+            const agent = agents.find(a => a.id === id) || allAgents.find(a => a.id === id);
+            return agent?.fullName || 'Inconnu';
+        });
+
         // Envoyer le webhook
         sendMissionCreationWebhook({
             ...newMissionData,
             startDate: newMissionData.startDate.toDate().toISOString(),
             endDate: newMissionData.endDate.toDate().toISOString(),
+            agents: agentNames,
         });
 
         form.reset();
