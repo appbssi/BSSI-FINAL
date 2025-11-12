@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, Controller } from 'react-hook-form';
@@ -33,6 +34,7 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { ScrollArea } from '../ui/scroll-area';
 import { useMemo } from 'react';
 import { getAgentAvailability } from '@/lib/agents';
+import { sendMissionCreationWebhook } from '@/lib/webhooks';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
@@ -89,7 +91,7 @@ export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCan
     const preselectedAgentIds = agents.map(agent => agent.id);
     const finalAgentIds = [...new Set([...preselectedAgentIds, ...(data.additionalAgentIds || [])])];
 
-    const newMissionData = {
+    const newMissionData: Omit<Mission, 'id' | 'status'> = {
         name: data.name,
         location: data.location,
         startDate: Timestamp.fromDate(data.startDate),
@@ -106,6 +108,10 @@ export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCan
             title: "Mission créée !",
             description: `La mission "${data.name}" a été créée avec les agents sélectionnés.`,
         });
+
+        // Envoyer le webhook
+        sendMissionCreationWebhook(newMissionData);
+
         form.reset();
         onMissionCreated();
     }).catch(async (serverError) => {
@@ -318,11 +324,11 @@ export function CreateMissionFromGatheringForm({ agents, onMissionCreated, onCan
             />
 
             <div className="flex justify-between pt-4">
-                <Button type="button" variant="outline" onClick={onCancel}>Annuler</Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <button type="button" className="button-13" onClick={onCancel}>Annuler</button>
+                <button type="submit" className="button-13" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Créer la mission
-                </Button>
+                </button>
             </div>
         </form>
       </Form>

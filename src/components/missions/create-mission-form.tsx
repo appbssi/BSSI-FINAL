@@ -32,6 +32,7 @@ import { Badge } from '../ui/badge';
 import { getAgentAvailability } from '@/lib/agents';
 import { logActivity } from '@/lib/activity-logger';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { sendMissionCreationWebhook } from '@/lib/webhooks';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
@@ -135,6 +136,10 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
             description: `La mission "${data.name}" a été créée avec succès.`,
         });
         logActivity(firestore, `La mission "${data.name}" a été créée.`, 'Mission', '/missions');
+        
+        // Envoyer le webhook
+        sendMissionCreationWebhook(newMissionData);
+
         form.reset();
         if (onMissionCreated) {
           onMissionCreated();
@@ -357,7 +362,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                        </div>
                     )}
                     <div className="flex justify-end pt-4">
-                        <Button type="button" onClick={handleNextStep}>Suivant</Button>
+                        <button type="button" onClick={handleNextStep} className="button-13">Suivant</button>
                     </div>
                 </div>
             )}
@@ -447,11 +452,11 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                 />
                 
                 <div className="flex justify-between pt-4">
-                  <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>Précédent</Button>
-                  <Button type="submit" disabled={isSubmitting}>
+                  <button type="button" className="button-13" onClick={() => setCurrentStep(1)}>Précédent</button>
+                  <button type="submit" className="button-13" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Créer la mission
-                  </Button>
+                  </button>
                 </div>
               </div>
             )}
