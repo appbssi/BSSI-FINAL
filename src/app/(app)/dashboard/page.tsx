@@ -46,15 +46,16 @@ export default function DashboardPage() {
   
   const [selectedMission, setSelectedMission] = useState<MissionWithDisplayStatus | null>(null);
 
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
+    setNow(new Date());
     const timer = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
   const stats = useMemo(() => {
-    if (!agents || !missions) {
+    if (!agents || !missions || !now) {
       return { totalAgents: 0, onMission: 0, available: 0, completedMissions: 0 };
     }
 
@@ -72,7 +73,7 @@ export default function DashboardPage() {
     
     const available = agents.length - onMission.size - onLeave.size;
     
-    const completedMissions = missions.filter(m => getDisplayStatus(m) === 'Terminée').length;
+    const completedMissions = missions.filter(m => getDisplayStatus(m, now) === 'Terminée').length;
 
     return {
       totalAgents: agents.length,
@@ -83,10 +84,10 @@ export default function DashboardPage() {
   }, [agents, missions, now]);
 
   const missionsWithStatus: MissionWithDisplayStatus[] = useMemo(() => {
-    if (!missions) return [];
+    if (!missions || !now) return [];
     return missions.map(mission => ({
       ...mission,
-      displayStatus: getDisplayStatus(mission),
+      displayStatus: getDisplayStatus(mission, now),
     }));
   }, [missions, now]);
 
@@ -109,7 +110,7 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold tracking-tight">Tableau de bord</h1>
       </div>
 
-      {(agentsLoading || missionsLoading) ? (
+      {(agentsLoading || missionsLoading || !now) ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
              <Card key={i} className="flex flex-col justify-between p-6 rounded-2xl">

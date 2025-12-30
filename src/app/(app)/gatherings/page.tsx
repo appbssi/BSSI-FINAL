@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -52,6 +52,13 @@ export default function GatheringsPage() {
   const [gatheringToDelete, setGatheringToDelete] = useState<Gathering | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setNow(new Date());
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   const gatheringsQuery = useMemoFirebase(
     () => (firestore ? collection(firestore, 'gatherings') : null),
@@ -98,9 +105,8 @@ export default function GatheringsPage() {
     setGatheringToDelete(null);
   };
 
-  const getStatus = (gathering: Gathering) => {
-    const now = new Date();
-    return gathering.dateTime.toDate() > now ? 'À venir' : 'Passé';
+  const getStatus = (gathering: Gathering, currentDate: Date) => {
+    return gathering.dateTime.toDate() > currentDate ? 'À venir' : 'Passé';
   };
 
   return (
@@ -136,7 +142,7 @@ export default function GatheringsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {gatheringsLoading || agentsLoading ? (
+            {gatheringsLoading || agentsLoading || !now ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center">Chargement des rassemblements...</TableCell>
               </TableRow>
@@ -145,9 +151,8 @@ export default function GatheringsPage() {
                 const assignedCount = gathering.assignedAgentIds.length;
                 const absentCount = gathering.absentAgentIds.length;
                 const presentCount = assignedCount - absentCount;
-                const status = getStatus(gathering);
+                const status = getStatus(gathering, now);
 
-                const now = new Date();
                 const gatheringTime = gathering.dateTime.toDate();
                 const sixHoursAfter = new Date(gatheringTime.getTime() + 6 * 60 * 60 * 1000);
                 const isAttendanceManagementLocked = now > sixHoursAfter;

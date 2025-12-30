@@ -85,9 +85,10 @@ export default function AgentsPage() {
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'Disponible' | 'En mission' | 'En congé'>('all');
   const [sectionFilter, setSectionFilter] = useState<string>('all');
   const { toast } = useToast();
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
+    setNow(new Date());
     const timer = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
@@ -106,10 +107,10 @@ export default function AgentsPage() {
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
 
   const agentsWithDetails: Agent[] = useMemo(() => {
-    if (!agents || !missions) return [];
+    if (!agents || !missions || !now) return [];
     return agents.map(agent => ({
       ...agent,
-      availability: getAgentAvailability(agent, missions),
+      availability: getAgentAvailability(agent, missions, now),
       missionCount: missions.filter(m => m.assignedAgentIds.includes(agent.id)).length,
     }));
   }, [agents, missions, now]);
@@ -156,9 +157,9 @@ export default function AgentsPage() {
   };
 
   const handleDeleteAgent = async () => {
-    if (!firestore || !agentToDelete || !missions) return;
+    if (!firestore || !agentToDelete || !missions || !now) return;
 
-    const availability = getAgentAvailability(agentToDelete, missions);
+    const availability = getAgentAvailability(agentToDelete, missions, now);
     if (availability === 'En mission') {
         toast({
             variant: 'destructive',
@@ -423,7 +424,7 @@ export default function AgentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {agentsLoading || missionsLoading ? (
+            {agentsLoading || missionsLoading || !now ? (
               <TableRow><TableCell colSpan={5} className="text-center">Chargement des agents...</TableCell></TableRow>
             ) : filteredAgents.length > 0 ? (
               filteredAgents.map((agent) => {
@@ -502,9 +503,9 @@ export default function AgentsPage() {
         />
       )}
 
-      {selectedAgent && missions && (
+      {selectedAgent && missions && now && (
         <AgentDetailsSheet
-          agent={{...selectedAgent, availability: getAgentAvailability(selectedAgent, missions), missionCount: missions.filter(m => m.assignedAgentIds.includes(selectedAgent.id)).length}}
+          agent={{...selectedAgent, availability: getAgentAvailability(selectedAgent, missions, now), missionCount: missions.filter(m => m.assignedAgentIds.includes(selectedAgent.id)).length}}
           missions={missions.filter(m => m.assignedAgentIds.includes(selectedAgent.id))}
           isOpen={!!selectedAgent}
           onOpenChange={(open) => !open && setSelectedAgent(null)}
@@ -537,5 +538,3 @@ export default function AgentsPage() {
     
 
     
-
-
