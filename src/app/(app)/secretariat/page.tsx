@@ -284,9 +284,9 @@ export default function SecretariatPage() {
                       <div className="text-sm text-muted-foreground">{visitor.contact}</div>
                     </TableCell>
                     <TableCell>{visitor.occupation}</TableCell>
-                    <TableCell>{visitor.entryTime.toDate().toLocaleDateString('fr-FR')}</TableCell>
-                    <TableCell>{visitor.entryTime.toDate().toLocaleTimeString('fr-FR')}</TableCell>
-                    <TableCell>{visitor.exitTime ? visitor.exitTime.toDate().toLocaleTimeString('fr-FR') : '...'}</TableCell>
+                    <TableCell>{isMounted ? visitor.entryTime.toDate().toLocaleDateString('fr-FR') : '...'}</TableCell>
+                    <TableCell>{isMounted ? visitor.entryTime.toDate().toLocaleTimeString('fr-FR') : '...'}</TableCell>
+                    <TableCell>{isMounted && visitor.exitTime ? visitor.exitTime.toDate().toLocaleTimeString('fr-FR') : '...'}</TableCell>
                     {!isObserver && (
                         <TableCell>
                         <DropdownMenu>
