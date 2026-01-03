@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -34,9 +33,11 @@ import { Badge } from '@/components/ui/badge';
 import { RecentActivities } from '@/components/dashboard/recent-activities';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useIsMounted } from '@/hooks/use-is-mounted';
 
 export default function DashboardPage() {
   const firestore = useFirestore();
+  const isMounted = useIsMounted();
 
   const agentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'agents') : null), [firestore]);
   const missionsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'missions') : null), [firestore]);
@@ -63,7 +64,7 @@ export default function DashboardPage() {
     const onLeave = new Set<string>();
 
     for (const agent of agents) {
-      const availability = getAgentAvailability(agent, missions);
+      const availability = getAgentAvailability(agent, missions, now);
       if (availability === 'En mission') {
         onMission.add(agent.id);
       } else if (availability === 'En congé') {
@@ -87,7 +88,7 @@ export default function DashboardPage() {
     if (!missions || !now) return [];
     return missions.map(mission => ({
       ...mission,
-      displayStatus: getDisplayStatus(mission, now),
+      displayStatus: getDisplayStatus(mission, now)!,
     }));
   }, [missions, now]);
 
@@ -103,6 +104,14 @@ export default function DashboardPage() {
     }, {} as Record<string, Agent>);
   }, [agents]);
 
+
+  if (!isMounted) {
+    return (
+      <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+        <div className="loader"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

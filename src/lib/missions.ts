@@ -1,4 +1,3 @@
-
 import { isSameDay } from 'date-fns';
 import type { Mission, MissionStatus } from './types';
 
@@ -10,7 +9,8 @@ export type MissionWithDisplayStatus = Mission & { displayStatus: MissionStatus 
  * @param now The current date to check against.
  * @returns The calculated display status.
  */
-export const getDisplayStatus = (mission: Mission, now: Date = new Date()): MissionStatus => {
+export const getDisplayStatus = (mission: Mission, now: Date | null): MissionStatus | undefined => {
+    if (!now) return undefined;
     const startDate = mission.startDate.toDate();
     const endDate = mission.endDate.toDate();
     

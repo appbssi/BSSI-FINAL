@@ -43,6 +43,7 @@ import { ManageAttendanceDialog } from '@/components/gatherings/manage-attendanc
 import { ViewAttendanceDialog } from '@/components/gatherings/view-attendance-dialog';
 import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
 import { logActivity } from '@/lib/activity-logger';
+import { useIsMounted } from '@/hooks/use-is-mounted';
 
 export default function GatheringsPage() {
   const { isObserver } = useRole();
@@ -52,6 +53,7 @@ export default function GatheringsPage() {
   const [gatheringToDelete, setGatheringToDelete] = useState<Gathering | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
+  const isMounted = useIsMounted();
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -105,9 +107,18 @@ export default function GatheringsPage() {
     setGatheringToDelete(null);
   };
 
-  const getStatus = (gathering: Gathering, currentDate: Date) => {
+  const getStatus = (gathering: Gathering, currentDate: Date | null) => {
+    if (!currentDate) return 'Chargement...';
     return gathering.dateTime.toDate() > currentDate ? 'À venir' : 'Passé';
   };
+
+  if (!isMounted) {
+    return (
+      <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+        <div className="loader"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

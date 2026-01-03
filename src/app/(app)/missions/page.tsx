@@ -64,6 +64,7 @@ import { differenceInDays, isSameDay } from 'date-fns';
 import { logActivity } from '@/lib/activity-logger';
 import { getDisplayStatus, MissionWithDisplayStatus } from '@/lib/missions';
 import { useSearchParams } from 'next/navigation';
+import { useIsMounted } from '@/hooks/use-is-mounted';
 
 const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missionName: string }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -220,6 +221,7 @@ const AssignedAgentsDialog = ({ agents, missionName }: { agents: Agent[], missio
 export default function MissionsPage() {
   const { isObserver } = useRole();
   const searchParams = useSearchParams();
+  const isMounted = useIsMounted();
   const [isCreateMissionOpen, setCreateMissionOpen] = useState(false);
   const [editingMission, setEditingMission] = useState<Mission | null>(null);
   const [missionToComplete, setMissionToComplete] = useState<Mission | null>(null);
@@ -266,7 +268,7 @@ export default function MissionsPage() {
     };
 
     return [...missions]
-      .map(m => ({...m, displayStatus: getDisplayStatus(m, now)}))
+      .map(m => ({...m, displayStatus: getDisplayStatus(m, now)!}))
       .sort((a, b) => (statusOrder[a.displayStatus] || 5) - (statusOrder[b.displayStatus] || 5) || b.startDate.toMillis() - a.startDate.toMillis());
   }, [missions, now]);
 
@@ -333,6 +335,14 @@ export default function MissionsPage() {
 
     setMissionToDelete(null);
   };
+
+  if (!isMounted) {
+    return (
+      <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+        <div className="loader"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

@@ -66,6 +66,7 @@ import { Loader2 } from 'lucide-react';
 import { ManageLeaveDialog } from '@/components/agents/manage-leave-dialog';
 import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
 import { updateOfficerRanks, prefixContactsWithZero } from '@/lib/firestore-utils';
+import { useIsMounted } from '@/hooks/use-is-mounted';
 
 
 export default function AgentsPage() {
@@ -73,6 +74,7 @@ export default function AgentsPage() {
   const searchParams = useSearchParams();
   const { isObserver, isAdmin } = useRole();
   const { logo } = useLogo();
+  const isMounted = useIsMounted();
   const [searchQuery, setSearchQuery] = useState('');
   const [isRegisterOpen, setRegisterOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
@@ -332,6 +334,14 @@ export default function AgentsPage() {
     }
   };
 
+
+  if (!isMounted) {
+    return (
+      <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+        <div className="loader"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
