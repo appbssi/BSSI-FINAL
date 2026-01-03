@@ -49,5 +49,3 @@ export function getAgentAvailability(agent: Agent, missions: Mission[], now: Dat
 
   return 'Disponible';
 }
-
-    

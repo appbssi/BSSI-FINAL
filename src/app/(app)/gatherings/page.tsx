@@ -54,13 +54,6 @@ export default function GatheringsPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const isMounted = useIsMounted();
-  const [now, setNow] = useState<Date | null>(null);
-
-  useEffect(() => {
-    setNow(new Date());
-    const timer = setInterval(() => setNow(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
 
   const gatheringsQuery = useMemoFirebase(
     () => (firestore ? collection(firestore, 'gatherings') : null),
@@ -107,9 +100,9 @@ export default function GatheringsPage() {
     setGatheringToDelete(null);
   };
 
-  const getStatus = (gathering: Gathering, currentDate: Date | null) => {
-    if (!currentDate) return 'Chargement...';
-    return gathering.dateTime.toDate() > currentDate ? 'À venir' : 'Passé';
+  const getStatus = (gathering: Gathering) => {
+    if (!isMounted) return 'Chargement...';
+    return gathering.dateTime.toDate() > new Date() ? 'À venir' : 'Passé';
   };
 
   if (!isMounted) {
@@ -153,7 +146,7 @@ export default function GatheringsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {gatheringsLoading || agentsLoading || !now ? (
+            {gatheringsLoading || agentsLoading ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center">Chargement des rassemblements...</TableCell>
               </TableRow>
@@ -162,11 +155,11 @@ export default function GatheringsPage() {
                 const assignedCount = gathering.assignedAgentIds.length;
                 const absentCount = gathering.absentAgentIds.length;
                 const presentCount = assignedCount - absentCount;
-                const status = getStatus(gathering, now);
+                const status = getStatus(gathering);
 
                 const gatheringTime = gathering.dateTime.toDate();
                 const sixHoursAfter = new Date(gatheringTime.getTime() + 6 * 60 * 60 * 1000);
-                const isAttendanceManagementLocked = now > sixHoursAfter;
+                const isAttendanceManagementLocked = new Date() > sixHoursAfter;
 
                 return (
                   <TableRow key={gathering.id}>
@@ -274,5 +267,3 @@ export default function GatheringsPage() {
     </div>
   );
 }
-
-    

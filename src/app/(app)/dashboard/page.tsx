@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -47,19 +48,11 @@ export default function DashboardPage() {
   
   const [selectedMission, setSelectedMission] = useState<MissionWithDisplayStatus | null>(null);
 
-  const [now, setNow] = useState<Date | null>(null);
-
-  useEffect(() => {
-    setNow(new Date());
-    const timer = setInterval(() => setNow(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
-
   const stats = useMemo(() => {
-    if (!agents || !missions || !now) {
+    if (!isMounted || !agents || !missions) {
       return { totalAgents: 0, onMission: 0, available: 0, completedMissions: 0 };
     }
-
+    const now = new Date();
     const onMission = new Set<string>();
     const onLeave = new Set<string>();
 
@@ -82,15 +75,16 @@ export default function DashboardPage() {
       available: available,
       completedMissions: completedMissions,
     };
-  }, [agents, missions, now]);
+  }, [isMounted, agents, missions]);
 
   const missionsWithStatus: MissionWithDisplayStatus[] = useMemo(() => {
-    if (!missions || !now) return [];
+    if (!isMounted || !missions) return [];
+    const now = new Date();
     return missions.map(mission => ({
       ...mission,
       displayStatus: getDisplayStatus(mission, now)!,
     }));
-  }, [missions, now]);
+  }, [isMounted, missions]);
 
   const ongoingMissions = useMemo(() => {
     return missionsWithStatus.filter(mission => mission.displayStatus === 'En cours');
@@ -119,7 +113,7 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold tracking-tight">Tableau de bord</h1>
       </div>
 
-      {(agentsLoading || missionsLoading || !now) ? (
+      {(agentsLoading || missionsLoading) ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
              <Card key={i} className="flex flex-col justify-between p-6 rounded-2xl">

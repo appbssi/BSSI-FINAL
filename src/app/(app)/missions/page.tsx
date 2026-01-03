@@ -231,13 +231,6 @@ export default function MissionsPage() {
   const firestore = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<MissionStatus | 'all'>('all');
-  const [now, setNow] = useState<Date | null>(null);
-
-  useEffect(() => {
-    setNow(new Date());
-    const timer = setInterval(() => setNow(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     const status = searchParams.get('status');
@@ -261,16 +254,16 @@ export default function MissionsPage() {
   }, [agents]);
 
   const sortedMissions: MissionWithDisplayStatus[] = useMemo(() => {
-    if (!missions || !now) return [];
+    if (!isMounted || !missions) return [];
     
     const statusOrder: Record<MissionStatus, number> = {
       'En cours': 1, 'Planification': 2, 'Terminée': 3, 'Annulée': 4,
     };
-
+    const now = new Date();
     return [...missions]
       .map(m => ({...m, displayStatus: getDisplayStatus(m, now)!}))
       .sort((a, b) => (statusOrder[a.displayStatus] || 5) - (statusOrder[b.displayStatus] || 5) || b.startDate.toMillis() - a.startDate.toMillis());
-  }, [missions, now]);
+  }, [isMounted, missions]);
 
   const filteredMissions = useMemo(() => {
     return sortedMissions.filter(mission => {
@@ -406,7 +399,7 @@ export default function MissionsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {missionsLoading || agentsLoading || !now ? (
+            {missionsLoading || agentsLoading ? (
               <TableRow><TableCell colSpan={6} className="text-center">Chargement des missions...</TableCell></TableRow>
             ) : filteredMissions.length > 0 ? (
             filteredMissions.map((mission) => {
@@ -537,5 +530,3 @@ export default function MissionsPage() {
     </div>
   );
 }
-
-    
