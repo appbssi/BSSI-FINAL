@@ -146,7 +146,7 @@ export default function GatheringsPage() {
               <TableRow>
                 <TableCell colSpan={6} className="text-center">Chargement des rassemblements...</TableCell>
               </TableRow>
-            ) : (
+            ) : sortedGatherings.length > 0 ? (
               sortedGatherings.map((gathering) => {
                 const assignedCount = gathering.assignedAgentIds.length;
                 const absentCount = gathering.absentAgentIds.length;
@@ -212,8 +212,7 @@ export default function GatheringsPage() {
                   </TableRow>
                 )
               })
-            )}
-            {!gatheringsLoading && sortedGatherings.length === 0 && (
+            ) : (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground">
                   Aucun rassemblement trouvé.
@@ -264,3 +263,5 @@ export default function GatheringsPage() {
     </div>
   );
 }
+
+    

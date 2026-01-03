@@ -16,8 +16,11 @@ import { getDisplayStatus } from './missions';
  * @param excludeMissionId An optional mission ID to exclude from the check (used when editing a mission).
  * @returns The availability status of the agent.
  */
-export function getAgentAvailability(agent: Agent, missions: Mission[], now: Date, excludeMissionId?: string): Availability {
-  
+export function getAgentAvailability(agent: Agent, missions: Mission[], now: Date | null, excludeMissionId?: string): Availability | undefined {
+  if (!now) {
+    return undefined; // or a default/loading state
+  }
+
   if (agent.leaveStartDate && agent.leaveEndDate) {
     const leaveStart = agent.leaveStartDate.toDate();
     const leaveEnd = agent.leaveEndDate.toDate();
@@ -46,3 +49,5 @@ export function getAgentAvailability(agent: Agent, missions: Mission[], now: Dat
 
   return 'Disponible';
 }
+
+    

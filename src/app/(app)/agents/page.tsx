@@ -442,7 +442,7 @@ export default function AgentsPage() {
                         {agent.missionCount || 0}
                       </div>
                     </TableCell>
-                    <TableCell><Badge variant={getBadgeVariant(agent.availability)}>{agent.availability}</Badge></TableCell>
+                    <TableCell><Badge variant={getBadgeVariant(agent.availability)}>{agent.availability || '...'}</Badge></TableCell>
                     <TableCell>
                       {!isObserver && (
                         <DropdownMenu>
@@ -505,7 +505,7 @@ export default function AgentsPage() {
 
       {selectedAgent && missions && now && (
         <AgentDetailsSheet
-          agent={{...selectedAgent, availability: getAgentAvailability(selectedAgent, missions, now), missionCount: missions.filter(m => m.assignedAgentIds.includes(selectedAgent.id)).length}}
+          agent={{...selectedAgent, availability: getAgentAvailability(selectedAgent, missions, now)!, missionCount: missions.filter(m => m.assignedAgentIds.includes(selectedAgent.id)).length}}
           missions={missions.filter(m => m.assignedAgentIds.includes(selectedAgent.id))}
           isOpen={!!selectedAgent}
           onOpenChange={(open) => !open && setSelectedAgent(null)}
@@ -534,6 +534,8 @@ export default function AgentsPage() {
     </div>
   );
 }
+
+    
 
     
 
