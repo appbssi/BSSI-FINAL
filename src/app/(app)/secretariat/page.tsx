@@ -54,6 +54,7 @@ import {
 import { RegisterVisitorForm } from '@/components/secretariat/register-visitor-form';
 import { logActivity } from '@/lib/activity-logger';
 import { useIsMounted } from '@/hooks/use-is-mounted';
+import Loading from '../loading';
 
 
 export default function SecretariatPage() {
@@ -204,6 +205,9 @@ export default function SecretariatPage() {
     }
   };
 
+  if (!isMounted) {
+    return <Loading />;
+  }
 
   return (
     <div className="space-y-4">
@@ -280,9 +284,9 @@ export default function SecretariatPage() {
                       <div className="text-sm text-muted-foreground">{visitor.contact}</div>
                     </TableCell>
                     <TableCell>{visitor.occupation}</TableCell>
-                    <TableCell>{isMounted ? visitor.entryTime.toDate().toLocaleDateString('fr-FR') : '...'}</TableCell>
-                    <TableCell>{isMounted ? visitor.entryTime.toDate().toLocaleTimeString('fr-FR') : '...'}</TableCell>
-                    <TableCell>{isMounted && visitor.exitTime ? visitor.exitTime.toDate().toLocaleTimeString('fr-FR') : '...'}</TableCell>
+                    <TableCell>{visitor.entryTime.toDate().toLocaleDateString('fr-FR')}</TableCell>
+                    <TableCell>{visitor.entryTime.toDate().toLocaleTimeString('fr-FR')}</TableCell>
+                    <TableCell>{visitor.exitTime ? visitor.exitTime.toDate().toLocaleTimeString('fr-FR') : '...'}</TableCell>
                     {!isObserver && (
                         <TableCell>
                         <DropdownMenu>
