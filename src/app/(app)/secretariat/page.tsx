@@ -53,12 +53,14 @@ import {
 } from '@/components/ui/dialog';
 import { RegisterVisitorForm } from '@/components/secretariat/register-visitor-form';
 import { logActivity } from '@/lib/activity-logger';
+import { useIsMounted } from '@/hooks/use-is-mounted';
 
 
 export default function SecretariatPage() {
   const firestore = useFirestore();
   const { isObserver } = useRole();
   const { logo } = useLogo();
+  const isMounted = useIsMounted();
   const [searchQuery, setSearchQuery] = useState('');
   const [isRegisterOpen, setRegisterOpen] = useState(false);
   const [editingVisitor, setEditingVisitor] = useState<Visitor | null>(null);
@@ -278,9 +280,9 @@ export default function SecretariatPage() {
                       <div className="text-sm text-muted-foreground">{visitor.contact}</div>
                     </TableCell>
                     <TableCell>{visitor.occupation}</TableCell>
-                    <TableCell>{visitor.entryTime.toDate().toLocaleDateString('fr-FR')}</TableCell>
-                    <TableCell>{visitor.entryTime.toDate().toLocaleTimeString('fr-FR')}</TableCell>
-                    <TableCell>{visitor.exitTime ? visitor.exitTime.toDate().toLocaleTimeString('fr-FR') : '...'}</TableCell>
+                    <TableCell>{isMounted ? visitor.entryTime.toDate().toLocaleDateString('fr-FR') : '...'}</TableCell>
+                    <TableCell>{isMounted ? visitor.entryTime.toDate().toLocaleTimeString('fr-FR') : '...'}</TableCell>
+                    <TableCell>{isMounted && visitor.exitTime ? visitor.exitTime.toDate().toLocaleTimeString('fr-FR') : '...'}</TableCell>
                     {!isObserver && (
                         <TableCell>
                         <DropdownMenu>
