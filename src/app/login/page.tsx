@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -61,12 +62,13 @@ export default function LoginPage() {
   const [currentImage, setCurrentImage] = useState(0);
 
   useEffect(() => {
+    if (!isMounted) return;
     const interval = setInterval(() => {
       setCurrentImage((prevImage) => (prevImage + 1) % images.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isMounted]);
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -147,9 +149,7 @@ export default function LoginPage() {
                 <CardHeader className="text-center">
                     <div className="mx-auto mb-4 h-24 w-24 flex items-center justify-center">
                         <div className="relative h-20 w-20">
-                            {isLogoLoading ? (
-                            <Loader2 className="h-full w-full animate-spin text-primary" />
-                            ) : logo ? (
+                            {logo ? (
                             <Image src={logo} alt="Logo" fill className="rounded-full object-cover" />
                             ) : null}
                         </div>

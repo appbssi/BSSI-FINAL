@@ -26,12 +26,13 @@ export default function LandingPage() {
   const router = useRouter();
 
   useEffect(() => {
+    if (!isMounted) return;
     const interval = setInterval(() => {
       setCurrentImage((prevImage) => (prevImage + 1) % images.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isMounted]);
 
   const handleEnterClick = () => {
     router.push('/login');
@@ -67,9 +68,7 @@ export default function LandingPage() {
         <div className="transition-all duration-500 opacity-100 scale-100">
             <div className="mx-auto mb-6 h-28 w-28 flex items-center justify-center">
                 <div className="relative h-24 w-24">
-                    {isLogoLoading ? (
-                        <Loader2 className="h-full w-full animate-spin text-primary" />
-                    ) : logo ? (
+                    {logo ? (
                         <Image src={logo} alt="Logo" fill className="rounded-full object-cover" />
                     ) : null}
                 </div>
