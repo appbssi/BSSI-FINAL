@@ -28,7 +28,8 @@ import { useUser } from '@/firebase';
 import { useIsMounted } from '@/hooks/use-is-mounted';
 import { setRole } from '@/hooks/use-role';
 import { FirebaseError } from 'firebase/app';
-import Loading from '../(app)/loading';
+import { ClientOnly } from '@/components/layout/client-only';
+
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Veuillez saisir votre login.'),
@@ -51,9 +52,15 @@ const images = [
 ];
 
 export default function LoginPage() {
-  const { logo, isLogoLoading } = useLogo();
-  const { isUserLoading } = useUser();
-  const isMounted = useIsMounted();
+  return (
+    <ClientOnly>
+      <LoginContent />
+    </ClientOnly>
+  );
+}
+
+function LoginContent() {
+  const { logo } = useLogo();
   const { toast } = useToast();
   const auth = useAuth();
   const router = useRouter();
@@ -63,13 +70,12 @@ export default function LoginPage() {
   const [currentImage, setCurrentImage] = useState(0);
 
   useEffect(() => {
-    if (!isMounted) return;
     const interval = setInterval(() => {
       setCurrentImage((prevImage) => (prevImage + 1) % images.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isMounted]);
+  }, []);
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -118,10 +124,6 @@ export default function LoginPage() {
       setHasError(false);
     }
     field.onChange(value);
-  }
-
-  if (!isMounted || isUserLoading || isLogoLoading) {
-    return <Loading />;
   }
 
   return (

@@ -35,10 +35,19 @@ import { RecentActivities } from '@/components/dashboard/recent-activities';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useIsMounted } from '@/hooks/use-is-mounted';
+import { ClientOnly } from '@/components/layout/client-only';
+
 
 export default function DashboardPage() {
+  return (
+    <ClientOnly>
+      <DashboardContent />
+    </ClientOnly>
+  );
+}
+
+function DashboardContent() {
   const firestore = useFirestore();
-  const isMounted = useIsMounted();
 
   const agentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'agents') : null), [firestore]);
   const missionsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'missions') : null), [firestore]);
@@ -49,7 +58,7 @@ export default function DashboardPage() {
   const [selectedMission, setSelectedMission] = useState<MissionWithDisplayStatus | null>(null);
 
   const stats = useMemo(() => {
-    if (!isMounted || !agents || !missions) {
+    if (!agents || !missions) {
       return { totalAgents: 0, onMission: 0, available: 0, completedMissions: 0 };
     }
     const now = new Date();
@@ -75,16 +84,16 @@ export default function DashboardPage() {
       available: available,
       completedMissions: completedMissions,
     };
-  }, [isMounted, agents, missions]);
+  }, [agents, missions]);
 
   const missionsWithStatus: MissionWithDisplayStatus[] = useMemo(() => {
-    if (!isMounted || !missions) return [];
+    if (!missions) return [];
     const now = new Date();
     return missions.map(mission => ({
       ...mission,
       displayStatus: getDisplayStatus(mission, now)!,
     }));
-  }, [isMounted, missions]);
+  }, [missions]);
 
   const ongoingMissions = useMemo(() => {
     return missionsWithStatus.filter(mission => mission.displayStatus === 'En cours');
@@ -98,14 +107,6 @@ export default function DashboardPage() {
     }, {} as Record<string, Agent>);
   }, [agents]);
 
-
-  if (!isMounted) {
-    return (
-      <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
-        <div className="loader"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">

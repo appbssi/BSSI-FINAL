@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
 import { useIsMounted } from '@/hooks/use-is-mounted';
-import Loading from './(app)/loading';
+import { ClientOnly } from '@/components/layout/client-only';
 
 const images = [
   'https://i.imgur.com/kPlJEwW.jpeg',
@@ -19,29 +19,31 @@ const images = [
   'https://i.imgur.com/p0CP2p6.jpeg',
 ];
 
+
 export default function LandingPage() {
+  return (
+    <ClientOnly>
+      <LandingContent />
+    </ClientOnly>
+  );
+}
+
+function LandingContent() {
   const [currentImage, setCurrentImage] = useState(0);
-  const { logo, isLogoLoading } = useLogo();
-  const { isUserLoading } = useUser();
-  const isMounted = useIsMounted();
+  const { logo } = useLogo();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isMounted) return;
     const interval = setInterval(() => {
       setCurrentImage((prevImage) => (prevImage + 1) % images.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isMounted]);
+  }, []);
 
   const handleEnterClick = () => {
     router.push('/login');
   };
-
-  if (!isMounted || isUserLoading || isLogoLoading) {
-    return <Loading />;
-  }
 
   return (
     <div className="relative w-full h-screen overflow-hidden">

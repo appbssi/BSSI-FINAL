@@ -67,14 +67,21 @@ import { ManageLeaveDialog } from '@/components/agents/manage-leave-dialog';
 import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
 import { updateOfficerRanks, prefixContactsWithZero } from '@/lib/firestore-utils';
 import { useIsMounted } from '@/hooks/use-is-mounted';
-
+import { ClientOnly } from '@/components/layout/client-only';
 
 export default function AgentsPage() {
+  return (
+    <ClientOnly>
+      <AgentsContent />
+    </ClientOnly>
+  );
+}
+
+function AgentsContent() {
   const firestore = useFirestore();
   const searchParams = useSearchParams();
   const { isObserver, isAdmin } = useRole();
   const { logo } = useLogo();
-  const isMounted = useIsMounted();
   const [searchQuery, setSearchQuery] = useState('');
   const [isRegisterOpen, setRegisterOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
@@ -102,14 +109,14 @@ export default function AgentsPage() {
   const { data: missions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
 
   const agentsWithDetails: Agent[] = useMemo(() => {
-    if (!isMounted || !agents || !missions) return [];
+    if (!agents || !missions) return [];
     const now = new Date();
     return agents.map(agent => ({
       ...agent,
       availability: getAgentAvailability(agent, missions, now),
       missionCount: missions.filter(m => m.assignedAgentIds.includes(agent.id)).length,
     }));
-  }, [isMounted, agents, missions]);
+  }, [agents, missions]);
 
   const sortedAgents = useMemo(() => {
     if (!agentsWithDetails) return [];
@@ -328,15 +335,6 @@ export default function AgentsPage() {
         addContent(null);
     }
   };
-
-
-  if (!isMounted) {
-    return (
-      <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
-        <div className="loader"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
