@@ -28,6 +28,7 @@ import { useUser } from '@/firebase';
 import { useIsMounted } from '@/hooks/use-is-mounted';
 import { setRole } from '@/hooks/use-role';
 import { FirebaseError } from 'firebase/app';
+import Loading from '../(app)/loading';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Veuillez saisir votre login.'),
@@ -120,11 +121,7 @@ export default function LoginPage() {
   }
 
   if (!isMounted || isUserLoading || isLogoLoading) {
-    return (
-       <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
-        <div className="loader"></div>
-      </div>
-    );
+    return <Loading />;
   }
 
   return (
@@ -154,7 +151,7 @@ export default function LoginPage() {
                             ) : null}
                         </div>
                     </div>
-                    <CardTitle><span className="text-destructive">s</span>BSSI</CardTitle>
+                    <CardTitle><span className="text-primary">s</span>BSSI</CardTitle>
                     <CardDescription>Connectez-vous pour accéder à votre tableau de bord</CardDescription>
                 </CardHeader>
                 <CardContent>

@@ -9,6 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
 import { useIsMounted } from '@/hooks/use-is-mounted';
+import Loading from './(app)/loading';
 
 const images = [
   'https://i.imgur.com/kPlJEwW.jpeg',
@@ -39,11 +40,7 @@ export default function LandingPage() {
   };
 
   if (!isMounted || isUserLoading || isLogoLoading) {
-    return (
-       <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
-        <div className="loader"></div>
-      </div>
-    );
+    return <Loading />;
   }
 
   return (
@@ -74,7 +71,7 @@ export default function LandingPage() {
                 </div>
             </div>
             <h1 className="text-5xl font-bold tracking-tight text-shadow-lg sm:text-6xl md:text-7xl" style={{fontFamily: 'Montserrat, sans-serif', textShadow: '2px 2px 8px rgba(0,0,0,0.7)'}}>
-                <span className="text-destructive">s</span>BSSI
+                <span className="text-primary">s</span>BSSI
             </h1>
             <p className="mt-4 max-w-2xl text-lg text-primary-foreground/80" style={{textShadow: '1px 1px 4px rgba(0,0,0,0.5)'}}>
                 Système de Brigade Spéciale de Surveillance et d'Intervention

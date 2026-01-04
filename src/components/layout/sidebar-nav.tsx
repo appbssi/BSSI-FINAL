@@ -86,7 +86,7 @@ export function SidebarNav() {
                         <Image src={logo} alt="Logo" width={48} height={48} className="rounded-full" />
                     ) : null}
                    <p className="text-4xl font-semibold text-center">
-                      <span className="text-destructive">s</span>
+                      <span className="text-primary">s</span>
                       <span className="text-sidebar-foreground">BSSI</span>
                   </p>
               </div>
