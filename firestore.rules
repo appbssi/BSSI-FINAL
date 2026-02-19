@@ -1,26 +1,16 @@
 
-/**
- * @fileoverview Firestore Security Rules for the application.
- * Updated to ensure full access for all authenticated users to all operational and financial data.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Simple sign-in check
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    // Full access for all collections to any signed-in user
+    // Permet l'accès complet à toutes les collections pour tout utilisateur authentifié
     match /{document=**} {
-      allow read, write: if isSignedIn();
+      allow read, write: if request.auth != null;
     }
-
-    // Specific match for settings to allow public read if necessary, but keep write protected
+    
+    // Règle spécifique pour le logo si nécessaire en accès public
     match /settings/app {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow write: if request.auth != null;
     }
   }
 }
