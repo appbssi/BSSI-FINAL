@@ -39,7 +39,7 @@ const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
   { href: '/agents', label: 'Agents', icon: Users, roles: ['admin', 'observer'] },
   { href: '/missions', label: 'Missions', icon: Rocket, roles: ['admin', 'observer'] },
-  { href: '/gatherings', label: 'Rassemblements', icon: CalendarClock, roles: ['admin', 'observer'] },
+  { href: '/gatherings', label: 'Rassemblements', icon: CalendarClock, roles: ['admin', 'observer', 'secretariat'] },
   { href: '/secretariat', label: 'Secrétariat', icon: BookUser, roles: ['admin', 'secretariat'] },
 ];
 
@@ -71,9 +71,8 @@ export function SidebarNav() {
           <Image
               src={logo}
               alt="Sidebar background"
-              layout="fill"
-              objectFit="cover"
-              className="opacity-10 pointer-events-none"
+              fill
+              className="opacity-10 pointer-events-none object-cover"
           />
       )}
       <div className={cn("relative z-10 flex flex-col h-full", logo ? "" : "")}>
