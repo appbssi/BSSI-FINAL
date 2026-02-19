@@ -1,37 +1,11 @@
+
 /**
  * @fileoverview Firestore Security Rules for the application.
- *
- * Core Philosophy:
- * This ruleset prioritizes security by enforcing strict access controls.
- * Read access is generally open where appropriate, but write access is always restricted
- * to prevent unauthorized data modification. All potentially private data is secured behind authentication checks.
- *
- * Data Structure:
- * - /agents/{agentId}: Stores individual agent information.
- * - /missions/{missionId}: Stores individual mission details.
- * - /gatherings/{gatheringId}: Stores individual gathering details.
- * - /settings/app: Stores application settings (e.g., logo). Only accessible for reading.
- * - /visitors/{visitorId}: Stores visitor information.
- * - /activities/{activityId}: Stores recent activity logs.
- *
- * Key Security Decisions:
- * - Listing of agents, missions and gatherings is allowed for any signed-in user.
- * - App settings can be read by anyone, but cannot be written to.
- * - Listing of visitors is allowed for any signed-in user.
- * - Activity logs can be read and created by any signed-in user, but not modified or deleted.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Allows access to agent documents.
-     * @path /agents/{agentId}
-     * @allow (get, list) Signed-in user can view all agents.
-     * @allow (create, update, delete) Only signed-in users can create, update, or delete agent documents.
-     * @deny No unauthenticated access.
-     * @principle Requires authentication for all operations.
-     */
     match /agents/{agentId} {
       allow get: if isSignedIn();
       allow list: if isSignedIn();
@@ -40,14 +14,6 @@ service cloud.firestore {
       allow delete: if isSignedIn();
     }
 
-    /**
-     * @description Allows access to mission documents.
-     * @path /missions/{missionId}
-     * @allow (get, list) Signed-in user can view all missions.
-     * @allow (create, update, delete) Only signed-in users can create, update, or delete mission documents.
-     * @deny No unauthenticated access.
-     * @principle Requires authentication for all operations.
-     */
     match /missions/{missionId} {
       allow get: if isSignedIn();
       allow list: if isSignedIn();
@@ -56,14 +22,6 @@ service cloud.firestore {
       allow delete: if isSignedIn();
     }
 
-    /**
-     * @description Allows access to gathering documents.
-     * @path /gatherings/{gatheringId}
-     * @allow (get, list) Signed-in user can view all gatherings.
-     * @allow (create, update, delete) Only signed-in users can create, update, or delete gathering documents.
-     * @deny No unauthenticated access.
-     * @principle Requires authentication for all operations.
-     */
     match /gatherings/{gatheringId} {
       allow get: if isSignedIn();
       allow list: if isSignedIn();
@@ -72,13 +30,14 @@ service cloud.firestore {
       allow delete: if isSignedIn();
     }
 
-    /**
-     * @description Allows read-only access to application settings.
-     * @path /settings/app
-     * @allow (get) Any user can retrieve the application settings.
-     * @deny (create, update, delete) No one can modify the application settings.
-     * @principle Restricts write access to application settings.
-     */
+    match /expenses/{expenseId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /allocations/{allocationId} {
+      allow read, write: if isSignedIn();
+    }
+
     match /settings/app {
       allow get: if true;
       allow list: if false;
@@ -87,14 +46,6 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    /**
-     * @description Allows access to visitor documents.
-     * @path /visitors/{visitorId}
-     * @allow (get, list) Signed-in user can view all visitors.
-     * @allow (create, update, delete) Only signed-in users can create, update, or delete visitor documents.
-     * @deny No unauthenticated access.
-     * @principle Requires authentication for all operations.
-     */
     match /visitors/{visitorId} {
       allow get: if isSignedIn();
       allow list: if isSignedIn();
@@ -103,13 +54,6 @@ service cloud.firestore {
       allow delete: if isSignedIn();
     }
 
-    /**
-     * @description Allows access to activity logs.
-     * @path /activities/{activityId}
-     * @allow (get, list, create) Signed-in user can view and create logs.
-     * @deny (update, delete) No one can modify or delete logs.
-     * @principle Ensures the integrity of the activity log.
-     */
     match /activities/{activityId} {
       allow get: if isSignedIn();
       allow list: if isSignedIn();
@@ -120,7 +64,6 @@ service cloud.firestore {
 
   }
 
-  // Helper function to determine if a user is signed in.
   function isSignedIn() {
     return request.auth != null;
   }

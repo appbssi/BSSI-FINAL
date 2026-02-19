@@ -56,3 +56,23 @@ export type ActivityLog = {
     type: 'Agent' | 'Mission' | 'Rassemblement' | 'Visiteur' | 'Général';
     link?: string;
 }
+
+export type ExpenseCategory = 'Opérationnel' | 'Matériel' | 'Transport' | 'Logistique' | 'Autre';
+export type ExpenseStatus = 'Validé' | 'En attente' | 'Refusé';
+
+export type Expense = {
+  id: string;
+  description: string;
+  amount: number;
+  category: ExpenseCategory;
+  date: Timestamp;
+  status: ExpenseStatus;
+};
+
+export type Allocation = {
+  id: string;
+  agentId: string;
+  amount: number;
+  purpose: string;
+  date: Timestamp;
+};

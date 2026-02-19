@@ -9,6 +9,7 @@ import {
   CalendarClock,
   Loader2,
   BookUser,
+  Banknote,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -40,6 +41,7 @@ const navItems: NavItem[] = [
   { href: '/agents', label: 'Agents', icon: Users, roles: ['admin', 'observer'] },
   { href: '/missions', label: 'Missions', icon: Rocket, roles: ['admin', 'observer'] },
   { href: '/gatherings', label: 'Rassemblements', icon: CalendarClock, roles: ['admin', 'observer', 'secretariat'] },
+  { href: '/finance', label: 'Finances', icon: Banknote, roles: ['admin'] },
   { href: '/secretariat', label: 'Secrétariat', icon: BookUser, roles: ['admin', 'secretariat'] },
 ];
 

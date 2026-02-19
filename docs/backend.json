@@ -141,6 +141,33 @@
         "absentAgentIds"
       ]
     },
+    "Expense": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Expense",
+      "type": "object",
+      "description": "Represents a financial expense record.",
+      "properties": {
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "category": { "type": "string", "enum": ["Opérationnel", "Matériel", "Transport", "Logistique", "Autre"] },
+        "date": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["Validé", "En attente", "Refusé"] }
+      },
+      "required": ["description", "amount", "category", "date", "status"]
+    },
+    "Allocation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Allocation",
+      "type": "object",
+      "description": "Represents a financial allocation to an agent.",
+      "properties": {
+        "agentId": { "type": "string" },
+        "amount": { "type": "number" },
+        "purpose": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["agentId", "amount", "purpose", "date"]
+    },
     "AppSettings": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "AppSettings",
@@ -246,6 +273,18 @@
             "$ref": "#/entities/Gathering"
         },
         "description": "Stores details about individual gatherings."
+      },
+      "/expenses/{expenseId}": {
+        "schema": {
+          "$ref": "#/entities/Expense"
+        },
+        "description": "Stores financial expense records."
+      },
+      "/allocations/{allocationId}": {
+        "schema": {
+          "$ref": "#/entities/Allocation"
+        },
+        "description": "Stores financial allocations to agents."
       },
       "/settings/app": {
         "schema": {

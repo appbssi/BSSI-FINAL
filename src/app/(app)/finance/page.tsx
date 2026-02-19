@@ -1,0 +1,259 @@
+
+'use client';
+
+import { useState, useMemo } from 'react';
+import { ClientOnly } from '@/components/layout/client-only';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { PlusCircle, Banknote, CreditCard, TrendingUp, Users, Loader2 } from 'lucide-react';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, query, orderBy } from 'firebase/firestore';
+import { useFirestore, useMemoFirebase } from '@/firebase';
+import type { Expense, Allocation, Agent } from '@/lib/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AddExpenseForm } from '@/components/finance/add-expense-form';
+import { AddAllocationForm } from '@/components/finance/add-allocation-form';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, Cell, Pie, PieChart } from 'recharts';
+
+export default function FinancePage() {
+  return (
+    <ClientOnly>
+      <FinanceContent />
+    </ClientOnly>
+  );
+}
+
+function FinanceContent() {
+  const firestore = useFirestore();
+  const [isExpenseDialogOpen, setExpenseDialogOpen] = useState(false);
+  const [isAllocationDialogOpen, setAllocationDialogOpen] = useState(false);
+
+  const expensesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'expenses'), orderBy('date', 'desc')) : null), [firestore]);
+  const allocationsQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'allocations'), orderBy('date', 'desc')) : null), [firestore]);
+  const agentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'agents') : null), [firestore]);
+
+  const { data: expenses, isLoading: expensesLoading } = useCollection<Expense>(expensesQuery);
+  const { data: allocations, isLoading: allocationsLoading } = useCollection<Allocation>(allocationsQuery);
+  const { data: agents } = useCollection<Agent>(agentsQuery);
+
+  const agentsById = useMemo(() => {
+    if (!agents) return {};
+    return agents.reduce((acc, agent) => {
+      acc[agent.id] = agent;
+      return acc;
+    }, {} as Record<string, Agent>);
+  }, [agents]);
+
+  const stats = useMemo(() => {
+    const totalExpenses = expenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
+    const totalAllocations = allocations?.reduce((sum, a) => sum + a.amount, 0) || 0;
+    return { totalExpenses, totalAllocations };
+  }, [expenses, allocations]);
+
+  const expensesByCategory = useMemo(() => {
+    if (!expenses) return [];
+    const categories: Record<string, number> = {};
+    expenses.forEach(e => {
+      categories[e.category] = (categories[e.category] || 0) + e.amount;
+    });
+    return Object.entries(categories).map(([name, value]) => ({ name, value }));
+  }, [expenses]);
+
+  const COLORS = ['#f97316', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6'];
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Finances</h1>
+        <div className="flex gap-2">
+          <Dialog open={isExpenseDialogOpen} onOpenChange={setExpenseDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Dépense
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Enregistrer une dépense</DialogTitle>
+              </DialogHeader>
+              <AddExpenseForm onSuccess={() => setExpenseDialogOpen(false)} />
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isAllocationDialogOpen} onOpenChange={setAllocationDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Allocation
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nouvelle Allocation Agent</DialogTitle>
+              </DialogHeader>
+              <AddAllocationForm agents={agents || []} onSuccess={() => setAllocationDialogOpen(false)} />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Dépenses</CardTitle>
+            <CreditCard className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalExpenses.toLocaleString('fr-FR')} FCFA</div>
+          </CardContent>
+        </Card>
+        <Card className="rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Allocations</CardTitle>
+            <Users className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalAllocations.toLocaleString('fr-FR')} FCFA</div>
+          </CardContent>
+        </Card>
+        <Card className="rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Budget Global Engagé</CardTitle>
+            <TrendingUp className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{(stats.totalExpenses + stats.totalAllocations).toLocaleString('fr-FR')} FCFA</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-2">
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle>Répartition des Dépenses</CardTitle>
+            <CardDescription>Par catégorie opérationnelle</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px]">
+            {expensesByCategory.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={expensesByCategory}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {expensesByCategory.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">Pas de données.</div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle>Optimisation des Ressources</CardTitle>
+            <CardDescription>Dépenses mensuelles (estimation)</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px]">
+             <div className="flex items-center justify-center h-full text-muted-foreground italic">Graphique d'évolution à venir...</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="expenses" className="space-y-4">
+        <TabsList className="grid w-[400px] grid-cols-2">
+          <TabsTrigger value="expenses">Dépenses</TabsTrigger>
+          <TabsTrigger value="allocations">Allocations Agents</TabsTrigger>
+        </TabsList>
+        <TabsContent value="expenses" className="space-y-4">
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle>Historique des Dépenses</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Catégorie</TableHead>
+                    <TableHead>Montant</TableHead>
+                    <TableHead>Statut</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {expensesLoading ? (
+                    <TableRow><TableCell colSpan={5} className="text-center">Chargement...</TableCell></TableRow>
+                  ) : expenses?.length ? (
+                    expenses.map((e) => (
+                      <TableRow key={e.id}>
+                        <TableCell>{e.date.toDate().toLocaleDateString('fr-FR')}</TableCell>
+                        <TableCell className="font-medium">{e.description}</TableCell>
+                        <TableCell><Badge variant="outline">{e.category}</Badge></TableCell>
+                        <TableCell className="font-semibold text-primary">{e.amount.toLocaleString('fr-FR')} FCFA</TableCell>
+                        <TableCell>
+                          <Badge variant={e.status === 'Validé' ? 'default' : e.status === 'Refusé' ? 'destructive' : 'secondary'}>
+                            {e.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Aucune dépense enregistrée.</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="allocations" className="space-y-4">
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle>Allocations Versées</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Agent</TableHead>
+                    <TableHead>Motif</TableHead>
+                    <TableHead>Montant</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {allocationsLoading ? (
+                    <TableRow><TableCell colSpan={4} className="text-center">Chargement...</TableCell></TableRow>
+                  ) : allocations?.length ? (
+                    allocations.map((a) => (
+                      <TableRow key={a.id}>
+                        <TableCell>{a.date.toDate().toLocaleDateString('fr-FR')}</TableCell>
+                        <TableCell className="font-medium">{agentsById[a.agentId]?.fullName || 'Agent inconnu'}</TableCell>
+                        <TableCell>{a.purpose}</TableCell>
+                        <TableCell className="font-semibold text-primary">{a.amount.toLocaleString('fr-FR')} FCFA</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Aucune allocation enregistrée.</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
