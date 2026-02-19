@@ -35,10 +35,27 @@ export function AddAllocationForm({ agents, onSuccess }: { agents: Agent[], onSu
 
   const onSubmit = async (values: z.infer<typeof allocationSchema>) => {
     if (!firestore) return;
-    const data = { ...values, date: Timestamp.now() };
-    await addDoc(collection(firestore, 'allocations'), data);
-    toast({ title: 'Allocation enregistrée' });
-    onSuccess();
+    const data = { 
+      agentId: values.agentId,
+      amount: values.amount,
+      purpose: values.purpose,
+      date: Timestamp.now() 
+    };
+    
+    const allocationsRef = collection(firestore, 'allocations');
+    
+    addDoc(allocationsRef, data)
+      .then(() => {
+        toast({ title: 'Allocation enregistrée' });
+        onSuccess();
+      })
+      .catch((error) => {
+        toast({ 
+          variant: 'destructive',
+          title: 'Erreur', 
+          description: "Impossible d'enregistrer l'allocation." 
+        });
+      });
   };
 
   return (

@@ -13,6 +13,7 @@ export type Agent = {
   leaveEndDate?: Timestamp;
   availability?: Availability;
   missionCount?: number;
+  onLeave?: boolean;
 };
 
 export type Availability = 'Disponible' | 'En mission' | 'En congé';

@@ -7,152 +7,42 @@
       "type": "object",
       "description": "Represents an agent who can be assigned to missions.",
       "properties": {
-        "fullName": {
-          "type": "string",
-          "description": "The agent's full name."
-        },
-        "registrationNumber": {
-            "type": "string",
-            "description": "The agent's service number."
-        },
-        "rank": {
-            "type": "string",
-            "description": "The agent's rank."
-        },
-        "contact": {
-            "type": "string",
-            "description": "The agent's contact details (digits only)."
-        },
-        "address": {
-            "type": "string",
-            "description": "The agent's physical address."
-        },
-        "section": {
-            "type": "string",
-            "description": "The section the agent is assigned to.",
-            "enum": ["Armurerie", "Administration", "Officier", "Adjudants", "FAUNE", "CONDUCTEUR", "SECTION FEMININE", "DETACHEMENT NOE", "DETACHEMENT TINGRELA", "DETACHEMENT MORONDO", "Non assigné"]
-        },
-        "leaveStartDate": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The start date of the agent's leave."
-        },
-        "leaveEndDate": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The end date of the agent's leave."
-        }
+        "fullName": { "type": "string" },
+        "registrationNumber": { "type": "string" },
+        "rank": { "type": "string" },
+        "contact": { "type": "string" },
+        "address": { "type": "string" },
+        "section": { "type": "string" },
+        "leaveStartDate": { "type": "string", "format": "date-time" },
+        "leaveEndDate": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "fullName",
-        "rank",
-        "address",
-        "section"
-      ]
+      "required": ["fullName", "rank", "address", "section"]
     },
     "Mission": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Mission",
       "type": "object",
-      "description": "Represents a mission.",
       "properties": {
-        "name": {
-            "type": "string",
-            "description": "The name or title of the mission."
-        },
-        "location": {
-          "type": "string",
-          "description": "The location where the mission takes place."
-        },
-        "startDate": {
-          "type": "string",
-          "description": "The scheduled start time for the mission.",
-          "format": "date-time"
-        },
-        "endDate": {
-          "type": "string",
-          "description": "The scheduled end time for the mission.",
-          "format": "date-time"
-        },
-        "startTime": {
-          "type": "string",
-          "description": "The start time for the mission, if it's on a single day."
-        },
-        "endTime": {
-          "type": "string",
-          "description": "The end time for the mission, if it's on a single day."
-        },
-        "status": {
-          "type": "string",
-          "description": "The current status of the mission.",
-          "enum": ["Planification", "En cours", "Terminée", "Annulée"]
-        },
-        "assignedAgentIds": {
-          "type": "array",
-          "description": "A list of agent IDs assigned to the mission.",
-          "items": {
-            "type": "string"
-          }
-        }
+        "name": { "type": "string" },
+        "location": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["Planification", "En cours", "Terminée", "Annulée"] },
+        "assignedAgentIds": { "type": "array", "items": { "type": "string" } }
       },
-      "required": [
-        "name",
-        "location",
-        "startDate",
-        "endDate",
-        "status",
-        "assignedAgentIds"
-      ]
-    },
-    "Gathering": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Gathering",
-      "type": "object",
-      "description": "Represents a gathering or muster for agents.",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "The name or topic of the gathering."
-        },
-        "dateTime": {
-          "type": "string",
-          "description": "The date and time of the gathering.",
-          "format": "date-time"
-        },
-        "assignedAgentIds": {
-          "type": "array",
-          "description": "A list of agent IDs assigned to the gathering.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "absentAgentIds": {
-            "type": "array",
-            "description": "A list of agent IDs marked as absent for the gathering.",
-            "items": {
-                "type": "string"
-            }
-        }
-      },
-      "required": [
-        "name",
-        "dateTime",
-        "assignedAgentIds",
-        "absentAgentIds"
-      ]
+      "required": ["name", "location", "startDate", "endDate", "status", "assignedAgentIds"]
     },
     "Expense": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Expense",
       "type": "object",
-      "description": "Represents a financial expense record.",
       "properties": {
         "description": { "type": "string" },
         "amount": { "type": "number" },
         "category": { "type": "string", "enum": ["Opérationnel", "Matériel", "Transport", "Logistique", "Autre"] },
         "date": { "type": "string", "format": "date-time" },
         "status": { "type": "string", "enum": ["Validé", "En attente", "Refusé"] },
-        "missionId": { "type": "string", "description": "L'identifiant de la mission liée, le cas échéant." }
+        "missionId": { "type": "string" }
       },
       "required": ["description", "amount", "category", "date", "status"]
     },
@@ -160,7 +50,6 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Allocation",
       "type": "object",
-      "description": "Represents a financial allocation to an agent.",
       "properties": {
         "agentId": { "type": "string" },
         "amount": { "type": "number" },
@@ -168,142 +57,12 @@
         "date": { "type": "string", "format": "date-time" }
       },
       "required": ["agentId", "amount", "purpose", "date"]
-    },
-    "AppSettings": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "AppSettings",
-        "type": "object",
-        "description": "Stores global application settings.",
-        "properties": {
-            "logo": {
-                "type": "string",
-                "description": "The application logo, stored as a base64 data URI."
-            }
-        }
-    },
-    "Visitor": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Visitor",
-      "type": "object",
-      "description": "Represents a visitor.",
-      "properties": {
-        "firstName": {
-          "type": "string",
-          "description": "The visitor's first name."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "The visitor's last name."
-        },
-        "contact": {
-          "type": "string",
-          "description": "The visitor's contact details."
-        },
-        "occupation": {
-          "type": "string",
-          "description": "The visitor's occupation or function."
-        },
-        "entryTime": {
-          "type": "string",
-          "description": "The timestamp when the visitor was registered.",
-          "format": "date-time"
-        },
-        "exitTime": {
-          "type": "string",
-          "description": "The timestamp when the visitor checked out.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "firstName",
-        "lastName",
-        "contact",
-        "occupation",
-        "entryTime"
-      ]
-    },
-    "ActivityLog": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ActivityLog",
-      "type": "object",
-      "description": "Represents a log of a recent activity in the application.",
-      "properties": {
-        "description": {
-          "type": "string",
-          "description": "A human-readable description of the activity."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "The time the activity occurred.",
-          "format": "date-time"
-        },
-        "type": {
-          "type": "string",
-          "description": "The category of the activity.",
-          "enum": ["Agent", "Mission", "Rassemblement", "Visiteur", "Général"]
-        },
-        "link": {
-          "type": "string",
-          "description": "An optional link related to the activity (e.g., /agents)."
-        }
-      },
-      "required": ["description", "timestamp", "type"]
     }
   },
-  "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
-  },
   "firestore": {
-      "/agents/{agentId}": {
-        "schema": {
-          "$ref": "#/entities/Agent"
-        },
-        "description": "Stores information about individual agents."
-      },
-      "/missions/{missionId}": {
-        "schema": {
-          "$ref": "#/entities/Mission"
-        },
-        "description": "Stores details about individual missions."
-      },
-      "/gatherings/{gatheringId}": {
-        "schema": {
-            "$ref": "#/entities/Gathering"
-        },
-        "description": "Stores details about individual gatherings."
-      },
-      "/expenses/{expenseId}": {
-        "schema": {
-          "$ref": "#/entities/Expense"
-        },
-        "description": "Stores financial expense records."
-      },
-      "/allocations/{allocationId}": {
-        "schema": {
-          "$ref": "#/entities/Allocation"
-        },
-        "description": "Stores financial allocations to agents."
-      },
-      "/settings/app": {
-        "schema": {
-          "$ref": "#/entities/AppSettings"
-        },
-        "description": "Stores global application settings like the logo."
-      },
-      "/visitors/{visitorId}": {
-        "schema": {
-          "$ref": "#/entities/Visitor"
-        },
-        "description": "Stores information about registered visitors."
-      },
-      "/activities/{activityId}": {
-        "schema": {
-          "$ref": "#/entities/ActivityLog"
-        },
-        "description": "Stores a log of recent activities in the application."
-      }
+    "/agents/{agentId}": { "schema": { "$ref": "#/entities/Agent" } },
+    "/missions/{missionId}": { "schema": { "$ref": "#/entities/Mission" } },
+    "/expenses/{expenseId}": { "schema": { "$ref": "#/entities/Expense" } },
+    "/allocations/{allocationId}": { "schema": { "$ref": "#/entities/Allocation" } }
   }
 }

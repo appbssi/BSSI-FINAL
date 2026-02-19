@@ -2,8 +2,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ACCÈS TOTAL - SAUTE TOUTES LES PERMISSIONS
-    // Autorise la lecture et l'écriture sur tous les documents sans condition
+    // ACCÈS TOTAL ET ILLIMITÉ - TOUTES PERMISSIONS SAUTÉES
+    // Autorise absolument toute lecture et écriture sans aucune condition
     match /{document=**} {
       allow read, write: if true;
     }
