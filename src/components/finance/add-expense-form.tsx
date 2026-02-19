@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -33,7 +32,12 @@ export function AddExpenseForm({ onSuccess }: { onSuccess: () => void }) {
 
   const form = useForm<z.infer<typeof expenseSchema>>({
     resolver: zodResolver(expenseSchema),
-    defaultValues: { description: '', amount: 0, category: 'Opérationnel', missionId: '' },
+    defaultValues: { 
+      description: '', 
+      amount: 0, 
+      category: 'Opérationnel', 
+      missionId: 'none' 
+    },
   });
 
   const onSubmit = async (values: z.infer<typeof expenseSchema>) => {
@@ -43,7 +47,7 @@ export function AddExpenseForm({ onSuccess }: { onSuccess: () => void }) {
       description: values.description,
       amount: values.amount,
       category: values.category,
-      missionId: values.missionId || null,
+      missionId: (values.missionId && values.missionId !== 'none') ? values.missionId : null,
       date: Timestamp.now(), 
       status: 'Validé' 
     };
@@ -100,7 +104,7 @@ export function AddExpenseForm({ onSuccess }: { onSuccess: () => void }) {
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl><SelectTrigger><SelectValue placeholder="Choisir une mission" /></SelectTrigger></FormControl>
               <SelectContent>
-                <SelectItem value="">Aucune mission</SelectItem>
+                <SelectItem value="none">Aucune mission</SelectItem>
                 {missions?.map(m => (
                   <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                 ))}
