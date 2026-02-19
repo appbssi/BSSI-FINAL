@@ -15,6 +15,8 @@ import { Loader2 } from 'lucide-react';
 import { logActivity } from '@/lib/activity-logger';
 import type { Mission } from '@/lib/types';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { getDisplayStatus } from '@/lib/missions';
+import { useMemo } from 'react';
 
 const expenseSchema = z.object({
   description: z.string().min(3, 'La description est requise'),
@@ -39,6 +41,16 @@ export function AddExpenseForm({ onSuccess }: { onSuccess: () => void }) {
       missionId: 'none' 
     },
   });
+
+  // Filtrer les missions pour n'afficher que celles en "Planification" ou "En cours"
+  const activeMissions = useMemo(() => {
+    if (!missions) return [];
+    const now = new Date();
+    return missions.filter(m => {
+      const status = getDisplayStatus(m, now);
+      return m.id && (status === 'Planification' || status === 'En cours');
+    });
+  }, [missions]);
 
   const onSubmit = async (values: z.infer<typeof expenseSchema>) => {
     if (!firestore) return;
@@ -105,11 +117,14 @@ export function AddExpenseForm({ onSuccess }: { onSuccess: () => void }) {
               <FormControl><SelectTrigger><SelectValue placeholder="Choisir une mission" /></SelectTrigger></FormControl>
               <SelectContent>
                 <SelectItem value="none">Aucune mission</SelectItem>
-                {missions?.filter(m => m.id).map(m => (
+                {activeMissions.map(m => (
                   <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <FormDescription>
+              Seules les missions planifiées ou en cours sont affichées.
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )} />
@@ -121,4 +136,8 @@ export function AddExpenseForm({ onSuccess }: { onSuccess: () => void }) {
       </form>
     </Form>
   );
+}
+
+function FormDescription({ children }: { children: React.ReactNode }) {
+  return <p className="text-[0.8rem] text-muted-foreground">{children}</p>;
 }
