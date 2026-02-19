@@ -31,11 +31,13 @@ service cloud.firestore {
     }
 
     match /expenses/{expenseId} {
-      allow read, write: if isSignedIn();
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
     }
 
     match /allocations/{allocationId} {
-      allow read, write: if isSignedIn();
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
     }
 
     match /settings/app {
