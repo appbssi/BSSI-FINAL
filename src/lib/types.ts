@@ -67,7 +67,7 @@ export type Expense = {
   category: ExpenseCategory;
   date: Timestamp;
   status: ExpenseStatus;
-  missionId?: string;
+  missionId?: string | null;
 };
 
 export type Allocation = {

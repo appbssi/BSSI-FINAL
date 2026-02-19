@@ -10,11 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase, errorEmitter } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { Loader2 } from 'lucide-react';
 import { logActivity } from '@/lib/activity-logger';
 import type { Mission } from '@/lib/types';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const expenseSchema = z.object({
   description: z.string().min(3, 'La description est requise'),
@@ -37,7 +38,8 @@ export function AddExpenseForm({ onSuccess }: { onSuccess: () => void }) {
 
   const onSubmit = async (values: z.infer<typeof expenseSchema>) => {
     if (!firestore) return;
-    const data = { 
+    
+    const expenseData = { 
       description: values.description,
       amount: values.amount,
       category: values.category,
@@ -46,14 +48,22 @@ export function AddExpenseForm({ onSuccess }: { onSuccess: () => void }) {
       status: 'Validé' 
     };
     
-    try {
-      await addDoc(collection(firestore, 'expenses'), data);
-      logActivity(firestore, `Nouvelle dépense enregistrée: ${values.description}`, 'Général', '/finance');
-      toast({ title: 'Dépense enregistrée' });
-      onSuccess();
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Erreur lors de l\'enregistrement' });
-    }
+    const expensesRef = collection(firestore, 'expenses');
+    
+    addDoc(expensesRef, expenseData)
+      .then(() => {
+        logActivity(firestore, `Nouvelle dépense enregistrée: ${values.description}`, 'Général', '/finance');
+        toast({ title: 'Dépense enregistrée' });
+        onSuccess();
+      })
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: expensesRef.path,
+          operation: 'create',
+          requestResourceData: expenseData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   return (

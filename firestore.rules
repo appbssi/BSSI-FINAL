@@ -1,43 +1,33 @@
 
 /**
  * @fileoverview Firestore Security Rules for the application.
+ * Updated to allow access to financial records for signed-in users.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     match /agents/{agentId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
 
     match /missions/{missionId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
 
     match /gatherings/{gatheringId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
 
     match /expenses/{expenseId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isSignedIn();
+      // Explicitly allow list and get for authenticated users
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
     }
 
     match /allocations/{allocationId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isSignedIn();
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
     }
 
     match /settings/app {
@@ -49,19 +39,13 @@ service cloud.firestore {
     }
 
     match /visitors/{visitorId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
 
     match /activities/{activityId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow read: if isSignedIn();
       allow create: if isSignedIn();
-      allow update: if false;
-      allow delete: if false;
+      allow update, delete: if false;
     }
 
   }
