@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -26,9 +25,14 @@ export function AddAllocationForm({ agents, onSuccess }: { agents: Agent[], onSu
   const { toast } = useToast();
   const firestore = useFirestore();
   const [search, setSearch] = useState('');
+  
   const form = useForm<z.infer<typeof allocationSchema>>({
     resolver: zodResolver(allocationSchema),
-    defaultValues: { agentId: '', amount: 0, purpose: '' },
+    defaultValues: { 
+      agentId: '', 
+      amount: 0, 
+      purpose: '' 
+    },
   });
 
   const filteredAgents = agents.filter(a => a.fullName.toLowerCase().includes(search.toLowerCase()));
@@ -68,13 +72,16 @@ export function AddAllocationForm({ agents, onSuccess }: { agents: Agent[], onSu
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Rechercher un agent..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
-            <Select onValueChange={field.onChange} value={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || undefined}>
               <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner l'agent" /></SelectTrigger></FormControl>
               <SelectContent>
                 <ScrollArea className="h-48">
-                  {filteredAgents.map(a => (
+                  {filteredAgents.filter(a => a.id).map(a => (
                     <SelectItem key={a.id} value={a.id}>{a.fullName} ({a.rank})</SelectItem>
                   ))}
+                  {filteredAgents.length === 0 && (
+                    <div className="p-2 text-sm text-center text-muted-foreground">Aucun agent trouvé</div>
+                  )}
                 </ScrollArea>
               </SelectContent>
             </Select>

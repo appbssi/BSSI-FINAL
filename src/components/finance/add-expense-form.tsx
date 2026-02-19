@@ -105,7 +105,7 @@ export function AddExpenseForm({ onSuccess }: { onSuccess: () => void }) {
               <FormControl><SelectTrigger><SelectValue placeholder="Choisir une mission" /></SelectTrigger></FormControl>
               <SelectContent>
                 <SelectItem value="none">Aucune mission</SelectItem>
-                {missions?.map(m => (
+                {missions?.filter(m => m.id).map(m => (
                   <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                 ))}
               </SelectContent>
