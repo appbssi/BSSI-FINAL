@@ -8,16 +8,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Banknote, CreditCard, TrendingUp, Users, Loader2 } from 'lucide-react';
+import { PlusCircle, CreditCard, TrendingUp, Users, Wallet } from 'lucide-react';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
-import type { Expense, Allocation, Agent } from '@/lib/types';
+import type { Expense, Allocation, Agent, Mission } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AddExpenseForm } from '@/components/finance/add-expense-form';
 import { AddAllocationForm } from '@/components/finance/add-allocation-form';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, Cell, Pie, PieChart } from 'recharts';
+import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 
 export default function FinancePage() {
   return (
@@ -35,10 +35,12 @@ function FinanceContent() {
   const expensesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'expenses'), orderBy('date', 'desc')) : null), [firestore]);
   const allocationsQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'allocations'), orderBy('date', 'desc')) : null), [firestore]);
   const agentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'agents') : null), [firestore]);
+  const missionsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'missions') : null), [firestore]);
 
   const { data: expenses, isLoading: expensesLoading } = useCollection<Expense>(expensesQuery);
   const { data: allocations, isLoading: allocationsLoading } = useCollection<Allocation>(allocationsQuery);
   const { data: agents } = useCollection<Agent>(agentsQuery);
+  const { data: missions } = useCollection<Mission>(missionsQuery);
 
   const agentsById = useMemo(() => {
     if (!agents) return {};
@@ -47,6 +49,14 @@ function FinanceContent() {
       return acc;
     }, {} as Record<string, Agent>);
   }, [agents]);
+
+  const missionsById = useMemo(() => {
+    if (!missions) return {};
+    return missions.reduce((acc, mission) => {
+      acc[mission.id] = mission;
+      return acc;
+    }, {} as Record<string, Mission>);
+  }, [missions]);
 
   const stats = useMemo(() => {
     const totalExpenses = expenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
@@ -64,6 +74,15 @@ function FinanceContent() {
   }, [expenses]);
 
   const COLORS = ['#f97316', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6'];
+
+  const chartConfig = {
+    value: { label: "Montant (FCFA)" },
+    Opérationnel: { label: "Opérationnel", color: COLORS[0] },
+    Matériel: { label: "Matériel", color: COLORS[1] },
+    Transport: { label: "Transport", color: COLORS[2] },
+    Logistique: { label: "Logistique", color: COLORS[3] },
+    Autre: { label: "Autre", color: COLORS[4] },
+  };
 
   return (
     <div className="space-y-8">
@@ -100,16 +119,16 @@ function FinanceContent() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="rounded-2xl">
+        <Card className="rounded-2xl border-none shadow-md bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Dépenses</CardTitle>
-            <CreditCard className="h-4 w-4 text-primary" />
+            <Wallet className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalExpenses.toLocaleString('fr-FR')} FCFA</div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
+        <Card className="rounded-2xl border-none shadow-md bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Allocations</CardTitle>
             <Users className="h-4 w-4 text-primary" />
@@ -118,10 +137,10 @@ function FinanceContent() {
             <div className="text-2xl font-bold">{stats.totalAllocations.toLocaleString('fr-FR')} FCFA</div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
+        <Card className="rounded-2xl border-none shadow-md bg-primary text-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Budget Global Engagé</CardTitle>
-            <TrendingUp className="h-4 w-4 text-primary" />
+            <CardTitle className="text-sm font-medium text-primary-foreground/80">Budget Engagé</CardTitle>
+            <TrendingUp className="h-4 w-4 text-white" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{(stats.totalExpenses + stats.totalAllocations).toLocaleString('fr-FR')} FCFA</div>
@@ -130,14 +149,14 @@ function FinanceContent() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        <Card className="rounded-2xl">
+        <Card className="rounded-2xl border-none shadow-md bg-white">
           <CardHeader>
             <CardTitle>Répartition des Dépenses</CardTitle>
             <CardDescription>Par catégorie opérationnelle</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             {expensesByCategory.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ChartContainer config={chartConfig}>
                 <PieChart>
                   <Pie
                     data={expensesByCategory}
@@ -154,20 +173,30 @@ function FinanceContent() {
                   </Pie>
                   <ChartTooltip content={<ChartTooltipContent />} />
                 </PieChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">Pas de données.</div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl">
+        <Card className="rounded-2xl border-none shadow-md bg-white">
           <CardHeader>
-            <CardTitle>Optimisation des Ressources</CardTitle>
-            <CardDescription>Dépenses mensuelles (estimation)</CardDescription>
+            <CardTitle>Dernières Activités</CardTitle>
+            <CardDescription>Mouvements financiers récents</CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px]">
-             <div className="flex items-center justify-center h-full text-muted-foreground italic">Graphique d'évolution à venir...</div>
+          <CardContent className="h-[300px] overflow-auto">
+             <div className="space-y-4">
+                {expenses?.slice(0, 5).map(e => (
+                  <div key={e.id} className="flex items-center justify-between border-b pb-2">
+                    <div>
+                      <p className="font-medium text-sm">{e.description}</p>
+                      <p className="text-xs text-muted-foreground">{e.date.toDate().toLocaleDateString('fr-FR')}</p>
+                    </div>
+                    <p className="font-semibold text-primary text-sm">-{e.amount.toLocaleString('fr-FR')} FCFA</p>
+                  </div>
+                ))}
+             </div>
           </CardContent>
         </Card>
       </div>
@@ -178,7 +207,7 @@ function FinanceContent() {
           <TabsTrigger value="allocations">Allocations Agents</TabsTrigger>
         </TabsList>
         <TabsContent value="expenses" className="space-y-4">
-          <Card className="rounded-2xl">
+          <Card className="rounded-2xl border-none shadow-md bg-white">
             <CardHeader>
               <CardTitle>Historique des Dépenses</CardTitle>
             </CardHeader>
@@ -188,6 +217,7 @@ function FinanceContent() {
                   <TableRow>
                     <TableHead>Date</TableHead>
                     <TableHead>Description</TableHead>
+                    <TableHead>Mission liée</TableHead>
                     <TableHead>Catégorie</TableHead>
                     <TableHead>Montant</TableHead>
                     <TableHead>Statut</TableHead>
@@ -195,12 +225,19 @@ function FinanceContent() {
                 </TableHeader>
                 <TableBody>
                   {expensesLoading ? (
-                    <TableRow><TableCell colSpan={5} className="text-center">Chargement...</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center">Chargement...</TableCell></TableRow>
                   ) : expenses?.length ? (
                     expenses.map((e) => (
                       <TableRow key={e.id}>
                         <TableCell>{e.date.toDate().toLocaleDateString('fr-FR')}</TableCell>
                         <TableCell className="font-medium">{e.description}</TableCell>
+                        <TableCell>
+                          {e.missionId ? (
+                            <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">
+                              {missionsById[e.missionId]?.name || 'Mission inconnue'}
+                            </span>
+                          ) : '-'}
+                        </TableCell>
                         <TableCell><Badge variant="outline">{e.category}</Badge></TableCell>
                         <TableCell className="font-semibold text-primary">{e.amount.toLocaleString('fr-FR')} FCFA</TableCell>
                         <TableCell>
@@ -211,7 +248,7 @@ function FinanceContent() {
                       </TableRow>
                     ))
                   ) : (
-                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Aucune dépense enregistrée.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Aucune dépense enregistrée.</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -219,7 +256,7 @@ function FinanceContent() {
           </Card>
         </TabsContent>
         <TabsContent value="allocations" className="space-y-4">
-          <Card className="rounded-2xl">
+          <Card className="rounded-2xl border-none shadow-md bg-white">
             <CardHeader>
               <CardTitle>Allocations Versées</CardTitle>
             </CardHeader>

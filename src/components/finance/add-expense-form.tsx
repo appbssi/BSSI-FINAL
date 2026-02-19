@@ -10,39 +10,59 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
 import { Loader2 } from 'lucide-react';
 import { logActivity } from '@/lib/activity-logger';
+import type { Mission } from '@/lib/types';
 
 const expenseSchema = z.object({
-  description: z.string().min(3, 'Requis'),
+  description: z.string().min(3, 'La description est requise'),
   amount: z.coerce.number().min(1, 'Montant invalide'),
   category: z.enum(['Opérationnel', 'Matériel', 'Transport', 'Logistique', 'Autre']),
+  missionId: z.string().optional(),
 });
 
 export function AddExpenseForm({ onSuccess }: { onSuccess: () => void }) {
   const { toast } = useToast();
   const firestore = useFirestore();
+  
+  const missionsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'missions') : null), [firestore]);
+  const { data: missions } = useCollection<Mission>(missionsQuery);
+
   const form = useForm<z.infer<typeof expenseSchema>>({
     resolver: zodResolver(expenseSchema),
-    defaultValues: { description: '', amount: 0, category: 'Opérationnel' },
+    defaultValues: { description: '', amount: 0, category: 'Opérationnel', missionId: '' },
   });
 
   const onSubmit = async (values: z.infer<typeof expenseSchema>) => {
     if (!firestore) return;
-    const data = { ...values, date: Timestamp.now(), status: 'Validé' };
-    await addDoc(collection(firestore, 'expenses'), data);
-    logActivity(firestore, `Nouvelle dépense enregistrée: ${values.description}`, 'Général', '/finance');
-    toast({ title: 'Dépense enregistrée' });
-    onSuccess();
+    const data = { 
+      description: values.description,
+      amount: values.amount,
+      category: values.category,
+      missionId: values.missionId || null,
+      date: Timestamp.now(), 
+      status: 'Validé' 
+    };
+    
+    try {
+      await addDoc(collection(firestore, 'expenses'), data);
+      logActivity(firestore, `Nouvelle dépense enregistrée: ${values.description}`, 'Général', '/finance');
+      toast({ title: 'Dépense enregistrée' });
+      onSuccess();
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Erreur lors de l\'enregistrement' });
+    }
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
         <FormField control={form.control} name="description" render={({ field }) => (
-          <FormItem><FormLabel>Description</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem><FormLabel>Description</FormLabel><FormControl><Input placeholder="Ex: Achat carburant, Réparation véhicule..." {...field} /></FormControl><FormMessage /></FormItem>
         )} />
+        
         <div className="grid grid-cols-2 gap-4">
           <FormField control={form.control} name="amount" render={({ field }) => (
             <FormItem><FormLabel>Montant (FCFA)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
@@ -63,6 +83,23 @@ export function AddExpenseForm({ onSuccess }: { onSuccess: () => void }) {
             </FormItem>
           )} />
         </div>
+
+        <FormField control={form.control} name="missionId" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Lier à une mission (Optionnel)</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl><SelectTrigger><SelectValue placeholder="Choisir une mission" /></SelectTrigger></FormControl>
+              <SelectContent>
+                <SelectItem value="">Aucune mission</SelectItem>
+                {missions?.map(m => (
+                  <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )} />
+
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Enregistrer la dépense
