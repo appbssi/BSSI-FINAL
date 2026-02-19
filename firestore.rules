@@ -2,9 +2,20 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ACCÈS TOTAL ET ILLIMITÉ - TOUTES PERMISSIONS SAUTÉES
-    // Autorise absolument toute lecture et écriture sans aucune condition
+    // FORCE UPDATE : ACCÈS TOTAL ET ILLIMITÉ
+    // Cette règle outrepasse toutes les conditions pour résoudre les erreurs de permissions.
     match /{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Déclarations explicites pour les collections problématiques
+    match /expenses/{expenseId} {
+      allow read, write: if true;
+    }
+    match /allocations/{allocationId} {
+      allow read, write: if true;
+    }
+    match /activities/{activityId} {
       allow read, write: if true;
     }
   }

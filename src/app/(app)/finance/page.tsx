@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, CreditCard, TrendingUp, Users, Wallet } from 'lucide-react';
+import { PlusCircle, CreditCard, TrendingUp, Users, Wallet, AlertCircle } from 'lucide-react';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
@@ -17,7 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AddExpenseForm } from '@/components/finance/add-expense-form';
 import { AddAllocationForm } from '@/components/finance/add-allocation-form';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
+import { Cell, Pie, PieChart } from 'recharts';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function FinancePage() {
   return (
@@ -37,8 +38,8 @@ function FinanceContent() {
   const agentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'agents') : null), [firestore]);
   const missionsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'missions') : null), [firestore]);
 
-  const { data: expenses, isLoading: expensesLoading } = useCollection<Expense>(expensesQuery);
-  const { data: allocations, isLoading: allocationsLoading } = useCollection<Allocation>(allocationsQuery);
+  const { data: expenses, isLoading: expensesLoading, error: expensesError } = useCollection<Expense>(expensesQuery);
+  const { data: allocations, isLoading: allocationsLoading, error: allocationsError } = useCollection<Allocation>(allocationsQuery);
   const { data: agents } = useCollection<Agent>(agentsQuery);
   const { data: missions } = useCollection<Mission>(missionsQuery);
 
@@ -84,6 +85,8 @@ function FinanceContent() {
     Autre: { label: "Autre", color: COLORS[4] },
   };
 
+  const hasPermissionError = !!(expensesError || allocationsError);
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -117,6 +120,17 @@ function FinanceContent() {
           </Dialog>
         </div>
       </div>
+
+      {hasPermissionError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erreur de synchronisation</AlertTitle>
+          <AlertDescription>
+            Une erreur de permission Firestore a été détectée. Les règles de sécurité sont en cours de mise à jour. 
+            Veuillez rafraîchir la page dans quelques instants si le problème persiste.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card className="rounded-2xl border-none shadow-md bg-white">
@@ -175,7 +189,9 @@ function FinanceContent() {
                 </PieChart>
               </ChartContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground">Pas de données.</div>
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                {expensesLoading ? "Chargement des données..." : "Pas de données disponibles."}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -196,6 +212,9 @@ function FinanceContent() {
                     <p className="font-semibold text-primary text-sm">-{e.amount.toLocaleString('fr-FR')} FCFA</p>
                   </div>
                 ))}
+                {(!expenses || expenses.length === 0) && !expensesLoading && (
+                  <p className="text-center text-muted-foreground py-8">Aucune activité récente.</p>
+                )}
              </div>
           </CardContent>
         </Card>
