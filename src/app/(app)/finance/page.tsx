@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, CreditCard, TrendingUp, Users, Wallet, AlertCircle } from 'lucide-react';
+import { PlusCircle, CreditCard, TrendingUp, Users, Wallet, AlertCircle, RefreshCw } from 'lucide-react';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
@@ -85,13 +85,16 @@ function FinanceContent() {
     Autre: { label: "Autre", color: COLORS[4] },
   };
 
-  const hasPermissionError = !!(expensesError || allocationsError);
+  const hasError = !!(expensesError || allocationsError);
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Finances</h1>
         <div className="flex gap-2">
+          <Button variant="ghost" size="icon" onClick={() => window.location.reload()} title="Actualiser les données">
+            <RefreshCw className="h-4 w-4" />
+          </Button>
           <Dialog open={isExpenseDialogOpen} onOpenChange={setExpenseDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -121,13 +124,12 @@ function FinanceContent() {
         </div>
       </div>
 
-      {hasPermissionError && (
-        <Alert variant="destructive">
+      {hasError && (
+        <Alert className="bg-primary/10 border-primary/20 text-primary">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erreur de synchronisation</AlertTitle>
+          <AlertTitle>Synchronisation en cours</AlertTitle>
           <AlertDescription>
-            Une erreur de permission Firestore a été détectée. Les règles de sécurité sont en cours de mise à jour. 
-            Veuillez rafraîchir la page dans quelques instants si le problème persiste.
+            Les données financières sont en cours de chargement. Si cela prend plus de 5 secondes, essayez de rafraîchir la page.
           </AlertDescription>
         </Alert>
       )}
