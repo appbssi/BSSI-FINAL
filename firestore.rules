@@ -1,56 +1,59 @@
 
 /**
  * @fileoverview Firestore Security Rules for the application.
- * Updated to allow access to financial records for signed-in users.
+ * Updated to allow full access to financial and operational records for all signed-in users.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Simple sign-in check
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Access for agents
     match /agents/{agentId} {
       allow read, write: if isSignedIn();
     }
 
+    // Access for missions
     match /missions/{missionId} {
       allow read, write: if isSignedIn();
     }
 
+    // Access for gatherings
     match /gatherings/{gatheringId} {
       allow read, write: if isSignedIn();
     }
 
+    // Access for financial expenses
     match /expenses/{expenseId} {
-      // Explicitly allow list and get for authenticated users
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
 
+    // Access for agent allocations
     match /allocations/{allocationId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
 
+    // Public settings (logo, etc.)
     match /settings/app {
       allow get: if true;
       allow list: if false;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow write: if isSignedIn();
     }
 
+    // Access for visitors
     match /visitors/{visitorId} {
       allow read, write: if isSignedIn();
     }
 
+    // Access for activity logs
     match /activities/{activityId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn();
+      allow read, create: if isSignedIn();
       allow update, delete: if false;
     }
 
-  }
-
-  function isSignedIn() {
-    return request.auth != null;
   }
 }
