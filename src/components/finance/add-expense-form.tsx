@@ -42,7 +42,6 @@ export function AddExpenseForm({ onSuccess }: { onSuccess: () => void }) {
     },
   });
 
-  // Filtrer les missions pour n'afficher que celles en "Planification" ou "En cours"
   const activeMissions = useMemo(() => {
     if (!missions) return [];
     const now = new Date();
@@ -131,7 +130,7 @@ export function AddExpenseForm({ onSuccess }: { onSuccess: () => void }) {
 
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Enregistrer la dépense
+          Enregistrer les informations dans la base de donnée
         </Button>
       </form>
     </Form>
