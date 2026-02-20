@@ -1,25 +1,43 @@
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 /**
- * Ce composant écoute les erreurs de permission Firebase.
- * Pour éviter de bloquer l'utilisateur, nous logguons l'erreur au lieu de la throw.
+ * Ce composant écoute les erreurs de permission et les erreurs globales de Firestore.
+ * Il empêche les erreurs internes du SDK de faire planter l'application.
  */
 export function FirebaseErrorListener() {
   useEffect(() => {
-    const handleError = (error: FirestorePermissionError) => {
-      // On log l'erreur pour le debug mais on ne throw plus pour éviter le crash de l'UI
-      console.warn('Firestore Permission Error (Ignored):', error.message);
+    // Gestion des erreurs de permission personnalisées
+    const handlePermissionError = (error: FirestorePermissionError) => {
+      console.warn('Firestore Permission (Silenced):', error.message);
     };
 
-    errorEmitter.on('permission-error', handleError);
+    // Gestion des erreurs globales (crash SDK, assertion failed, etc.)
+    const handleGlobalError = (event: ErrorEvent) => {
+      if (event.message?.includes('firebase') || event.message?.includes('firestore')) {
+        console.warn('Firebase SDK Internal Error (Intercepted):', event.message);
+        event.preventDefault(); // Empêche la propagation du crash
+      }
+    };
+
+    const handleRejection = (event: PromiseRejectionEvent) => {
+      if (event.reason?.message?.includes('firebase') || event.reason?.message?.includes('firestore')) {
+        console.warn('Firebase Async Error (Intercepted):', event.reason.message);
+        event.preventDefault();
+      }
+    };
+
+    errorEmitter.on('permission-error', handlePermissionError);
+    window.addEventListener('error', handleGlobalError);
+    window.addEventListener('unhandledrejection', handleRejection);
 
     return () => {
-      errorEmitter.off('permission-error', handleError);
+      errorEmitter.off('permission-error', handlePermissionError);
+      window.removeEventListener('error', handleGlobalError);
+      window.removeEventListener('unhandledrejection', handleRejection);
     };
   }, []);
 
