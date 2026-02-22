@@ -57,12 +57,27 @@
         "date": { "type": "string", "format": "date-time" }
       },
       "required": ["agentId", "amount", "purpose", "date"]
+    },
+    "Detainee": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Detainee",
+      "type": "object",
+      "description": "Représente une personne en Garde À Vue.",
+      "properties": {
+        "lastName": { "type": "string" },
+        "firstName": { "type": "string" },
+        "birthDate": { "type": "string", "format": "date-time" },
+        "photo": { "type": "string", "description": "Data URI de la photo d'identité" },
+        "entryTime": { "type": "string", "format": "date-time" }
+      },
+      "required": ["lastName", "firstName", "birthDate", "entryTime"]
     }
   },
   "firestore": {
     "/agents/{agentId}": { "schema": { "$ref": "#/entities/Agent" } },
     "/missions/{missionId}": { "schema": { "$ref": "#/entities/Mission" } },
     "/expenses/{expenseId}": { "schema": { "$ref": "#/entities/Expense" } },
-    "/allocations/{allocationId}": { "schema": { "$ref": "#/entities/Allocation" } }
+    "/allocations/{allocationId}": { "schema": { "$ref": "#/entities/Allocation" } },
+    "/detainees/{detaineeId}": { "schema": { "$ref": "#/entities/Detainee" } }
   }
 }

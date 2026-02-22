@@ -50,11 +50,20 @@ export type Visitor = {
   exitTime: Timestamp | null;
 }
 
+export type Detainee = {
+  id: string;
+  lastName: string;
+  firstName: string;
+  birthDate: Timestamp;
+  photo?: string;
+  entryTime: Timestamp;
+}
+
 export type ActivityLog = {
     id: string;
     description: string;
     timestamp: Timestamp;
-    type: 'Agent' | 'Mission' | 'Rassemblement' | 'Visiteur' | 'Général';
+    type: 'Agent' | 'Mission' | 'Rassemblement' | 'Visiteur' | 'Général' | 'GAV';
     link?: string;
 }
 
