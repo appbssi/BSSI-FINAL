@@ -15,17 +15,18 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Camera, Loader2, User, X } from 'lucide-react';
+import { Camera, Loader2, User, X, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import { useFirestore, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { logActivity } from '@/lib/activity-logger';
 import Image from 'next/image';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const detaineeSchema = z.object({
-  lastName: z.string().min(2, 'Le nom est requis.'),
-  firstName: z.string().min(2, 'Le prénom est requis.'),
+  lastName: z.string().min(2, 'Le nom est requis (min 2 caractères).'),
+  firstName: z.string().min(2, 'Le prénom est requis (min 2 caractères).'),
   birthDate: z.string().min(1, 'La date de naissance est requise.'),
 });
 
@@ -39,6 +40,7 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const [photo, setPhoto] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<DetaineeFormValues>({
@@ -53,6 +55,16 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Limit file size to ~800KB to stay under Firestore 1MB limit including overhead
+      if (file.size > 800000) {
+        toast({
+          variant: 'destructive',
+          title: 'Photo trop volumineuse',
+          description: 'Veuillez choisir une photo de moins de 800 Ko.',
+        });
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setPhoto(reader.result as string);
@@ -62,49 +74,87 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
   };
 
   const onSubmit = async (data: DetaineeFormValues) => {
-    if (!firestore) return;
+    if (!firestore) {
+      console.error("Firestore instance not available");
+      return;
+    }
+    
+    setSubmitError(null);
+    console.log("Submitting GAV record...", data);
 
-    const detaineeData = {
-      lastName: data.lastName,
-      firstName: data.firstName,
-      birthDate: Timestamp.fromDate(new Date(data.birthDate)),
-      photo: photo,
-      entryTime: Timestamp.now(),
-    };
+    try {
+      const birthDateObj = new Date(data.birthDate);
+      if (isNaN(birthDateObj.getTime())) {
+        throw new Error("Date de naissance invalide.");
+      }
 
-    addDoc(collection(firestore, 'detainees'), detaineeData)
-      .then(() => {
-        toast({
-          title: 'Enregistrement réussi',
-          description: `La personne a été enregistrée en GAV.`,
-        });
-        logActivity(firestore, `Nouvel enregistrement GAV: ${data.lastName} ${data.firstName}`, 'GAV', '/gav');
-        onSuccess();
-      })
-      .catch(async (serverError) => {
+      const detaineeData = {
+        lastName: data.lastName.trim().toUpperCase(),
+        firstName: data.firstName.trim(),
+        birthDate: Timestamp.fromDate(birthDateObj),
+        photo: photo,
+        entryTime: Timestamp.now(),
+      };
+
+      const docRef = await addDoc(collection(firestore, 'detainees'), detaineeData);
+      console.log("Document written with ID: ", docRef.id);
+
+      toast({
+        title: 'Enregistrement réussi',
+        description: `${data.firstName} ${data.lastName} a été enregistré en GAV.`,
+      });
+
+      logActivity(firestore, `Nouvel enregistrement GAV: ${data.lastName} ${data.firstName}`, 'GAV', '/gav');
+      onSuccess();
+    } catch (error: any) {
+      console.error("Error adding detainee record:", error);
+      
+      let errorMessage = "Une erreur est survenue lors de l'enregistrement.";
+      
+      if (error.code === 'permission-denied') {
+        errorMessage = "Permissions insuffisantes pour écrire dans la base de données.";
         const permissionError = new FirestorePermissionError({
           path: 'detainees',
           operation: 'create',
-          requestResourceData: detaineeData,
         });
         errorEmitter.emit('permission-error', permissionError);
+      } else {
+        errorMessage = error.message || errorMessage;
+      }
+
+      setSubmitError(errorMessage);
+      toast({
+        variant: 'destructive',
+        title: "Échec de l'enregistrement",
+        description: errorMessage,
       });
+    }
   };
 
   const { isSubmitting } = form.formState;
 
   return (
     <div className="space-y-6 py-4">
+      {submitError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erreur</AlertTitle>
+          <AlertDescription>{submitError}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex flex-col items-center gap-4">
         <div 
           className="relative h-32 w-32 rounded-lg border-2 border-dashed flex items-center justify-center bg-muted overflow-hidden cursor-pointer hover:bg-muted/80 transition-colors"
           onClick={() => fileInputRef.current?.click()}
+          title="Cliquez pour ajouter une photo"
         >
           {photo ? (
             <>
               <Image src={photo} alt="Detainee photo" fill className="object-cover" />
               <button 
-                className="absolute top-1 right-1 bg-background/80 rounded-full p-1 shadow-sm"
+                type="button"
+                className="absolute top-1 right-1 bg-background/80 rounded-full p-1 shadow-sm hover:bg-destructive hover:text-white transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   setPhoto(null);
@@ -116,7 +166,7 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
           ) : (
             <div className="flex flex-col items-center text-muted-foreground">
               <Camera className="h-8 w-8 mb-1" />
-              <span className="text-xs">Ajouter une photo</span>
+              <span className="text-xs">Photo d'identité</span>
             </div>
           )}
         </div>
@@ -127,6 +177,9 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
           accept="image/*" 
           onChange={handlePhotoUpload} 
         />
+        <p className="text-[10px] text-muted-foreground text-center">
+          Optionnel. Format JPEG/PNG recommandé (max 800Ko).
+        </p>
       </div>
 
       <Form {...form}>
@@ -139,7 +192,7 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
                 <FormItem>
                   <FormLabel>Nom</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: KOUASSI" {...field} />
+                    <Input placeholder="Ex: KOUASSI" {...field} autoComplete="family-name" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -152,7 +205,7 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
                 <FormItem>
                   <FormLabel>Prénom(s)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Jean" {...field} />
+                    <Input placeholder="Ex: Jean" {...field} autoComplete="given-name" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -173,9 +226,19 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
             )}
           />
           <div className="flex justify-end pt-4">
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Enregistrer en GAV
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enregistrement en cours...
+                </>
+              ) : (
+                'Enregistrer en GAV'
+              )}
             </Button>
           </div>
         </form>
