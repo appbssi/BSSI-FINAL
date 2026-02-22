@@ -64,19 +64,18 @@ export async function deleteDuplicateAgents(firestore: Firestore): Promise<numbe
 
 export async function deleteDuplicateAgentsByName(firestore: Firestore): Promise<number> {
   const agentsRef = collection(firestore, 'agents');
-  // Order by fullName to process duplicates together, and by a timestamp if you have one.
-  // Assuming no creation timestamp, we'll fetch all and process in memory.
   const snapshot = await getDocs(agentsRef);
   
   const agentsByName = new Map<string, Agent[]>();
 
-  // Group agents by full name
+  // Group agents by full name (case insensitive)
   snapshot.docs.forEach(docSnap => {
     const agent = { id: docSnap.id, ...docSnap.data() } as Agent;
     if (agent.fullName) {
-      const existing = agentsByName.get(agent.fullName) || [];
+      const nameKey = agent.fullName.trim().toLowerCase();
+      const existing = agentsByName.get(nameKey) || [];
       existing.push(agent);
-      agentsByName.set(agent.fullName, existing);
+      agentsByName.set(nameKey, existing);
     }
   });
 
@@ -85,11 +84,8 @@ export async function deleteDuplicateAgentsByName(firestore: Firestore): Promise
 
   for (const [name, agents] of agentsByName.entries()) {
     if (agents.length > 1) {
-      // For simplicity, we keep the first one fetched.
-      // A better approach would be to sort by a creation date if available.
-      // Here, we just mark all but the first one for deletion.
+      // Keep the first one, delete others
       const agentsToDelete = agents.slice(1);
-      
       for (const agentToDelete of agentsToDelete) {
         const docRef = doc(firestore, 'agents', agentToDelete.id);
         batch.delete(docRef);
@@ -106,7 +102,6 @@ export async function deleteDuplicateAgentsByName(firestore: Firestore): Promise
         requestResourceData: { info: "Batch delete for name deduplication" },
       });
       errorEmitter.emit('permission-error', permissionError);
-      // Rethrow to be caught by the calling function
       throw serverError;
     });
      logActivity(firestore, `${duplicatesDeleted} agent(s) en double par nom ont été supprimés.`, 'Agent', '/agents');

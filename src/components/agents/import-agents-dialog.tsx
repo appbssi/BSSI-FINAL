@@ -145,14 +145,18 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
     const batch = writeBatch(firestore);
     const agentsRef = collection(firestore, 'agents');
     
-    // Fetch existing agents to check for duplicates by registration number
-    const q = query(agentsRef, where('registrationNumber', '!=', ''));
-    const querySnapshot = await getDocs(q);
-    const existingAgentsMap = new Map<string, string>(); // registrationNumber -> docId
-    querySnapshot.forEach(doc => {
-        const agent = doc.data() as Agent;
-        if(agent.registrationNumber) {
-            existingAgentsMap.set(agent.registrationNumber, doc.id);
+    // Fetch all existing agents to check for duplicates by reg number OR name
+    const querySnapshot = await getDocs(agentsRef);
+    const existingByReg = new Map<string, string>(); // registrationNumber -> docId
+    const existingByName = new Map<string, string>(); // fullName (lowercase) -> docId
+    
+    querySnapshot.forEach(docSnap => {
+        const agent = docSnap.data() as Agent;
+        if (agent.registrationNumber) {
+            existingByReg.set(agent.registrationNumber.trim(), docSnap.id);
+        }
+        if (agent.fullName) {
+            existingByName.set(agent.fullName.trim().toLowerCase(), docSnap.id);
         }
     });
 
@@ -160,9 +164,15 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
     let agentsUpdated = 0;
 
     for (const agentData of agentsToImport) {
-        if (agentData.registrationNumber && existingAgentsMap.has(agentData.registrationNumber)) {
+        const nameKey = agentData.fullName.trim().toLowerCase();
+        const regKey = agentData.registrationNumber?.trim() || '';
+        
+        let docId = (regKey && existingByReg.has(regKey)) 
+            ? existingByReg.get(regKey) 
+            : existingByName.get(nameKey);
+
+        if (docId) {
             // Update existing agent
-            const docId = existingAgentsMap.get(agentData.registrationNumber)!;
             const docRef = doc(firestore, 'agents', docId);
             batch.update(docRef, {
               fullName: agentData.fullName,
@@ -177,15 +187,18 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
             const newAgentRef = doc(agentsRef);
             batch.set(newAgentRef, { ...agentData, leaveStartDate: null, leaveEndDate: null });
             agentsAdded++;
+            // Update local maps to prevent adding same agent twice within the same import
+            if (regKey) existingByReg.set(regKey, newAgentRef.id);
+            existingByName.set(nameKey, newAgentRef.id);
         }
     }
 
     batch.commit().then(() => {
         toast({
             title: 'Importation terminée !',
-            description: `${agentsAdded} agent(s) ajouté(s) et ${agentsUpdated} agent(s) mis à jour.`,
+            description: `${agentsAdded} agent(s) ajouté(s) et ${agentsUpdated} agent(s) mis à jour. Les doublons ont été évités.`,
         });
-        const logMessage = `Importation depuis un fichier : ${agentsAdded} agent(s) ajouté(s), ${agentsUpdated} mis à jour.`;
+        const logMessage = `Importation : ${agentsAdded} ajoutés, ${agentsUpdated} mis à jour. Doublons filtrés.`;
         logActivity(firestore, logMessage, 'Agent', '/agents');
     }).catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -213,8 +226,8 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
         <DialogHeader>
           <DialogTitle>Importer et Mettre à jour des Agents</DialogTitle>
           <DialogDescription>
-            Sélectionnez un fichier .xlsx. Les agents sont identifiés par leur matricule. Les nouveaux agents seront ajoutés, les agents existants seront mis à jour.
-            Colonnes requises : fullName, registrationNumber, rank, contact, address, section.
+            Sélectionnez un fichier .xlsx. Les agents sont identifiés par leur matricule ou leur nom complet pour éviter les doublons. 
+            Colonnes requises : fullName, registrationNumber, rank, contact, address, section (Détachement).
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -230,7 +243,7 @@ export function ImportAgentsDialog({ children }: { children: React.ReactNode }) 
                                 <TableHead>Grade</TableHead>
                                 <TableHead>Contact</TableHead>
                                 <TableHead>Adresse</TableHead>
-                                <TableHead>Section</TableHead>
+                                <TableHead>Section (Détachement)</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

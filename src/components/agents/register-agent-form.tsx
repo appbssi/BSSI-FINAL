@@ -71,8 +71,20 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
     try {
       const agentsRef = collection(firestore, 'agents');
       
+      // Prevent duplicate by name
+      const nameQuery = query(agentsRef, where("fullName", "==", data.fullName.trim()));
+      const nameQuerySnapshot = await getDocs(nameQuery);
+      if (!nameQuerySnapshot.empty) {
+        form.setError('fullName', {
+          type: 'manual',
+          message: 'Un agent avec ce nom est déjà enregistré.',
+        });
+        return;
+      }
+
+      // Prevent duplicate by registration number
       if (data.registrationNumber) {
-        const regQuery = query(agentsRef, where("registrationNumber", "==", data.registrationNumber));
+        const regQuery = query(agentsRef, where("registrationNumber", "==", data.registrationNumber.trim()));
         const regQuerySnapshot = await getDocs(regQuery);
         if (!regQuerySnapshot.empty) {
           form.setError('registrationNumber', {
@@ -83,20 +95,10 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
         }
       }
       
-      if (data.contact) {
-        const contactQuery = query(agentsRef, where("contact", "==", data.contact));
-        const contactQuerySnapshot = await getDocs(contactQuery);
-        if (!contactQuerySnapshot.empty) {
-            form.setError('contact', {
-                type: 'manual',
-                message: 'Ce contact est déjà utilisé par un autre agent.',
-            });
-            return;
-        }
-      }
-      
       const agentData = {
         ...data,
+        fullName: data.fullName.trim(),
+        registrationNumber: data.registrationNumber?.trim() || '',
         leaveStartDate: null,
         leaveEndDate: null,
       };
@@ -121,15 +123,11 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
         });
 
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        // Handle Zod validation errors
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Erreur',
-          description: "Une erreur inattendue est survenue.",
-        });
-      }
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: "Une erreur inattendue est survenue.",
+      });
     }
   };
 
@@ -140,7 +138,7 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
       <DialogHeader>
         <DialogTitle>Enregistrer un nouvel agent</DialogTitle>
         <DialogDescription>
-          Ajoutez un nouvel agent à la brigade. Remplissez les détails ci-dessous.
+          Ajoutez un nouvel agent à la brigade. Les doublons (nom ou matricule) sont automatiquement détectés.
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
@@ -152,7 +150,7 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
               <FormItem>
                 <FormLabel>Nom et Prénom(s)</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} placeholder="Ex: KOUASSI KOFFI JEAN" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -166,7 +164,7 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
                 <FormItem>
                   <FormLabel>Matricule</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Ex: 812 115-B" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -179,7 +177,7 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
                 <FormItem>
                   <FormLabel>Grade</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Ex: SGT" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -194,7 +192,7 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
                 <FormItem>
                   <FormLabel>Contact</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Ex: 0102030405" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -207,7 +205,7 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
                 <FormItem>
                   <FormLabel>Adresse</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Ex: Abidjan, Cocody" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -219,7 +217,7 @@ export function RegisterAgentForm({ onAgentRegistered }: RegisterAgentFormProps)
               name="section"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Section</FormLabel>
+                  <FormLabel>Section (Détachement)</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>

@@ -71,12 +71,26 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
     if (!firestore) return;
     try {
       const agentsRef = collection(firestore, 'agents');
-       // Check for uniqueness of registrationNumber if it has changed
-      if (data.registrationNumber && data.registrationNumber !== agent.registrationNumber) {
-        const q = query(agentsRef, where("registrationNumber", "==", data.registrationNumber));
-        const querySnapshot = await getDocs(q);
 
-        if (!querySnapshot.empty) {
+      // Check for name duplicate (excluding current agent)
+      if (data.fullName.trim() !== agent.fullName) {
+        const qName = query(agentsRef, where("fullName", "==", data.fullName.trim()));
+        const nameSnapshot = await getDocs(qName);
+        if (!nameSnapshot.empty) {
+            form.setError('fullName', {
+                type: 'manual',
+                message: 'Ce nom est déjà utilisé par un autre agent.',
+            });
+            return;
+        }
+      }
+
+       // Check for reg number duplicate (excluding current agent)
+      if (data.registrationNumber && data.registrationNumber.trim() !== agent.registrationNumber) {
+        const qReg = query(agentsRef, where("registrationNumber", "==", data.registrationNumber.trim()));
+        const regSnapshot = await getDocs(qReg);
+
+        if (!regSnapshot.empty) {
           form.setError('registrationNumber', {
             type: 'manual',
             message: 'Ce matricule est déjà utilisé par un autre agent.',
@@ -85,23 +99,14 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
         }
       }
 
-      // Check for uniqueness of contact if it has changed
-      if (data.contact && data.contact !== agent.contact) {
-        const q = query(agentsRef, where("contact", "==", data.contact));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-            form.setError('contact', {
-                type: 'manual',
-                message: 'Ce contact est déjà utilisé par un autre agent.',
-            });
-            return;
-        }
-      }
-
-
       const agentRef = doc(firestore, 'agents', agent.id);
-      updateDoc(agentRef, data).then(() => {
+      const updateData = {
+          ...data,
+          fullName: data.fullName.trim(),
+          registrationNumber: data.registrationNumber?.trim() || '',
+      };
+
+      updateDoc(agentRef, updateData).then(() => {
         toast({
             title: 'Agent mis à jour !',
             description: `Les informations de l'agent ${data.fullName} ont été mises à jour.`,
@@ -112,7 +117,7 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
         const permissionError = new FirestorePermissionError({
             path: agentRef.path,
             operation: 'update',
-            requestResourceData: data,
+            requestResourceData: updateData,
         });
         errorEmitter.emit('permission-error', permissionError);
       });
@@ -133,7 +138,7 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
       <DialogHeader>
         <DialogTitle>Modifier l'agent</DialogTitle>
         <DialogDescription>
-          Mettez à jour les informations de l'agent ci-dessous.
+          Mettez à jour les informations de l'agent ci-dessous. Les doublons sont vérifiés avant sauvegarde.
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
@@ -212,7 +217,7 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
               name="section"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Section</FormLabel>
+                  <FormLabel>Section (Détachement)</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
