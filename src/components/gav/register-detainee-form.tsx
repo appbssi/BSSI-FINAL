@@ -196,7 +196,7 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
           <div className="flex justify-end pt-4">
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Enregistrer en GAV
+              en cliquant sur ce bouton enregistre les données saisirs dans la base de donnée
             </Button>
           </div>
         </form>
