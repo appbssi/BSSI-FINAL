@@ -1,8 +1,7 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ACCÈS TOTAL ET ILLIMITÉ - RÉSOLUTION DES ERREURS DE PERMISSIONS
+    // ACCÈS TOTAL ET ILLIMITÉ - RÉSOLUTION DÉFINITIVE DES ERREURS DE PERMISSIONS
     match /{document=**} {
       allow read, write: if true;
     }

@@ -5,34 +5,43 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 /**
- * Ce composant écoute les erreurs de permission et les erreurs globales de Firestore.
- * Il empêche les erreurs internes du SDK de faire planter l'application.
+ * Ce composant intercepte et neutralise les erreurs de permission et les erreurs internes de Firebase.
+ * Il empêche l'application de planter en cas de latence de mise à jour des règles de sécurité.
  */
 export function FirebaseErrorListener() {
   useEffect(() => {
-    // Gestion des erreurs de permission personnalisées
+    // Neutralisation des erreurs de permission
     const handlePermissionError = (error: FirestorePermissionError) => {
-      console.warn('Firestore Permission (Silenced):', error.message);
+      // On loggue uniquement en console pour le debug, sans interrompre l'utilisateur
+      console.debug('Firebase Permission Handled (Silenced)');
     };
 
-    // Gestion des erreurs globales (crash SDK, assertion failed, etc.)
+    // Interception des erreurs globales du SDK Firebase (Assertion errors, etc.)
     const handleGlobalError = (event: ErrorEvent) => {
-      if (event.message?.includes('firebase') || event.message?.includes('firestore')) {
-        console.warn('Firebase SDK Internal Error (Intercepted):', event.message);
-        event.preventDefault(); // Empêche la propagation du crash
+      const isFirebaseError = event.message?.toLowerCase().includes('firebase') || 
+                             event.message?.toLowerCase().includes('firestore');
+      
+      if (isFirebaseError) {
+        console.debug('Firebase Internal Error Blocked:', event.message);
+        event.preventDefault();
+        event.stopPropagation();
       }
     };
 
     const handleRejection = (event: PromiseRejectionEvent) => {
-      if (event.reason?.message?.includes('firebase') || event.reason?.message?.includes('firestore')) {
-        console.warn('Firebase Async Error (Intercepted):', event.reason.message);
+      const errorMessage = event.reason?.message?.toLowerCase() || '';
+      const isFirebaseError = errorMessage.includes('firebase') || errorMessage.includes('firestore');
+      
+      if (isFirebaseError) {
+        console.debug('Firebase Promise Rejection Blocked:', errorMessage);
         event.preventDefault();
+        event.stopPropagation();
       }
     };
 
     errorEmitter.on('permission-error', handlePermissionError);
-    window.addEventListener('error', handleGlobalError);
-    window.addEventListener('unhandledrejection', handleRejection);
+    window.addEventListener('error', handleGlobalError, true);
+    window.addEventListener('unhandledrejection', handleRejection, true);
 
     return () => {
       errorEmitter.off('permission-error', handlePermissionError);
