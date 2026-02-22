@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { FileUp, MoreHorizontal, PlusCircle, Search, FileDown, Shield, RefreshCw } from 'lucide-react';
+import { FileUp, MoreHorizontal, PlusCircle, Search, FileDown, Shield, RefreshCw, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,7 +65,7 @@ import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import { ManageLeaveDialog } from '@/components/agents/manage-leave-dialog';
 import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
-import { updateOfficerRanks, prefixContactsWithZero } from '@/lib/firestore-utils';
+import { updateOfficerRanks, prefixContactsWithZero, deleteDuplicateAgents } from '@/lib/firestore-utils';
 import { useIsMounted } from '@/hooks/use-is-mounted';
 import { ClientOnly } from '@/components/layout/client-only';
 
@@ -89,6 +89,7 @@ function AgentsContent() {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCleaning, setIsCleaning] = useState(false);
   const [isUpdatingRanks, setIsUpdatingRanks] = useState(false);
   const [isUpdatingContacts, setIsUpdatingContacts] = useState(false);
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'Disponible' | 'En mission' | 'En congé'>('all');
@@ -125,7 +126,7 @@ function AgentsContent() {
       const nameB = b.fullName || '';
       return nameA.localeCompare(nameB);
     });
-}, [agentsWithDetails]);
+  }, [agentsWithDetails]);
 
   const filteredAgents = sortedAgents.filter(agent => {
     const searchLower = searchQuery.toLowerCase();
@@ -193,6 +194,34 @@ function AgentsContent() {
         setIsDeleting(false);
         setAgentToDelete(null); // Close the dialog
     });
+  };
+
+  const handleCleanDuplicates = async () => {
+    if (!firestore) return;
+    setIsCleaning(true);
+    try {
+      const deletedCount = await deleteDuplicateAgents(firestore);
+      if (deletedCount > 0) {
+        toast({
+          title: 'Nettoyage terminé',
+          description: `${deletedCount} agent(s) en double ont été supprimés.`,
+        });
+      } else {
+        toast({
+          title: 'Aucun doublon',
+          description: 'Aucun agent avec le même matricule n\'a été trouvé.',
+        });
+      }
+    } catch (error) {
+      console.error('Error cleaning duplicates:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors du nettoyage des doublons.',
+      });
+    } finally {
+      setIsCleaning(false);
+    }
   };
 
   const handleUpdateRanks = async () => {
@@ -355,6 +384,16 @@ function AgentsContent() {
               />
             </div>
             <div className="flex items-center gap-2 flex-wrap justify-end">
+              {isAdmin && (
+                <button 
+                  className="button-13 flex items-center justify-center text-destructive hover:bg-destructive/10 !w-auto px-4"
+                  onClick={handleCleanDuplicates}
+                  disabled={isCleaning}
+                >
+                  {isCleaning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                  Nettoyer Doublons
+                </button>
+              )}
               {!isObserver && (
                 <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
                   <DialogTrigger asChild>
