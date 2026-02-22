@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -130,7 +131,7 @@ export function AddExpenseForm({ onSuccess }: { onSuccess: () => void }) {
 
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Enregistrer les informations dans la base de donnée
+          Enregistrer la dépense
         </Button>
       </form>
     </Form>

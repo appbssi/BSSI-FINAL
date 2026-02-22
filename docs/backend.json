@@ -42,7 +42,7 @@
         "category": { "type": "string", "enum": ["Opérationnel", "Matériel", "Transport", "Logistique", "Autre"] },
         "date": { "type": "string", "format": "date-time" },
         "status": { "type": "string", "enum": ["Validé", "En attente", "Refusé"] },
-        "missionId": { "type": "string" }
+        "missionId": { "type": ["string", "null"] }
       },
       "required": ["description", "amount", "category", "date", "status"]
     },
@@ -68,10 +68,9 @@
         "firstName": { "type": "string" },
         "birthDate": { "type": "string", "format": "date-time" },
         "photo": { "type": "string", "description": "Data URI de la photo d'identité" },
-        "entryTime": { "type": "string", "format": "date-time" },
-        "arrestReason": { "type": "string", "description": "Le motif de l'arrestation" }
+        "entryTime": { "type": "string", "format": "date-time" }
       },
-      "required": ["lastName", "firstName", "birthDate", "entryTime", "arrestReason"]
+      "required": ["lastName", "firstName", "birthDate", "entryTime"]
     }
   },
   "firestore": {

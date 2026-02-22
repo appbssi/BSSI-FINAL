@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Form,
   FormControl,
@@ -28,7 +27,6 @@ const detaineeSchema = z.object({
   lastName: z.string().min(2, 'Le nom est requis.'),
   firstName: z.string().min(2, 'Le prénom est requis.'),
   birthDate: z.string().min(1, 'La date de naissance est requise.'),
-  arrestReason: z.string().min(5, "Le motif de l'arrestation est requis."),
 });
 
 type DetaineeFormValues = z.infer<typeof detaineeSchema>;
@@ -49,7 +47,6 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
       firstName: '',
       lastName: '',
       birthDate: '',
-      arrestReason: '',
     },
   });
 
@@ -72,7 +69,6 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
       firstName: data.firstName,
       birthDate: Timestamp.fromDate(new Date(data.birthDate)),
       photo: photo,
-      arrestReason: data.arrestReason,
       entryTime: Timestamp.now(),
     };
 
@@ -176,27 +172,10 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="arrestReason"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Motif de l'arrestation</FormLabel>
-                <FormControl>
-                  <Textarea 
-                    placeholder="Précisez les raisons de la mise en GAV..." 
-                    className="min-h-[100px]"
-                    {...field} 
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <div className="flex justify-end pt-4">
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              en cliquant sur ce bouton enregistre les données saisirs dans la base de donnée
+              Enregistrer en GAV
             </Button>
           </div>
         </form>
