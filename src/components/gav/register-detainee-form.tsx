@@ -23,11 +23,14 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { logActivity } from '@/lib/activity-logger';
 import Image from 'next/image';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Textarea } from '@/components/ui/textarea';
 
 const detaineeSchema = z.object({
   lastName: z.string().min(2, 'Le nom est requis (min 2 caractères).'),
   firstName: z.string().min(2, 'Le prénom est requis (min 2 caractères).'),
   birthDate: z.string().min(1, 'La date de naissance est requise.'),
+  arrestLocation: z.string().min(2, "Le lieu d'arrestation est requis."),
+  arrestReason: z.string().min(5, "Le motif d'arrestation est requis (min 5 caractères)."),
 });
 
 type DetaineeFormValues = z.infer<typeof detaineeSchema>;
@@ -49,13 +52,14 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
       firstName: '',
       lastName: '',
       birthDate: '',
+      arrestLocation: '',
+      arrestReason: '',
     },
   });
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Limit file size to ~800KB to stay under Firestore 1MB limit including overhead
       if (file.size > 800000) {
         toast({
           variant: 'destructive',
@@ -74,13 +78,9 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
   };
 
   const onSubmit = async (data: DetaineeFormValues) => {
-    if (!firestore) {
-      console.error("Firestore instance not available");
-      return;
-    }
+    if (!firestore) return;
     
     setSubmitError(null);
-    console.log("Submitting GAV record...", data);
 
     try {
       const birthDateObj = new Date(data.birthDate);
@@ -94,10 +94,11 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
         birthDate: Timestamp.fromDate(birthDateObj),
         photo: photo,
         entryTime: Timestamp.now(),
+        arrestLocation: data.arrestLocation.trim(),
+        arrestReason: data.arrestReason.trim(),
       };
 
-      const docRef = await addDoc(collection(firestore, 'detainees'), detaineeData);
-      console.log("Document written with ID: ", docRef.id);
+      await addDoc(collection(firestore, 'detainees'), detaineeData);
 
       toast({
         title: 'Enregistrement réussi',
@@ -108,7 +109,6 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
       onSuccess();
     } catch (error: any) {
       console.error("Error adding detainee record:", error);
-      
       let errorMessage = "Une erreur est survenue lors de l'enregistrement.";
       
       if (error.code === 'permission-denied') {
@@ -212,19 +212,54 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
               )}
             />
           </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="birthDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date de naissance</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="arrestLocation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lieu d'arrestation</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: Adjamé, Pont Fer" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           <FormField
             control={form.control}
-            name="birthDate"
+            name="arrestReason"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date de naissance</FormLabel>
+                <FormLabel>Motif d'arrestation</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Textarea 
+                    placeholder="Décrivez les faits reprochés..." 
+                    className="resize-none"
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <div className="flex justify-end pt-4">
             <Button 
               type="submit" 

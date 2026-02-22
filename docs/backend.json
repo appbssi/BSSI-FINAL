@@ -68,9 +68,11 @@
         "firstName": { "type": "string" },
         "birthDate": { "type": "string", "format": "date-time" },
         "photo": { "type": "string", "description": "Data URI de la photo d'identité" },
-        "entryTime": { "type": "string", "format": "date-time" }
+        "entryTime": { "type": "string", "format": "date-time" },
+        "arrestLocation": { "type": "string" },
+        "arrestReason": { "type": "string" }
       },
-      "required": ["lastName", "firstName", "birthDate", "entryTime"]
+      "required": ["lastName", "firstName", "birthDate", "entryTime", "arrestLocation", "arrestReason"]
     }
   },
   "firestore": {

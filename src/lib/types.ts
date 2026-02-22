@@ -57,6 +57,8 @@ export type Detainee = {
   birthDate: Timestamp;
   photo?: string;
   entryTime: Timestamp;
+  arrestLocation: string;
+  arrestReason: string;
 }
 
 export type ActivityLog = {
