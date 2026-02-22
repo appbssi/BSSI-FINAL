@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import type { Detainee } from '@/lib/types';
-import { User, Calendar, Clock, Info } from 'lucide-react';
+import { User, Calendar, Clock, Info, ShieldAlert } from 'lucide-react';
 import Image from 'next/image';
 
 interface DetaineeDetailsDialogProps {
@@ -65,6 +65,18 @@ export function DetaineeDetailsDialog({ detainee, isOpen, onOpenChange }: Detain
                 <div>
                   <p className="text-xs text-muted-foreground">Date de naissance</p>
                   <p className="font-semibold">{detainee.birthDate.toDate().toLocaleDateString('fr-FR', { dateStyle: 'long' })}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 border-b pb-4">
+              <div className="space-y-1 flex items-center gap-3">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <ShieldAlert className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground">Motif de l'arrestation</p>
+                  <p className="text-sm font-medium leading-tight mt-1">{detainee.arrestReason}</p>
                 </div>
               </div>
             </div>
