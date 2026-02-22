@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -15,7 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Camera, Loader2, User, X, AlertCircle } from 'lucide-react';
+import { Camera, Loader2, User, X, AlertCircle, FlipHorizontal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import { useFirestore, errorEmitter } from '@/firebase';
@@ -44,7 +43,12 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
   const firestore = useFirestore();
   const [photo, setPhoto] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const form = useForm<DetaineeFormValues>({
     resolver: zodResolver(detaineeSchema),
@@ -56,6 +60,58 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
       arrestReason: '',
     },
   });
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      setHasCameraPermission(true);
+      setIsCameraOpen(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      setHasCameraPermission(false);
+      toast({
+        variant: 'destructive',
+        title: 'Accès caméra refusé',
+        description: 'Veuillez autoriser l\'accès à la caméra dans les réglages de votre navigateur.',
+      });
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      const tracks = stream.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraOpen(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+
+      if (context) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Mirror effect if needed (camera is front-facing)
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1);
+        
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const dataUri = canvas.toDataURL('image/jpeg', 0.8);
+        setPhoto(dataUri);
+        stopCamera();
+      }
+    }
+  };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -133,6 +189,11 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
 
   const { isSubmitting } = form.formState;
 
+  // Stop camera when component unmounts
+  useEffect(() => {
+    return () => stopCamera();
+  }, []);
+
   return (
     <div className="space-y-6 py-4">
       {submitError && (
@@ -144,32 +205,65 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
       )}
 
       <div className="flex flex-col items-center gap-4">
-        <div 
-          className="relative h-32 w-32 rounded-lg border-2 border-dashed flex items-center justify-center bg-muted overflow-hidden cursor-pointer hover:bg-muted/80 transition-colors"
-          onClick={() => fileInputRef.current?.click()}
-          title="Cliquez pour ajouter une photo"
-        >
-          {photo ? (
-            <>
-              <Image src={photo} alt="Detainee photo" fill className="object-cover" />
-              <button 
-                type="button"
-                className="absolute top-1 right-1 bg-background/80 rounded-full p-1 shadow-sm hover:bg-destructive hover:text-white transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPhoto(null);
-                }}
-              >
+        {isCameraOpen ? (
+          <div className="relative w-full aspect-square max-w-[240px] rounded-lg overflow-hidden bg-black border-2 border-primary">
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              muted 
+              playsInline 
+              className="w-full h-full object-cover scale-x-[-1]" 
+            />
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 px-2">
+              <Button size="sm" variant="secondary" onClick={capturePhoto} className="flex-1">
+                <Camera className="mr-2 h-4 w-4" /> Capturer
+              </Button>
+              <Button size="sm" variant="destructive" onClick={stopCamera} className="px-3">
                 <X className="h-4 w-4" />
-              </button>
-            </>
-          ) : (
-            <div className="flex flex-col items-center text-muted-foreground">
-              <Camera className="h-8 w-8 mb-1" />
-              <span className="text-xs">Photo d'identité</span>
+              </Button>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div 
+            className="relative h-32 w-32 rounded-lg border-2 border-dashed flex items-center justify-center bg-muted overflow-hidden cursor-pointer hover:bg-muted/80 transition-colors"
+            onClick={() => !photo && startCamera()}
+            title="Cliquez pour prendre une photo ou uploader"
+          >
+            {photo ? (
+              <>
+                <Image src={photo} alt="Detainee photo" fill className="object-cover" />
+                <button 
+                  type="button"
+                  className="absolute top-1 right-1 bg-background/80 rounded-full p-1 shadow-sm hover:bg-destructive hover:text-white transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPhoto(null);
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </>
+            ) : (
+              <div className="flex flex-col items-center text-muted-foreground text-center p-2">
+                <Camera className="h-8 w-8 mb-1" />
+                <span className="text-[10px]">Prendre une photo ou importer</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {!isCameraOpen && !photo && (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={startCamera}>
+              <Camera className="mr-2 h-4 w-4" /> Webcam
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+              <User className="mr-2 h-4 w-4" /> Parcourir
+            </Button>
+          </div>
+        )}
+
+        <canvas ref={canvasRef} className="hidden" />
         <input 
           type="file" 
           ref={fileInputRef} 
@@ -177,6 +271,7 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
           accept="image/*" 
           onChange={handlePhotoUpload} 
         />
+        
         <p className="text-[10px] text-muted-foreground text-center">
           Optionnel. Format JPEG/PNG recommandé (max 800Ko).
         </p>
