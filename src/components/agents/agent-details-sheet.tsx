@@ -69,7 +69,7 @@ export function AgentDetailsSheet({ agent, missions, isOpen, onOpenChange }: Age
                   </div>
                   <div>
                       <h2 className="text-2xl font-bold tracking-tight">{agent.fullName}</h2>
-                       <Badge variant="secondary" className="font-mono mt-1">
+                       <Badge variant="secondary" className="font-mono mt-1 text-[1.1em]">
                          {agent.registrationNumber || 'Sans matricule'}
                        </Badge>
                   </div>
