@@ -13,6 +13,7 @@
         "contact": { "type": "string" },
         "address": { "type": "string" },
         "section": { "type": "string" },
+        "photo": { "type": "string", "description": "Data URI de la photo d'identité" },
         "leaveStartDate": { "type": "string", "format": "date-time" },
         "leaveEndDate": { "type": "string", "format": "date-time" }
       },

@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState, useRef } from 'react';
 import {
   DialogHeader,
   DialogTitle,
@@ -31,13 +32,14 @@ import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/fire
 import { useFirestore, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { Agent, Availability } from '@/lib/types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User, X } from 'lucide-react';
 import { logActivity } from '@/lib/activity-logger';
+import Image from 'next/image';
 
 const agentSchema = z.object({
   fullName: z.string().min(2, 'Le nom complet est requis'),
   registrationNumber: z.string().optional(),
-  rank: z.string().min(3, 'Le grade est requis'),
+  rank: z.string().min(1, 'Le grade est requis'),
   contact: z.string().transform(val => val.replace(/\D/g, '')).pipe(z.string().min(8, "Le contact doit contenir au moins 8 chiffres.").max(14, "Le contact ne peut pas dépasser 14 chiffres.")).optional().or(z.literal('')),
   address: z.string().min(3, "L'adresse est requise"),
   section: z.string({ required_error: "Veuillez sélectionner une section."}),
@@ -54,6 +56,8 @@ interface EditAgentSheetProps {
 export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgentSheetProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const [photo, setPhoto] = useState<string | null>(agent.photo || null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<AgentFormValues>({
     resolver: zodResolver(agentSchema),
@@ -66,6 +70,26 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
       section: agent.section || 'Non assigné',
     },
   });
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 800000) {
+        toast({
+          variant: 'destructive',
+          title: 'Photo trop volumineuse',
+          description: 'Veuillez choisir une photo de moins de 800 Ko.',
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const onSubmit = async (data: AgentFormValues) => {
     if (!firestore) return;
@@ -104,6 +128,7 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
           ...data,
           fullName: data.fullName.trim(),
           registrationNumber: data.registrationNumber?.trim() || '',
+          photo: photo,
       };
 
       updateDoc(agentRef, updateData).then(() => {
@@ -138,11 +163,47 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
       <DialogHeader>
         <DialogTitle>Modifier l'agent</DialogTitle>
         <DialogDescription>
-          Mettez à jour les informations de l'agent ci-dessous. Les doublons sont vérifiés avant sauvegarde.
+          Mettez à jour les informations de l'agent.
         </DialogDescription>
       </DialogHeader>
+
+      <div className="flex flex-col items-center gap-4 py-4">
+        <div 
+          className="relative h-24 w-24 rounded-full border-2 border-dashed flex items-center justify-center bg-muted overflow-hidden cursor-pointer hover:bg-muted/80 transition-colors"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {photo ? (
+            <>
+              <Image src={photo} alt="Agent photo" fill className="object-cover" />
+              <button 
+                type="button"
+                className="absolute top-0 right-0 bg-background/80 rounded-full p-1 shadow-sm hover:bg-destructive hover:text-white transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPhoto(null);
+                }}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </>
+          ) : (
+            <div className="flex flex-col items-center text-muted-foreground text-center p-2">
+              <User className="h-6 w-6 mb-1" />
+              <span className="text-[8px]">Photo d'identité</span>
+            </div>
+          )}
+        </div>
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          className="hidden" 
+          accept="image/*" 
+          onChange={handlePhotoUpload} 
+        />
+      </div>
+
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
             name="fullName"
@@ -241,7 +302,7 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
               )}
             />
           <div className="flex justify-end pt-4">
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="w-full">
                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sauvegarder les modifications
             </Button>

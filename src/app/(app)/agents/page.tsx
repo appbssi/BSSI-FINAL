@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { FileUp, MoreHorizontal, PlusCircle, Search, FileDown, Shield, RefreshCw, Trash2 } from 'lucide-react';
+import { FileUp, MoreHorizontal, PlusCircle, Search, FileDown, Shield, RefreshCw, Trash2, User } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,6 +68,7 @@ import { EditAgentSheet } from '@/components/agents/edit-agent-sheet';
 import { updateOfficerRanks, prefixContactsWithZero, deleteDuplicateAgents } from '@/lib/firestore-utils';
 import { useIsMounted } from '@/hooks/use-is-mounted';
 import { ClientOnly } from '@/components/layout/client-only';
+import Image from 'next/image';
 
 export default function AgentsPage() {
   return (
@@ -90,8 +91,6 @@ function AgentsContent() {
   const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCleaning, setIsCleaning] = useState(false);
-  const [isUpdatingRanks, setIsUpdatingRanks] = useState(false);
-  const [isUpdatingContacts, setIsUpdatingContacts] = useState(false);
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'Disponible' | 'En mission' | 'En congé'>('all');
   const [sectionFilter, setSectionFilter] = useState<string>('all');
   const { toast } = useToast();
@@ -223,61 +222,6 @@ function AgentsContent() {
       setIsCleaning(false);
     }
   };
-
-  const handleUpdateRanks = async () => {
-    if (!firestore) return;
-    setIsUpdatingRanks(true);
-    try {
-        const updatedCount = await updateOfficerRanks(firestore);
-        if (updatedCount > 0) {
-            toast({
-                title: "Mise à jour réussie",
-                description: `${updatedCount} grade(s) d'officier(s) ont été mis à jour.`
-            });
-        } else {
-            toast({
-                title: "Aucune mise à jour",
-                description: "Aucun agent ne correspondait aux critères de mise à jour."
-            });
-        }
-    } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "Erreur de mise à jour",
-            description: error.message || "Une erreur est survenue lors de la mise à jour des grades.",
-        });
-    } finally {
-        setIsUpdatingRanks(false);
-    }
-  };
-
-  const handleUpdateContacts = async () => {
-    if (!firestore) return;
-    setIsUpdatingContacts(true);
-    try {
-        const updatedCount = await prefixContactsWithZero(firestore);
-        if (updatedCount > 0) {
-            toast({
-                title: "Mise à jour des contacts réussie",
-                description: `${updatedCount} contact(s) ont été mis à jour.`
-            });
-        } else {
-            toast({
-                title: "Aucune mise à jour de contact",
-                description: "Aucun contact ne nécessitait de mise à jour."
-            });
-        }
-    } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "Erreur de mise à jour des contacts",
-            description: error.message || "Une erreur est survenue lors de la mise à jour des contacts.",
-        });
-    } finally {
-        setIsUpdatingContacts(false);
-    }
-  };
-
 
   const handleExportXLSX = () => {
     const dataToExport = filteredAgents.map(agent => ({
@@ -458,6 +402,7 @@ function AgentsContent() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]"></TableHead>
               <TableHead>Nom complet</TableHead>
               <TableHead>Grade</TableHead>
               <TableHead>Missions</TableHead>
@@ -467,12 +412,21 @@ function AgentsContent() {
           </TableHeader>
           <TableBody>
             {agentsLoading || missionsLoading ? (
-              <TableRow><TableCell colSpan={5} className="text-center">Chargement des agents...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center">Chargement des agents...</TableCell></TableRow>
             ) : filteredAgents.length > 0 ? (
               filteredAgents.map((agent) => {
                 const isAgentOnMission = agent.availability === 'En mission';
                 return (
                   <TableRow key={agent.id} onClick={() => setSelectedAgent(agent)} className="cursor-pointer">
+                    <TableCell>
+                        <div className="h-8 w-8 rounded-full bg-muted overflow-hidden flex items-center justify-center text-muted-foreground border">
+                            {agent.photo ? (
+                                <Image src={agent.photo} alt={agent.fullName} width={32} height={32} className="object-cover h-full w-full" />
+                            ) : (
+                                <User className="h-4 w-4" />
+                            )}
+                        </div>
+                    </TableCell>
                     <TableCell className="font-medium">
                         <div>{agent.fullName}</div>
                         {agent.registrationNumber && <div className="text-xs text-muted-foreground">{agent.registrationNumber}</div>}
@@ -519,7 +473,7 @@ function AgentsContent() {
                 );
               })
             ) : (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Aucun agent trouvé.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
@@ -527,7 +481,7 @@ function AgentsContent() {
 
       {editingAgent && (
         <Dialog open={!!editingAgent} onOpenChange={(open) => !open && setEditingAgent(null)}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-md">
             <EditAgentSheet
               agent={editingAgent}
               availability={editingAgent.availability!}

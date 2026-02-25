@@ -9,6 +9,7 @@ export type Agent = {
   contact?: string;
   address: string;
   section: 'Armurerie' | 'Administration' | 'Officier' | 'Adjudants' | 'FAUNE' | 'CONDUCTEUR' | 'SECTION FEMININE' | 'DETACHEMENT NOE' | 'DETACHEMENT TINGRELA' | 'DETACHEMENT MORONDO' | 'Non assigné';
+  photo?: string;
   leaveStartDate?: Timestamp;
   leaveEndDate?: Timestamp;
   availability?: Availability;
