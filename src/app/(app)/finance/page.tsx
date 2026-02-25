@@ -114,11 +114,15 @@ function FinanceContent() {
                 <PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Allocation
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-lg">
               <DialogHeader>
                 <DialogTitle>Nouvelle Allocation Agent</DialogTitle>
               </DialogHeader>
-              <AddAllocationForm agents={agents || []} onSuccess={() => setAllocationDialogOpen(false)} />
+              <AddAllocationForm 
+                agents={agents || []} 
+                missions={missions || []}
+                onSuccess={() => setAllocationDialogOpen(false)} 
+              />
             </DialogContent>
           </Dialog>
         </div>

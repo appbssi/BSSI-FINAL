@@ -1,39 +1,51 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { collection, Timestamp, writeBatch, doc } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase } from '@/firebase';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useFirestore } from '@/firebase';
 import { Loader2, Search } from 'lucide-react';
 import type { Agent, Mission } from '@/lib/types';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getDisplayStatus } from '@/lib/missions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
 
 const allocationSchema = z.object({
   agentIds: z.array(z.string()).min(1, 'Veuillez sélectionner au moins un agent'),
   amount: z.coerce.number().min(1, 'Montant invalide'),
   purpose: z.string().min(3, 'Motif requis'),
-  missionId: z.string().optional(),
 });
 
-export function AddAllocationForm({ agents, onSuccess }: { agents: Agent[], onSuccess: () => void }) {
+interface AddAllocationFormProps {
+  agents: Agent[];
+  missions: Mission[];
+  onSuccess: () => void;
+}
+
+export function AddAllocationForm({ agents, missions, onSuccess }: AddAllocationFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const [search, setSearch] = useState('');
   const [selectedMissionId, setSelectedMissionId] = useState<string>('all');
   
-  const missionsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'missions') : null), [firestore]);
-  const { data: missions } = useCollection<Mission>(missionsQuery);
+  const form = useForm<z.infer<typeof allocationSchema>>({
+    resolver: zodResolver(allocationSchema),
+    defaultValues: { 
+      agentIds: [], 
+      amount: 0, 
+      purpose: '',
+    },
+  });
 
   const plannedMissions = useMemo(() => {
     if (!missions) return [];
@@ -41,27 +53,20 @@ export function AddAllocationForm({ agents, onSuccess }: { agents: Agent[], onSu
     return missions.filter(m => getDisplayStatus(m, now) === 'Planification');
   }, [missions]);
 
-  const form = useForm<z.infer<typeof allocationSchema>>({
-    resolver: zodResolver(allocationSchema),
-    defaultValues: { 
-      agentIds: [], 
-      amount: 0, 
-      purpose: '',
-      missionId: 'all'
-    },
-  });
+  // Réinitialiser la sélection quand la mission change pour éviter les erreurs
+  useEffect(() => {
+    form.setValue('agentIds', []);
+  }, [selectedMissionId, form]);
 
   const filteredAgents = useMemo(() => {
     let list = agents;
     
-    // Filtrer par mission sélectionnée
     if (selectedMissionId !== 'all') {
       const mission = plannedMissions.find(m => m.id === selectedMissionId);
       if (mission) {
         list = agents.filter(a => mission.assignedAgentIds.includes(a.id));
       }
     } else {
-      // Si aucune mission spécifique n'est choisie, on montre les agents en planification
       const allPlannedAgentIds = new Set<string>();
       plannedMissions.forEach(m => m.assignedAgentIds.forEach(id => allPlannedAgentIds.add(id)));
       list = agents.filter(a => allPlannedAgentIds.has(a.id));
@@ -90,7 +95,7 @@ export function AddAllocationForm({ agents, onSuccess }: { agents: Agent[], onSu
       await batch.commit();
       toast({ 
         title: 'Allocations enregistrées', 
-        description: `${values.agentIds.length} agent(s) ont reçu l'allocation de ${values.amount.toLocaleString('fr-FR')} FCFA.`
+        description: `${values.agentIds.length} agent(s) ont reçu l'allocation.`
       });
       onSuccess();
     } catch (error) {
@@ -114,24 +119,13 @@ export function AddAllocationForm({ agents, onSuccess }: { agents: Agent[], onSu
     }
   };
 
-  const handleSelectAll = () => {
-    form.setValue('agentIds', filteredAgents.map(a => a.id));
-  };
-
-  const handleClearAll = () => {
-    form.setValue('agentIds', []);
-  };
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
         
         <div className="space-y-2">
-          <FormLabel>Filtrer par Mission (Générée)</FormLabel>
-          <Select value={selectedMissionId} onValueChange={(val) => {
-            setSelectedMissionId(val);
-            form.setValue('agentIds', []); // Reset agent selection when mission changes
-          }}>
+          <Label className="text-sm font-medium">Filtrer par Mission (Générée)</Label>
+          <Select value={selectedMissionId} onValueChange={setSelectedMissionId}>
             <SelectTrigger>
               <SelectValue placeholder="Toutes les missions planifiées" />
             </SelectTrigger>
@@ -142,14 +136,14 @@ export function AddAllocationForm({ agents, onSuccess }: { agents: Agent[], onSu
               ))}
             </SelectContent>
           </Select>
-          <FormDescription>
-            Sélectionnez une mission pour voir uniquement les agents qui y sont désignés.
-          </FormDescription>
+          <p className="text-[0.8rem] text-muted-foreground">
+            Affiche uniquement les agents désignés pour la mission sélectionnée.
+          </p>
         </div>
 
-        <FormField control={form.control} name="agentIds" render={({ field }) => (
+        <FormField control={form.control} name="agentIds" render={() => (
           <FormItem>
-            <FormLabel>Agents désignés ({selectedAgentIds.length} sélectionnés)</FormLabel>
+            <FormLabel>Agents ({selectedAgentIds.length} sélectionnés)</FormLabel>
             <div className="relative mb-2">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Rechercher un agent..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -184,13 +178,6 @@ export function AddAllocationForm({ agents, onSuccess }: { agents: Agent[], onSu
                   )}
                 </div>
               </ScrollArea>
-            </div>
-            
-            <div className="flex items-center justify-between mt-2">
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={handleSelectAll}>Tout sélectionner</Button>
-                <Button type="button" variant="outline" size="sm" className="text-destructive" onClick={handleClearAll}>Effacer</Button>
-              </div>
             </div>
             <FormMessage />
           </FormItem>
