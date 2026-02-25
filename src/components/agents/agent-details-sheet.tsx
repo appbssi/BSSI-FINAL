@@ -42,7 +42,7 @@ export function AgentDetailsSheet({ agent, missions, isOpen, onOpenChange }: Age
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-2xl sm:max-w-md bg-background/95 backdrop-blur-md shadow-2xl border-primary/50 border-2 max-h-[90vh] p-0 overflow-hidden flex flex-col">
+      <DialogContent className="rounded-[2rem] sm:max-w-md bg-background/95 backdrop-blur-md shadow-2xl border-primary/50 border-2 max-h-[90vh] p-0 overflow-hidden flex flex-col">
         <DialogHeader className="p-6 pb-2">
           <DialogTitle>Détails de l'agent</DialogTitle>
           <DialogDescription>
