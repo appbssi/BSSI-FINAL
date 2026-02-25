@@ -11,6 +11,7 @@ import {
   BookUser,
   Banknote,
   Lock,
+  Sword,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -42,6 +43,7 @@ const navItems: NavItem[] = [
   { href: '/agents', label: 'Agents', icon: Users, roles: ['admin', 'observer'] },
   { href: '/missions', label: 'Missions', icon: Rocket, roles: ['admin', 'observer'] },
   { href: '/gatherings', label: 'Rassemblements', icon: CalendarClock, roles: ['admin', 'observer', 'secretariat'] },
+  { href: '/armurerie', label: 'Armurerie', icon: Sword, roles: ['admin'] },
   { href: '/gav', label: 'GAV', icon: Lock, roles: ['admin', 'secretariat'] },
   { href: '/finance', label: 'Finances', icon: Banknote, roles: ['admin'] },
   { href: '/secretariat', label: 'Secrétariat', icon: BookUser, roles: ['admin', 'secretariat'] },

@@ -47,17 +47,32 @@
       },
       "required": ["description", "amount", "category", "date", "status"]
     },
-    "Allocation": {
+    "Weapon": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Allocation",
+      "title": "Weapon",
       "type": "object",
       "properties": {
-        "agentId": { "type": "string" },
-        "amount": { "type": "number" },
-        "purpose": { "type": "string" },
-        "date": { "type": "string", "format": "date-time" }
+        "serialNumber": { "type": "string" },
+        "model": { "type": "string" },
+        "type": { "type": "string", "enum": ["Arme de poing", "Fusil d'assaut", "Munition", "Accessoire"] },
+        "status": { "type": "string", "enum": ["Fonctionnel", "En maintenance", "Hors service"] },
+        "quantity": { "type": "number" },
+        "lastMaintenanceDate": { "type": "string", "format": "date-time" }
       },
-      "required": ["agentId", "amount", "purpose", "date"]
+      "required": ["serialNumber", "model", "type", "status"]
+    },
+    "WeaponAssignment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WeaponAssignment",
+      "type": "object",
+      "properties": {
+        "weaponId": { "type": "string" },
+        "agentId": { "type": "string" },
+        "assignedAt": { "type": "string", "format": "date-time" },
+        "returnedAt": { "type": ["string", "null"], "format": "date-time" },
+        "notes": { "type": "string" }
+      },
+      "required": ["weaponId", "agentId", "assignedAt"]
     },
     "Detainee": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -80,7 +95,8 @@
     "/agents/{agentId}": { "schema": { "$ref": "#/entities/Agent" } },
     "/missions/{missionId}": { "schema": { "$ref": "#/entities/Mission" } },
     "/expenses/{expenseId}": { "schema": { "$ref": "#/entities/Expense" } },
-    "/allocations/{allocationId}": { "schema": { "$ref": "#/entities/Allocation" } },
+    "/weapons/{weaponId}": { "schema": { "$ref": "#/entities/Weapon" } },
+    "/weaponAssignments/{assignmentId}": { "schema": { "$ref": "#/entities/WeaponAssignment" } },
     "/detainees/{detaineeId}": { "schema": { "$ref": "#/entities/Detainee" } }
   }
 }

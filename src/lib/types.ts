@@ -33,6 +33,28 @@ export type Mission = {
   assignedAgentIds: string[];
 };
 
+export type WeaponType = 'Arme de poing' | "Fusil d'assaut" | 'Munition' | 'Accessoire';
+export type WeaponStatus = 'Fonctionnel' | 'En maintenance' | 'Hors service';
+
+export type Weapon = {
+  id: string;
+  serialNumber: string;
+  model: string;
+  type: WeaponType;
+  status: WeaponStatus;
+  quantity: number;
+  lastMaintenanceDate?: Timestamp;
+};
+
+export type WeaponAssignment = {
+  id: string;
+  weaponId: string;
+  agentId: string;
+  assignedAt: Timestamp;
+  returnedAt: Timestamp | null;
+  notes?: string;
+};
+
 export type Gathering = {
   id: string;
   name: string;
@@ -66,7 +88,7 @@ export type ActivityLog = {
     id: string;
     description: string;
     timestamp: Timestamp;
-    type: 'Agent' | 'Mission' | 'Rassemblement' | 'Visiteur' | 'Général' | 'GAV';
+    type: 'Agent' | 'Mission' | 'Rassemblement' | 'Visiteur' | 'Général' | 'GAV' | 'Armurerie';
     link?: string;
 }
 
