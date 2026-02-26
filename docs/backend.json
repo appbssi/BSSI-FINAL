@@ -54,7 +54,7 @@
       "properties": {
         "serialNumber": { "type": "string" },
         "model": { "type": "string" },
-        "type": { "type": "string", "enum": ["Arme de poing", "Fusil d'assaut", "Munition", "Accessoire", "Casque", "Gillet Par balle"] },
+        "type": { "type": "string", "enum": ["Arme de poing", "Fusil d'assaut", "Munition", "Accessoire", "Casque", "Gilets par balle"] },
         "status": { "type": "string", "enum": ["Fonctionnel", "En maintenance", "Hors service"] },
         "quantity": { "type": "number" },
         "lastMaintenanceDate": { "type": "string", "format": "date-time" }
