@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -18,11 +17,22 @@ import {
   AlertTriangle, 
   ArrowLeftRight,
   FileText,
-  Loader2
+  Loader2,
+  Trash2
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy, doc, updateDoc, Timestamp, addDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, Timestamp, deleteDoc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import type { Weapon, WeaponAssignment, Agent, Mission } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -49,6 +59,8 @@ function ArmurerieContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddWeaponOpen, setAddWeaponOpen] = useState(false);
   const [isAssignOpen, setAssignOpen] = useState(false);
+  const [weaponToDelete, setWeaponToDelete] = useState<Weapon | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const weaponsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'weapons') : null), [firestore]);
   const assignmentsQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'weaponAssignments'), orderBy('assignedAt', 'desc')) : null), [firestore]);
@@ -106,6 +118,35 @@ function ArmurerieContent() {
       toast({ title: 'Statut mis à jour', description: `L'équipement est maintenant marqué comme : ${newStatus}` });
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de mettre à jour le statut." });
+    }
+  };
+
+  const handleDeleteWeapon = async () => {
+    if (!firestore || !weaponToDelete) return;
+    
+    // Vérifier si le matériel est actuellement assigné
+    const activeAssignments = assignments?.filter(a => a.weaponId === weaponToDelete.id && !a.returnedAt) || [];
+    if (activeAssignments.length > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Action impossible',
+        description: 'Ce matériel est actuellement assigné à un agent. Veuillez enregistrer le retour avant de le supprimer.'
+      });
+      setWeaponToDelete(null);
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const weaponRef = doc(firestore, 'weapons', weaponToDelete.id);
+      await deleteDoc(weaponRef);
+      logActivity(firestore, `Matériel retiré de l'inventaire : ${weaponToDelete.model} (${weaponToDelete.serialNumber})`, 'Armurerie', '/armurerie');
+      toast({ title: 'Matériel supprimé' });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de supprimer le matériel." });
+    } finally {
+      setIsDeleting(false);
+      setWeaponToDelete(null);
     }
   };
 
@@ -255,10 +296,15 @@ function ArmurerieContent() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" onClick={() => handleReportIssue(w)}>
-                            <AlertTriangle className={cn("h-4 w-4 mr-2", w.status === 'En maintenance' ? "text-green-600" : "text-orange-500")} />
-                            {w.status === 'En maintenance' ? 'Remettre en service' : 'Signaler Panne'}
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => handleReportIssue(w)}>
+                              <AlertTriangle className={cn("h-4 w-4 mr-2", w.status === 'En maintenance' ? "text-green-600" : "text-orange-500")} />
+                              {w.status === 'En maintenance' ? 'Remettre en service' : 'Signaler Panne'}
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => setWeaponToDelete(w)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -345,6 +391,26 @@ function ArmurerieContent() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {weaponToDelete && (
+        <AlertDialog open={!!weaponToDelete} onOpenChange={(open) => !open && setWeaponToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+              <AlertDialogDescription>
+                Êtes-vous sûr de vouloir retirer le matériel <span className="font-semibold">{weaponToDelete.model} ({weaponToDelete.serialNumber})</span> de l'inventaire ? Cette action est irréversible.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteWeapon} className="bg-destructive hover:bg-destructive/90" disabled={isDeleting}>
+                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Supprimer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
