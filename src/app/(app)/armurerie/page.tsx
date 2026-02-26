@@ -19,7 +19,8 @@ import {
   ArrowLeftRight,
   FileText,
   Loader2,
-  Trash2
+  Trash2,
+  RotateCcw
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -41,7 +42,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy, doc, updateDoc, Timestamp, deleteDoc, increment } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, Timestamp, deleteDoc, increment, writeBatch } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import type { Weapon, WeaponAssignment, Agent, Mission } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -71,6 +72,7 @@ function ArmurerieContent() {
   const [isAssignOpen, setAssignOpen] = useState(false);
   const [weaponToDelete, setWeaponToDelete] = useState<Weapon | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isClearHistoryOpen, setClearHistoryOpen] = useState(false);
   
   const [assignmentToReturn, setAssignmentToReturn] = useState<WeaponAssignment | null>(null);
   const [returnedAmmunition, setReturnedAmmunition] = useState<number>(0);
@@ -123,7 +125,6 @@ function ArmurerieContent() {
       const weapon = weaponsById[assignmentToReturn.weaponId];
       const agent = agentsById[assignmentToReturn.agentId];
       
-      // Utiliser munitionLotId pour réincrémenter le stock si applicable
       const lotId = assignmentToReturn.munitionLotId || (weapon?.type === 'Munition' ? weapon.id : null);
       
       if (lotId) {
@@ -183,6 +184,25 @@ function ArmurerieContent() {
     } finally {
       setIsDeleting(false);
       setWeaponToDelete(null);
+    }
+  };
+
+  const handleClearHistory = async () => {
+    if (!firestore || !assignments) return;
+    setIsDeleting(true);
+    try {
+      const batch = writeBatch(firestore);
+      assignments.forEach((a) => {
+        batch.delete(doc(firestore, 'weaponAssignments', a.id));
+      });
+      await batch.commit();
+      toast({ title: 'Historique réinitialisé', description: "Toutes les archives d'affectation ont été supprimées." });
+      logActivity(firestore, `L'historique de l'armurerie a été réinitialisé.`, 'Armurerie', '/armurerie');
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de réinitialiser l'historique." });
+    } finally {
+      setIsDeleting(false);
+      setClearHistoryOpen(false);
     }
   };
 
@@ -403,8 +423,15 @@ function ArmurerieContent() {
         <TabsContent value="history">
           <Card>
             <CardHeader>
-              <CardTitle>Historique complet</CardTitle>
-              <CardDescription>Registre de tous les mouvements de matériel.</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Historique complet</CardTitle>
+                  <CardDescription>Registre de tous les mouvements de matériel.</CardDescription>
+                </div>
+                <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => setClearHistoryOpen(true)}>
+                  <RotateCcw className="h-4 w-4 mr-2" /> Réinitialiser l'historique
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <Table>
@@ -418,29 +445,35 @@ function ArmurerieContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {assignments?.map((a) => (
-                    <TableRow key={a.id}>
-                      <TableCell>{a.assignedAt.toDate().toLocaleString('fr-FR')}</TableCell>
-                      <TableCell>
-                        {a.returnedAt ? a.returnedAt.toDate().toLocaleString('fr-FR') : <Badge variant="outline">Non retourné</Badge>}
-                      </TableCell>
-                      <TableCell>{agentsById[a.agentId]?.fullName || '...'}</TableCell>
-                      <TableCell>{weaponsById[a.weaponId]?.model || '...'}</TableCell>
-                      <TableCell>
-                        <div className="text-xs text-muted-foreground">
-                          {a.magazineCount > 0 && <span>{a.magazineCount} ch. </span>}
-                          {a.ammunitionCount > 0 && (
-                            <span>
-                              {a.ammunitionCount} mun.
-                              {a.returnedAt && a.returnedAmmunitionCount !== undefined && (
-                                <span className="text-primary font-bold"> (Retour: {a.returnedAmmunitionCount})</span>
-                              )}
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {assignmentsLoading ? (
+                    <TableRow><TableCell colSpan={5} className="text-center">Chargement...</TableCell></TableRow>
+                  ) : assignments?.length ? (
+                    assignments.map((a) => (
+                      <TableRow key={a.id}>
+                        <TableCell>{a.assignedAt.toDate().toLocaleString('fr-FR')}</TableCell>
+                        <TableCell>
+                          {a.returnedAt ? a.returnedAt.toDate().toLocaleString('fr-FR') : <Badge variant="outline">Non retourné</Badge>}
+                        </TableCell>
+                        <TableCell>{agentsById[a.agentId]?.fullName || '...'}</TableCell>
+                        <TableCell>{weaponsById[a.weaponId]?.model || '...'}</TableCell>
+                        <TableCell>
+                          <div className="text-xs text-muted-foreground">
+                            {a.magazineCount > 0 && <span>{a.magazineCount} ch. </span>}
+                            {a.ammunitionCount > 0 && (
+                              <span>
+                                {a.ammunitionCount} mun.
+                                {a.returnedAt && a.returnedAmmunitionCount !== undefined && (
+                                  <span className="text-primary font-bold"> (Retour: {a.returnedAmmunitionCount})</span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Aucun historique disponible.</TableCell></TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -448,7 +481,6 @@ function ArmurerieContent() {
         </TabsContent>
       </Tabs>
 
-      {/* Dialog pour enregistrer le retour avec munitions */}
       <Dialog open={!!assignmentToReturn} onOpenChange={(open) => !open && setAssignmentToReturn(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -504,25 +536,41 @@ function ArmurerieContent() {
         </DialogContent>
       </Dialog>
 
-      {weaponToDelete && (
-        <AlertDialog open={!!weaponToDelete} onOpenChange={(open) => !open && setWeaponToDelete(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-              <AlertDialogDescription>
-                Êtes-vous sûr de vouloir retirer le matériel <span className="font-semibold">{weaponToDelete.model} ({weaponToDelete.serialNumber})</span> de l'inventaire ? Cette action est irréversible.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Annuler</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteWeapon} className="bg-destructive hover:bg-destructive/90" disabled={isDeleting}>
-                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Supprimer
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+      <AlertDialog open={!!weaponToDelete} onOpenChange={(open) => !open && setWeaponToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir retirer le matériel <span className="font-semibold">{weaponToDelete?.model} ({weaponToDelete?.serialNumber})</span> de l'inventaire ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteWeapon} className="bg-destructive hover:bg-destructive/90" disabled={isDeleting}>
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isClearHistoryOpen} onOpenChange={setClearHistoryOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Réinitialiser l'historique ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action supprimera **définitivement** toutes les archives d'attribution et de retour de l'armurerie. L'inventaire actuel ne sera pas affecté.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearHistory} className="bg-destructive hover:bg-destructive/90" disabled={isDeleting}>
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirmer la réinitialisation
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
