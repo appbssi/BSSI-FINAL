@@ -15,10 +15,19 @@ import { Loader2 } from 'lucide-react';
 import { logActivity } from '@/lib/activity-logger';
 
 const weaponSchema = z.object({
-  serialNumber: z.string().min(3, 'N° Série requis'),
+  serialNumber: z.string().optional(),
   model: z.string().min(2, 'Modèle requis'),
   type: z.enum(['Arme de poing', "Fusil d'assaut", 'Munition', 'Accessoire', 'Casque', 'Gilets par balle']),
   quantity: z.coerce.number().min(0),
+}).refine((data) => {
+  // Le numéro de série est requis pour les armes et accessoires, mais pas pour les consommables/protection
+  if (!['Munition', 'Casque', 'Gilets par balle'].includes(data.type)) {
+    return !!data.serialNumber && data.serialNumber.length >= 3;
+  }
+  return true;
+}, {
+  message: 'N° Série requis',
+  path: ['serialNumber'],
 });
 
 export function AddWeaponForm({ onSuccess }: { onSuccess: () => void }) {
@@ -30,17 +39,26 @@ export function AddWeaponForm({ onSuccess }: { onSuccess: () => void }) {
     defaultValues: { serialNumber: '', model: '', type: 'Arme de poing', quantity: 1 },
   });
 
+  const selectedType = form.watch('type');
+  const showSerialNumber = !['Munition', 'Casque', 'Gilets par balle'].includes(selectedType);
+
   const onSubmit = async (values: z.infer<typeof weaponSchema>) => {
     if (!firestore) return;
     
+    // Si le numéro de série est masqué, on génère un identifiant de lot interne
+    const finalSerialNumber = showSerialNumber 
+      ? (values.serialNumber || '') 
+      : `LOT-${values.type.toUpperCase().replace(/ /g, '_')}-${Math.floor(Math.random() * 10000)}`;
+
     const weaponData = { 
       ...values,
+      serialNumber: finalSerialNumber,
       status: 'Fonctionnel',
     };
     
     try {
       await addDoc(collection(firestore, 'weapons'), weaponData);
-      logActivity(firestore, `Nouvel équipement ajouté : ${values.model} (${values.serialNumber})`, 'Armurerie', '/armurerie');
+      logActivity(firestore, `Nouvel équipement ajouté : ${values.model} (${finalSerialNumber})`, 'Armurerie', '/armurerie');
       toast({ title: 'Équipement enregistré' });
       onSuccess();
     } catch (error) {
@@ -51,33 +69,49 @@ export function AddWeaponForm({ onSuccess }: { onSuccess: () => void }) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-        <FormField control={form.control} name="serialNumber" render={({ field }) => (
-          <FormItem><FormLabel>Numéro de Série / Lot</FormLabel><FormControl><Input placeholder="Ex: WPN-2024-001" {...field} /></FormControl><FormMessage /></FormItem>
+        <FormField control={form.control} name="type" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Type d'équipement</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+              <SelectContent>
+                <SelectItem value="Arme de poing">Arme de poing</SelectItem>
+                <SelectItem value="Fusil d'assaut">Fusil d'assaut</SelectItem>
+                <SelectItem value="Munition">Munition</SelectItem>
+                <SelectItem value="Accessoire">Accessoire</SelectItem>
+                <SelectItem value="Casque">Casque</SelectItem>
+                <SelectItem value="Gilets par balle">Gilets par balle</SelectItem>
+              </SelectContent>
+            </Select>
+          </FormItem>
         )} />
-        <FormField control={form.control} name="model" render={({ field }) => (
-          <FormItem><FormLabel>Modèle / Désignation</FormLabel><FormControl><Input placeholder="Ex: AK-47, Sig Sauer P226..." {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <div className="grid grid-cols-2 gap-4">
-          <FormField control={form.control} name="type" render={({ field }) => (
+
+        {showSerialNumber && (
+          <FormField control={form.control} name="serialNumber" render={({ field }) => (
             <FormItem>
-              <FormLabel>Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                <SelectContent>
-                  <SelectItem value="Arme de poing">Arme de poing</SelectItem>
-                  <SelectItem value="Fusil d'assaut">Fusil d'assaut</SelectItem>
-                  <SelectItem value="Munition">Munition</SelectItem>
-                  <SelectItem value="Accessoire">Accessoire</SelectItem>
-                  <SelectItem value="Casque">Casque</SelectItem>
-                  <SelectItem value="Gilets par balle">Gilets par balle</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormLabel>Numéro de Série</FormLabel>
+              <FormControl><Input placeholder="Ex: WPN-2024-001" {...field} /></FormControl>
+              <FormMessage />
             </FormItem>
           )} />
-          <FormField control={form.control} name="quantity" render={({ field }) => (
-            <FormItem><FormLabel>Quantité initiale</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-          )} />
-        </div>
+        )}
+
+        <FormField control={form.control} name="model" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Modèle / Désignation</FormLabel>
+            <FormControl><Input placeholder="Ex: AK-47, Sig Sauer P226..." {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        
+        <FormField control={form.control} name="quantity" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Quantité {showSerialNumber ? 'initiale' : 'en stock'}</FormLabel>
+            <FormControl><Input type="number" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Enregistrer le matériel
