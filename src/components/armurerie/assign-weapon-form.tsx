@@ -42,17 +42,20 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
     defaultValues: { weaponId: '', agentId: '', notes: '' },
   });
 
-  const plannedMissions = useMemo(() => {
+  const activeMissions = useMemo(() => {
     if (!missions) return [];
     const now = new Date();
-    return missions.filter(m => getDisplayStatus(m, now) === 'Planification');
+    return missions.filter(m => {
+      const status = getDisplayStatus(m, now);
+      return status === 'Planification' || status === 'En cours';
+    });
   }, [missions]);
 
   const filteredAgents = useMemo(() => {
     let list = agents;
     
     if (selectedMissionId !== 'all') {
-      const mission = plannedMissions.find(m => m.id === selectedMissionId);
+      const mission = activeMissions.find(m => m.id === selectedMissionId);
       if (mission) {
         list = agents.filter(a => mission.assignedAgentIds.includes(a.id));
       }
@@ -66,7 +69,7 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
     }
 
     return list.sort((a, b) => a.fullName.localeCompare(b.fullName));
-  }, [agents, selectedMissionId, plannedMissions, agentSearch]);
+  }, [agents, selectedMissionId, activeMissions, agentSearch]);
 
   const onSubmit = async (values: z.infer<typeof assignSchema>) => {
     if (!firestore) return;
@@ -96,14 +99,14 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
         
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Filtrer par Mission (Générée)</Label>
+          <Label className="text-sm font-medium">Filtrer par Mission (Actives)</Label>
           <Select value={selectedMissionId} onValueChange={setSelectedMissionId}>
             <SelectTrigger>
-              <SelectValue placeholder="Toutes les missions planifiées" />
+              <SelectValue placeholder="Toutes les missions actives" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Toutes les missions planifiées</SelectItem>
-              {plannedMissions.map(m => (
+              <SelectItem value="all">Toutes les missions actives (Planifiées / En cours)</SelectItem>
+              {activeMissions.map(m => (
                 <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
               ))}
             </SelectContent>

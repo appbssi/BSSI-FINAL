@@ -47,10 +47,13 @@ export function AddAllocationForm({ agents, missions, onSuccess }: AddAllocation
     },
   });
 
-  const plannedMissions = useMemo(() => {
+  const activeMissions = useMemo(() => {
     if (!missions) return [];
     const now = new Date();
-    return missions.filter(m => getDisplayStatus(m, now) === 'Planification');
+    return missions.filter(m => {
+      const status = getDisplayStatus(m, now);
+      return status === 'Planification' || status === 'En cours';
+    });
   }, [missions]);
 
   // Réinitialiser la sélection quand la mission change pour éviter les erreurs
@@ -62,18 +65,18 @@ export function AddAllocationForm({ agents, missions, onSuccess }: AddAllocation
     let list = agents;
     
     if (selectedMissionId !== 'all') {
-      const mission = plannedMissions.find(m => m.id === selectedMissionId);
+      const mission = activeMissions.find(m => m.id === selectedMissionId);
       if (mission) {
         list = agents.filter(a => mission.assignedAgentIds.includes(a.id));
       }
     } else {
-      const allPlannedAgentIds = new Set<string>();
-      plannedMissions.forEach(m => m.assignedAgentIds.forEach(id => allPlannedAgentIds.add(id)));
-      list = agents.filter(a => allPlannedAgentIds.has(a.id));
+      const allActiveAgentIds = new Set<string>();
+      activeMissions.forEach(m => m.assignedAgentIds.forEach(id => allActiveAgentIds.add(id)));
+      list = agents.filter(a => allActiveAgentIds.has(a.id));
     }
 
     return list.filter(a => a.fullName.toLowerCase().includes(search.toLowerCase()));
-  }, [agents, selectedMissionId, plannedMissions, search]);
+  }, [agents, selectedMissionId, activeMissions, search]);
 
   const onSubmit = async (values: z.infer<typeof allocationSchema>) => {
     if (!firestore) return;
@@ -124,14 +127,14 @@ export function AddAllocationForm({ agents, missions, onSuccess }: AddAllocation
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
         
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Filtrer par Mission (Générée)</Label>
+          <Label className="text-sm font-medium">Filtrer par Mission (Actives)</Label>
           <Select value={selectedMissionId} onValueChange={setSelectedMissionId}>
             <SelectTrigger>
-              <SelectValue placeholder="Toutes les missions planifiées" />
+              <SelectValue placeholder="Toutes les missions actives" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Toutes les missions planifiées</SelectItem>
-              {plannedMissions.map(m => (
+              <SelectItem value="all">Toutes les missions actives (Planifiées / En cours)</SelectItem>
+              {activeMissions.map(m => (
                 <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
               ))}
             </SelectContent>
