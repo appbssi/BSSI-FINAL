@@ -56,6 +56,7 @@ export type WeaponAssignment = {
   ammunitionCount?: number;
   magazineCount?: number;
   returnedAmmunitionCount?: number;
+  munitionLotId?: string | null;
 };
 
 export type Gathering = {

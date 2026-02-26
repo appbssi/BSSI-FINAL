@@ -24,6 +24,7 @@ const assignSchema = z.object({
   ammunitionCount: z.coerce.number().min(0, 'Nombre invalide').default(0),
   magazineCount: z.coerce.number().min(0, 'Nombre invalide').default(0),
   notes: z.string().optional(),
+  munitionLotId: z.string().optional(),
 });
 
 interface AssignWeaponFormProps {
@@ -41,23 +42,33 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
   
   const form = useForm<z.infer<typeof assignSchema>>({
     resolver: zodResolver(assignSchema),
-    defaultValues: { weaponId: '', agentId: '', notes: '', ammunitionCount: 0, magazineCount: 0 },
+    defaultValues: { weaponId: '', agentId: '', notes: '', ammunitionCount: 0, magazineCount: 0, munitionLotId: '' },
   });
 
   const selectedWeaponId = form.watch('weaponId');
   const ammunitionCount = form.watch('ammunitionCount');
+  const selectedMunitionLotId = form.watch('munitionLotId');
   
   const selectedWeapon = useMemo(() => 
     weapons.find(w => w.id === selectedWeaponId), 
     [weapons, selectedWeaponId]
   );
 
+  const munitionLots = useMemo(() => 
+    weapons.filter(w => w.type === 'Munition' && w.quantity > 0),
+    [weapons]
+  );
+
+  const activeMunitionLot = useMemo(() => {
+    if (selectedWeapon?.type === 'Munition') return selectedWeapon;
+    return munitionLots.find(l => l.id === selectedMunitionLotId);
+  }, [selectedWeapon, munitionLots, selectedMunitionLotId]);
+
   const isStockInsufficient = useMemo(() => {
-    if (selectedWeapon?.type === 'Munition') {
-      return ammunitionCount > selectedWeapon.quantity;
-    }
-    return false;
-  }, [selectedWeapon, ammunitionCount]);
+    if (ammunitionCount <= 0) return false;
+    if (!activeMunitionLot) return true;
+    return ammunitionCount > activeMunitionLot.quantity;
+  }, [activeMunitionLot, ammunitionCount]);
 
   const activeMissions = useMemo(() => {
     if (!missions) return [];
@@ -96,8 +107,15 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
 
     if (!weapon || !agent) return;
 
+    const lotId = activeMunitionLot?.id;
+
     const assignmentData = { 
-      ...values,
+      weaponId: values.weaponId,
+      agentId: values.agentId,
+      ammunitionCount: values.ammunitionCount,
+      magazineCount: values.magazineCount,
+      notes: values.notes,
+      munitionLotId: lotId || null,
       assignedAt: Timestamp.now(),
       returnedAt: null,
     };
@@ -106,10 +124,10 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
       // 1. Créer l'attribution
       await addDoc(collection(firestore, 'weaponAssignments'), assignmentData);
       
-      // 2. Déduire du stock si c'est de la munition
-      if (weapon.type === 'Munition') {
-        const weaponRef = doc(firestore, 'weapons', weapon.id);
-        await updateDoc(weaponRef, {
+      // 2. Déduire du stock
+      if (lotId && values.ammunitionCount > 0) {
+        const lotRef = doc(firestore, 'weapons', lotId);
+        await updateDoc(lotRef, {
           quantity: increment(-(values.ammunitionCount || 0))
         });
       }
@@ -187,6 +205,25 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
           </FormItem>
         )} />
 
+        {selectedWeapon && selectedWeapon.type !== 'Munition' && (
+          <FormField control={form.control} name="munitionLotId" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Source des munitions (facultatif)</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl><SelectTrigger><SelectValue placeholder="Choisir un lot de munitions" /></SelectTrigger></FormControl>
+                <SelectContent>
+                  <SelectItem value="none">Aucune munition</SelectItem>
+                  {munitionLots.map(l => (
+                    <SelectItem key={l.id} value={l.id}>{l.model} (Stock: {l.quantity})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription className="text-[10px]">Sélectionnez le stock dans lequel prélever les munitions.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )} />
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           <FormField control={form.control} name="magazineCount" render={({ field }) => (
             <FormItem>
@@ -205,18 +242,24 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
                   className={isStockInsufficient ? "border-destructive text-destructive" : ""}
                 />
               </FormControl>
-              {selectedWeapon?.type === 'Munition' ? (
+              {activeMunitionLot ? (
                 <div className="mt-1">
                   <p className={`flex items-center gap-1 text-[10px] ${isStockInsufficient ? "text-destructive font-bold animate-pulse" : "text-primary"}`}>
                     {isStockInsufficient ? <AlertCircle className="h-3 w-3" /> : <Info className="h-3 w-3" />}
-                    Stock disponible : {selectedWeapon.quantity} unités
+                    Stock disponible : {activeMunitionLot.quantity} unités
                   </p>
                   {isStockInsufficient && (
                     <p className="text-[10px] text-destructive mt-0.5">La quantité demandée dépasse le stock disponible.</p>
                   )}
                 </div>
               ) : (
-                <FormDescription className="text-[10px]">Dotation accompagnant l'arme.</FormDescription>
+                <FormDescription className="text-[10px]">
+                  {selectedWeapon?.type !== 'Munition' && ammunitionCount > 0 ? (
+                    <span className="text-destructive font-semibold">Sélectionnez une source de munitions ci-dessus.</span>
+                  ) : (
+                    "Dotation accompagnant l'arme."
+                  )}
+                </FormDescription>
               )}
               <FormMessage />
             </FormItem>

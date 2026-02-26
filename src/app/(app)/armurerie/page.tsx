@@ -123,9 +123,11 @@ function ArmurerieContent() {
       const weapon = weaponsById[assignmentToReturn.weaponId];
       const agent = agentsById[assignmentToReturn.agentId];
       
-      // Si c'était de la munition, on réincrémente le stock mondial
-      if (weapon?.type === 'Munition') {
-        const weaponRef = doc(firestore, 'weapons', weapon.id);
+      // Utiliser munitionLotId pour réincrémenter le stock si applicable
+      const lotId = assignmentToReturn.munitionLotId || (weapon?.type === 'Munition' ? weapon.id : null);
+      
+      if (lotId) {
+        const weaponRef = doc(firestore, 'weapons', lotId);
         await updateDoc(weaponRef, {
           quantity: increment(returnedAmmunition)
         });
