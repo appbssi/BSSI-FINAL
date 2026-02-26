@@ -53,6 +53,8 @@ export type WeaponAssignment = {
   assignedAt: Timestamp;
   returnedAt: Timestamp | null;
   notes?: string;
+  ammunitionCount?: number;
+  magazineCount?: number;
 };
 
 export type Gathering = {

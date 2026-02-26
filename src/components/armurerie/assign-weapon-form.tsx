@@ -21,6 +21,8 @@ import { Label } from '@/components/ui/label';
 const assignSchema = z.object({
   weaponId: z.string().min(1, 'Sélectionnez un équipement'),
   agentId: z.string().min(1, 'Sélectionnez un agent'),
+  ammunitionCount: z.coerce.number().min(0, 'Nombre invalide').optional(),
+  magazineCount: z.coerce.number().min(0, 'Nombre invalide').optional(),
   notes: z.string().optional(),
 });
 
@@ -39,7 +41,7 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
   
   const form = useForm<z.infer<typeof assignSchema>>({
     resolver: zodResolver(assignSchema),
-    defaultValues: { weaponId: '', agentId: '', notes: '' },
+    defaultValues: { weaponId: '', agentId: '', notes: '', ammunitionCount: 0, magazineCount: 0 },
   });
 
   const activeMissions = useMemo(() => {
@@ -155,6 +157,23 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
             <FormMessage />
           </FormItem>
         )} />
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField control={form.control} name="magazineCount" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nbre de chargeurs</FormLabel>
+              <FormControl><Input type="number" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="ammunitionCount" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nbre de munitions</FormLabel>
+              <FormControl><Input type="number" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
 
         <FormField control={form.control} name="notes" render={({ field }) => (
           <FormItem><FormLabel>Notes (facultatif)</FormLabel><FormControl><Input placeholder="Ex: Dotation mission spéciale..." {...field} /></FormControl><FormMessage /></FormItem>

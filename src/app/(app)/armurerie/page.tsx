@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -124,7 +125,6 @@ function ArmurerieContent() {
   const handleDeleteWeapon = async () => {
     if (!firestore || !weaponToDelete) return;
     
-    // Vérifier si le matériel est actuellement assigné
     const activeAssignments = assignments?.filter(a => a.weaponId === weaponToDelete.id && !a.returnedAt) || [];
     if (activeAssignments.length > 0) {
       toast({
@@ -166,7 +166,6 @@ function ArmurerieContent() {
 
     addHeader();
 
-    // Section 1: Équipements en maintenance
     const maintenanceWeapons = weapons?.filter(w => w.status === 'En maintenance') || [];
     doc.setFontSize(12);
     doc.text("1. Équipements nécessitant une intervention / En maintenance", 14, 45);
@@ -182,16 +181,17 @@ function ArmurerieContent() {
       ]),
     });
 
-    // Section 2: Affectations en cours
     const activeAssignments = assignments?.filter(a => !a.returnedAt) || [];
     doc.text("2. Affectations en cours (Matériel sorti)", 14, (doc as any).lastAutoTable.finalY + 15);
     
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 20,
-      head: [['Agent', 'Matériel', 'Sorti le']],
+      head: [['Agent', 'Matériel', 'Munitions', 'Chargeurs', 'Sorti le']],
       body: activeAssignments.map(a => [
         agentsById[a.agentId]?.fullName || 'Inconnu',
         weaponsById[a.weaponId]?.model || 'Inconnu',
+        a.ammunitionCount || 0,
+        a.magazineCount || 0,
         a.assignedAt.toDate().toLocaleString('fr-FR')
       ]),
     });
@@ -329,8 +329,8 @@ function ArmurerieContent() {
                   <TableRow>
                     <TableHead>Agent</TableHead>
                     <TableHead>Matériel</TableHead>
+                    <TableHead>Dotation</TableHead>
                     <TableHead>Date Sortie</TableHead>
-                    <TableHead>Notes</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -342,8 +342,14 @@ function ArmurerieContent() {
                       <TableRow key={a.id}>
                         <TableCell className="font-medium">{agentsById[a.agentId]?.fullName || '...'}</TableCell>
                         <TableCell>{weaponsById[a.weaponId]?.model || '...'} ({weaponsById[a.weaponId]?.serialNumber})</TableCell>
+                        <TableCell>
+                          <div className="text-xs">
+                            {a.magazineCount > 0 && <span className="block">{a.magazineCount} chargeur(s)</span>}
+                            {a.ammunitionCount > 0 && <span className="block">{a.ammunitionCount} munition(s)</span>}
+                            {!(a.magazineCount > 0 || a.ammunitionCount > 0) && '-'}
+                          </div>
+                        </TableCell>
                         <TableCell>{a.assignedAt.toDate().toLocaleString('fr-FR')}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground italic">{a.notes || '-'}</TableCell>
                         <TableCell className="text-right">
                           <Button size="sm" variant="outline" onClick={() => handleReturnWeapon(a)}>Enregistrer Retour</Button>
                         </TableCell>
@@ -372,6 +378,7 @@ function ArmurerieContent() {
                     <TableHead>Date Retour</TableHead>
                     <TableHead>Agent</TableHead>
                     <TableHead>Matériel</TableHead>
+                    <TableHead>Dotation</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -383,6 +390,12 @@ function ArmurerieContent() {
                       </TableCell>
                       <TableCell>{agentsById[a.agentId]?.fullName || '...'}</TableCell>
                       <TableCell>{weaponsById[a.weaponId]?.model || '...'}</TableCell>
+                      <TableCell>
+                        <div className="text-xs text-muted-foreground">
+                          {a.magazineCount > 0 && <span>{a.magazineCount} ch. </span>}
+                          {a.ammunitionCount > 0 && <span>{a.ammunitionCount} mun.</span>}
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
