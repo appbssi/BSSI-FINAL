@@ -4,14 +4,14 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, Timestamp, doc, updateDoc, increment } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2, Search, Info } from 'lucide-react';
 import type { Weapon, Agent, Mission } from '@/lib/types';
 import { logActivity } from '@/lib/activity-logger';
 import { useState, useMemo } from 'react';
@@ -43,6 +43,9 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
     resolver: zodResolver(assignSchema),
     defaultValues: { weaponId: '', agentId: '', notes: '', ammunitionCount: 0, magazineCount: 0 },
   });
+
+  const selectedWeaponId = form.watch('weaponId');
+  const selectedWeapon = useMemo(() => weapons.find(w => w.id === selectedWeaponId), [weapons, selectedWeaponId]);
 
   const activeMissions = useMemo(() => {
     if (!missions) return [];
@@ -196,7 +199,19 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
           <FormField control={form.control} name="ammunitionCount" render={({ field }) => (
             <FormItem>
               <FormLabel>Nbre de munitions</FormLabel>
-              <FormControl><Input type="number" {...field} /></FormControl>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  {...field} 
+                  max={selectedWeapon?.type === 'Munition' ? selectedWeapon.quantity : undefined}
+                />
+              </FormControl>
+              {selectedWeapon?.type === 'Munition' && (
+                <FormDescription className="flex items-center gap-1 text-[10px] text-primary">
+                  <Info className="h-3 w-3" />
+                  Stock disponible : {selectedWeapon.quantity} unités
+                </FormDescription>
+              )}
               <FormMessage />
             </FormItem>
           )} />
