@@ -11,18 +11,18 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, Timestamp, doc, updateDoc, increment } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
-import { Loader2, Search, Info } from 'lucide-react';
+import { Loader2, Search, Info, AlertCircle } from 'lucide-react';
 import type { Weapon, Agent, Mission } from '@/lib/types';
 import { logActivity } from '@/lib/activity-logger';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { getDisplayStatus } from '@/lib/missions';
 import { Label } from '@/components/ui/label';
 
 const assignSchema = z.object({
   weaponId: z.string().min(1, 'Sélectionnez un équipement'),
   agentId: z.string().min(1, 'Sélectionnez un agent'),
-  ammunitionCount: z.coerce.number().min(0, 'Nombre invalide').optional(),
-  magazineCount: z.coerce.number().min(0, 'Nombre invalide').optional(),
+  ammunitionCount: z.coerce.number().min(0, 'Nombre invalide').default(0),
+  magazineCount: z.coerce.number().min(0, 'Nombre invalide').default(0),
   notes: z.string().optional(),
 });
 
@@ -45,7 +45,19 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
   });
 
   const selectedWeaponId = form.watch('weaponId');
-  const selectedWeapon = useMemo(() => weapons.find(w => w.id === selectedWeaponId), [weapons, selectedWeaponId]);
+  const ammunitionCount = form.watch('ammunitionCount');
+  
+  const selectedWeapon = useMemo(() => 
+    weapons.find(w => w.id === selectedWeaponId), 
+    [weapons, selectedWeaponId]
+  );
+
+  const isStockInsufficient = useMemo(() => {
+    if (selectedWeapon?.type === 'Munition') {
+      return ammunitionCount > selectedWeapon.quantity;
+    }
+    return false;
+  }, [selectedWeapon, ammunitionCount]);
 
   const activeMissions = useMemo(() => {
     if (!missions) return [];
@@ -77,26 +89,13 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
   }, [agents, selectedMissionId, activeMissions, agentSearch]);
 
   const onSubmit = async (values: z.infer<typeof assignSchema>) => {
-    if (!firestore) return;
+    if (!firestore || isStockInsufficient) return;
     
     const weapon = weapons.find(w => w.id === values.weaponId);
     const agent = agents.find(a => a.id === values.agentId);
 
     if (!weapon || !agent) return;
 
-    // Gestion du stock pour les munitions
-    if (weapon.type === 'Munition') {
-      const needed = values.ammunitionCount || 0;
-      if (needed > weapon.quantity) {
-        toast({
-          variant: 'destructive',
-          title: 'Stock insuffisant',
-          description: `Il ne reste que ${weapon.quantity} unités de cette munition.`
-        });
-        return;
-      }
-    }
-    
     const assignmentData = { 
       ...values,
       assignedAt: Timestamp.now(),
@@ -115,7 +114,7 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
         });
       }
       
-      logActivity(firestore, `Attribution : ${weapon.model} assigné à ${agent.fullName}`, 'Armurerie', '/armurerie');
+      logActivity(firestore, `Attribution : ${weapon.model} assigné à ${agent.fullName} (${values.ammunitionCount} mun.)`, 'Armurerie', '/armurerie');
       toast({ title: 'Attribution réussie' });
       onSuccess();
     } catch (error) {
@@ -203,14 +202,21 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
                 <Input 
                   type="number" 
                   {...field} 
-                  max={selectedWeapon?.type === 'Munition' ? selectedWeapon.quantity : undefined}
+                  className={isStockInsufficient ? "border-destructive text-destructive" : ""}
                 />
               </FormControl>
-              {selectedWeapon?.type === 'Munition' && (
-                <FormDescription className="flex items-center gap-1 text-[10px] text-primary">
-                  <Info className="h-3 w-3" />
-                  Stock disponible : {selectedWeapon.quantity} unités
-                </FormDescription>
+              {selectedWeapon?.type === 'Munition' ? (
+                <div className="mt-1">
+                  <p className={`flex items-center gap-1 text-[10px] ${isStockInsufficient ? "text-destructive font-bold animate-pulse" : "text-primary"}`}>
+                    {isStockInsufficient ? <AlertCircle className="h-3 w-3" /> : <Info className="h-3 w-3" />}
+                    Stock disponible : {selectedWeapon.quantity} unités
+                  </p>
+                  {isStockInsufficient && (
+                    <p className="text-[10px] text-destructive mt-0.5">La quantité demandée dépasse le stock disponible.</p>
+                  )}
+                </div>
+              ) : (
+                <FormDescription className="text-[10px]">Dotation accompagnant l'arme.</FormDescription>
               )}
               <FormMessage />
             </FormItem>
@@ -221,9 +227,13 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
           <FormItem><FormLabel>Notes (facultatif)</FormLabel><FormControl><Input placeholder="Ex: Dotation mission spéciale..." {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
-        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={form.formState.isSubmitting || isStockInsufficient}
+        >
           {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Confirmer l'attribution
+          {isStockInsufficient ? 'Stock Insuffisant' : "Confirmer l'attribution"}
         </Button>
       </form>
     </Form>
