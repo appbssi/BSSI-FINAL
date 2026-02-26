@@ -55,6 +55,7 @@ export type WeaponAssignment = {
   notes?: string;
   ammunitionCount?: number;
   magazineCount?: number;
+  returnedAmmunitionCount?: number;
 };
 
 export type Gathering = {

@@ -33,7 +33,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy, doc, updateDoc, Timestamp, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, Timestamp, deleteDoc, increment } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import type { Weapon, WeaponAssignment, Agent, Mission } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -44,6 +44,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useLogo } from '@/context/logo-context';
 import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
 
 export default function ArmureriePage() {
   return (
@@ -62,6 +63,10 @@ function ArmurerieContent() {
   const [isAssignOpen, setAssignOpen] = useState(false);
   const [weaponToDelete, setWeaponToDelete] = useState<Weapon | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const [assignmentToReturn, setAssignmentToReturn] = useState<WeaponAssignment | null>(null);
+  const [returnedAmmunition, setReturnedAmmunition] = useState<number>(0);
+  const [isReturning, setIsReturning] = useState(false);
 
   const weaponsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'weapons') : null), [firestore]);
   const assignmentsQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'weaponAssignments'), orderBy('assignedAt', 'desc')) : null), [firestore]);
@@ -91,19 +96,40 @@ function ArmurerieContent() {
     );
   }, [weapons, searchQuery]);
 
-  const handleReturnWeapon = async (assignment: WeaponAssignment) => {
-    if (!firestore) return;
+  const handleOpenReturnDialog = (assignment: WeaponAssignment) => {
+    setAssignmentToReturn(assignment);
+    setReturnedAmmunition(assignment.ammunitionCount || 0);
+  };
+
+  const handleConfirmReturn = async () => {
+    if (!firestore || !assignmentToReturn) return;
+    
+    setIsReturning(true);
     try {
-      const assignmentRef = doc(firestore, 'weaponAssignments', assignment.id);
-      await updateDoc(assignmentRef, { returnedAt: Timestamp.now() });
+      const assignmentRef = doc(firestore, 'weaponAssignments', assignmentToReturn.id);
+      await updateDoc(assignmentRef, { 
+        returnedAt: Timestamp.now(),
+        returnedAmmunitionCount: returnedAmmunition
+      });
       
-      const weapon = weaponsById[assignment.weaponId];
-      const agent = agentsById[assignment.agentId];
+      const weapon = weaponsById[assignmentToReturn.weaponId];
+      const agent = agentsById[assignmentToReturn.agentId];
       
-      logActivity(firestore, `Retour de matériel : ${weapon?.model} par ${agent?.fullName}`, 'Armurerie', '/armurerie');
-      toast({ title: 'Retour enregistré', description: 'Le matériel a été marqué comme retourné.' });
+      // Si c'était de la munition, on réincrémente le stock mondial
+      if (weapon?.type === 'Munition') {
+        const weaponRef = doc(firestore, 'weapons', weapon.id);
+        await updateDoc(weaponRef, {
+          quantity: increment(returnedAmmunition)
+        });
+      }
+      
+      logActivity(firestore, `Retour de matériel : ${weapon?.model} par ${agent?.fullName} (${returnedAmmunition} munitions)`, 'Armurerie', '/armurerie');
+      toast({ title: 'Retour enregistré', description: 'Le matériel a été marqué comme retourné et le stock a été mis à jour.' });
+      setAssignmentToReturn(null);
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erreur', description: "Impossible d'enregistrer le retour." });
+    } finally {
+      setIsReturning(false);
     }
   };
 
@@ -351,7 +377,7 @@ function ArmurerieContent() {
                         </TableCell>
                         <TableCell>{a.assignedAt.toDate().toLocaleString('fr-FR')}</TableCell>
                         <TableCell className="text-right">
-                          <Button size="sm" variant="outline" onClick={() => handleReturnWeapon(a)}>Enregistrer Retour</Button>
+                          <Button size="sm" variant="outline" onClick={() => handleOpenReturnDialog(a)}>Enregistrer Retour</Button>
                         </TableCell>
                       </TableRow>
                     ))
@@ -378,7 +404,7 @@ function ArmurerieContent() {
                     <TableHead>Date Retour</TableHead>
                     <TableHead>Agent</TableHead>
                     <TableHead>Matériel</TableHead>
-                    <TableHead>Dotation</TableHead>
+                    <TableHead>Dotation (Retour)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -393,7 +419,14 @@ function ArmurerieContent() {
                       <TableCell>
                         <div className="text-xs text-muted-foreground">
                           {a.magazineCount > 0 && <span>{a.magazineCount} ch. </span>}
-                          {a.ammunitionCount > 0 && <span>{a.ammunitionCount} mun.</span>}
+                          {a.ammunitionCount > 0 && (
+                            <span>
+                              {a.ammunitionCount} mun.
+                              {a.returnedAt && a.returnedAmmunitionCount !== undefined && (
+                                <span className="text-primary font-bold"> (Retour: {a.returnedAmmunitionCount})</span>
+                              )}
+                            </span>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -404,6 +437,62 @@ function ArmurerieContent() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog pour enregistrer le retour avec munitions */}
+      <Dialog open={!!assignmentToReturn} onOpenChange={(open) => !open && setAssignmentToReturn(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enregistrer le retour de matériel</DialogTitle>
+            <DialogDescription>
+              Veuillez confirmer le matériel retourné et le nombre de munitions restituées.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-muted-foreground text-xs uppercase">Agent</Label>
+                <p className="font-semibold text-sm">{assignmentToReturn ? agentsById[assignmentToReturn.agentId]?.fullName : '...'}</p>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-muted-foreground text-xs uppercase">Matériel</Label>
+                <p className="font-semibold text-sm">{assignmentToReturn ? weaponsById[assignmentToReturn.weaponId]?.model : '...'}</p>
+              </div>
+            </div>
+
+            {assignmentToReturn && assignmentToReturn.ammunitionCount > 0 && (
+              <div className="space-y-3 bg-muted/50 p-4 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <Label>Munitions reçues</Label>
+                  <Badge variant="outline">{assignmentToReturn.ammunitionCount}</Badge>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="returned-ammunition">Munitions retournées</Label>
+                  <Input 
+                    id="returned-ammunition"
+                    type="number"
+                    value={returnedAmmunition}
+                    onChange={(e) => setReturnedAmmunition(Number(e.target.value))}
+                    max={assignmentToReturn.ammunitionCount}
+                    min={0}
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Note : Si le nombre est inférieur à la dotation initiale, le stock global sera mis à jour avec cette valeur.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignmentToReturn(null)}>Annuler</Button>
+            <Button onClick={handleConfirmReturn} disabled={isReturning}>
+              {isReturning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirmer le retour
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {weaponToDelete && (
         <AlertDialog open={!!weaponToDelete} onOpenChange={(open) => !open && setWeaponToDelete(null)}>

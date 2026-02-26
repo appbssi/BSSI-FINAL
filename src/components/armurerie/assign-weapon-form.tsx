@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { addDoc, collection, Timestamp } from 'firebase/firestore';
+import { addDoc, collection, Timestamp, doc, updateDoc, increment } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { Loader2, Search } from 'lucide-react';
 import type { Weapon, Agent, Mission } from '@/lib/types';
@@ -76,6 +76,24 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
   const onSubmit = async (values: z.infer<typeof assignSchema>) => {
     if (!firestore) return;
     
+    const weapon = weapons.find(w => w.id === values.weaponId);
+    const agent = agents.find(a => a.id === values.agentId);
+
+    if (!weapon || !agent) return;
+
+    // Gestion du stock pour les munitions
+    if (weapon.type === 'Munition') {
+      const needed = values.ammunitionCount || 0;
+      if (needed > weapon.quantity) {
+        toast({
+          variant: 'destructive',
+          title: 'Stock insuffisant',
+          description: `Il ne reste que ${weapon.quantity} unités de cette munition.`
+        });
+        return;
+      }
+    }
+    
     const assignmentData = { 
       ...values,
       assignedAt: Timestamp.now(),
@@ -83,12 +101,18 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
     };
     
     try {
+      // 1. Créer l'attribution
       await addDoc(collection(firestore, 'weaponAssignments'), assignmentData);
       
-      const weapon = weapons.find(w => w.id === values.weaponId);
-      const agent = agents.find(a => a.id === values.agentId);
+      // 2. Déduire du stock si c'est de la munition
+      if (weapon.type === 'Munition') {
+        const weaponRef = doc(firestore, 'weapons', weapon.id);
+        await updateDoc(weaponRef, {
+          quantity: increment(-(values.ammunitionCount || 0))
+        });
+      }
       
-      logActivity(firestore, `Attribution : ${weapon?.model} assigné à ${agent?.fullName}`, 'Armurerie', '/armurerie');
+      logActivity(firestore, `Attribution : ${weapon.model} assigné à ${agent.fullName}`, 'Armurerie', '/armurerie');
       toast({ title: 'Attribution réussie' });
       onSuccess();
     } catch (error) {
@@ -150,7 +174,10 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
               <FormControl><SelectTrigger><SelectValue placeholder="Choisir le matériel" /></SelectTrigger></FormControl>
               <SelectContent>
                 {weapons.map(w => (
-                  <SelectItem key={w.id} value={w.id}>{w.model} - {w.serialNumber}</SelectItem>
+                  <SelectItem key={w.id} value={w.id}>
+                    {w.model} - {w.serialNumber} 
+                    {w.type === 'Munition' ? ` (Stock: ${w.quantity})` : ''}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
