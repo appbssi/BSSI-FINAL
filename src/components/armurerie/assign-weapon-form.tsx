@@ -11,9 +11,12 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
-import { Loader2 } from 'lucide-react';
-import type { Weapon, Agent } from '@/lib/types';
+import { Loader2, Search } from 'lucide-react';
+import type { Weapon, Agent, Mission } from '@/lib/types';
 import { logActivity } from '@/lib/activity-logger';
+import { useState, useMemo } from 'react';
+import { getDisplayStatus } from '@/lib/missions';
+import { Label } from '@/components/ui/label';
 
 const assignSchema = z.object({
   weaponId: z.string().min(1, 'Sélectionnez un équipement'),
@@ -24,17 +27,46 @@ const assignSchema = z.object({
 interface AssignWeaponFormProps {
   weapons: Weapon[];
   agents: Agent[];
+  missions: Mission[];
   onSuccess: () => void;
 }
 
-export function AssignWeaponForm({ weapons, agents, onSuccess }: AssignWeaponFormProps) {
+export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: AssignWeaponFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const [selectedMissionId, setSelectedMissionId] = useState<string>('all');
+  const [agentSearch, setAgentSearch] = useState('');
   
   const form = useForm<z.infer<typeof assignSchema>>({
     resolver: zodResolver(assignSchema),
     defaultValues: { weaponId: '', agentId: '', notes: '' },
   });
+
+  const plannedMissions = useMemo(() => {
+    if (!missions) return [];
+    const now = new Date();
+    return missions.filter(m => getDisplayStatus(m, now) === 'Planification');
+  }, [missions]);
+
+  const filteredAgents = useMemo(() => {
+    let list = agents;
+    
+    if (selectedMissionId !== 'all') {
+      const mission = plannedMissions.find(m => m.id === selectedMissionId);
+      if (mission) {
+        list = agents.filter(a => mission.assignedAgentIds.includes(a.id));
+      }
+    }
+
+    if (agentSearch) {
+      list = list.filter(a => 
+        a.fullName.toLowerCase().includes(agentSearch.toLowerCase()) ||
+        a.registrationNumber?.toLowerCase().includes(agentSearch.toLowerCase())
+      );
+    }
+
+    return list.sort((a, b) => a.fullName.localeCompare(b.fullName));
+  }, [agents, selectedMissionId, plannedMissions, agentSearch]);
 
   const onSubmit = async (values: z.infer<typeof assignSchema>) => {
     if (!firestore) return;
@@ -62,15 +94,44 @@ export function AssignWeaponForm({ weapons, agents, onSuccess }: AssignWeaponFor
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+        
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Filtrer par Mission (Générée)</Label>
+          <Select value={selectedMissionId} onValueChange={setSelectedMissionId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Toutes les missions planifiées" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les missions planifiées</SelectItem>
+              {plannedMissions.map(m => (
+                <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <FormField control={form.control} name="agentId" render={({ field }) => (
           <FormItem>
             <FormLabel>Agent</FormLabel>
+            <div className="relative mb-2">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Rechercher un agent..." 
+                className="pl-8" 
+                value={agentSearch} 
+                onChange={(e) => setAgentSearch(e.target.value)} 
+              />
+            </div>
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl><SelectTrigger><SelectValue placeholder="Choisir un agent" /></SelectTrigger></FormControl>
               <SelectContent>
-                {agents.sort((a,b) => a.fullName.localeCompare(b.fullName)).map(a => (
-                  <SelectItem key={a.id} value={a.id}>{a.fullName} ({a.rank})</SelectItem>
-                ))}
+                {filteredAgents.length > 0 ? (
+                  filteredAgents.map(a => (
+                    <SelectItem key={a.id} value={a.id}>{a.fullName} ({a.rank})</SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="none" disabled>Aucun agent trouvé</SelectItem>
+                )}
               </SelectContent>
             </Select>
             <FormMessage />

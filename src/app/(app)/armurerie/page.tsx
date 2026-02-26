@@ -24,7 +24,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy, doc, updateDoc, Timestamp, addDoc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
-import type { Weapon, WeaponAssignment, Agent } from '@/lib/types';
+import type { Weapon, WeaponAssignment, Agent, Mission } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { AddWeaponForm } from '@/components/armurerie/add-weapon-form';
 import { AssignWeaponForm } from '@/components/armurerie/assign-weapon-form';
@@ -32,6 +32,7 @@ import { logActivity } from '@/lib/activity-logger';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useLogo } from '@/context/logo-context';
+import { cn } from '@/lib/utils';
 
 export default function ArmureriePage() {
   return (
@@ -52,10 +53,12 @@ function ArmurerieContent() {
   const weaponsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'weapons') : null), [firestore]);
   const assignmentsQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'weaponAssignments'), orderBy('assignedAt', 'desc')) : null), [firestore]);
   const agentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'agents') : null), [firestore]);
+  const missionsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'missions') : null), [firestore]);
 
   const { data: weapons, isLoading: weaponsLoading } = useCollection<Weapon>(weaponsQuery);
   const { data: assignments, isLoading: assignmentsLoading } = useCollection<WeaponAssignment>(assignmentsQuery);
   const { data: agents } = useCollection<Agent>(agentsQuery);
+  const { data: missions } = useCollection<Mission>(missionsQuery);
 
   const agentsById = useMemo(() => {
     if (!agents) return {};
@@ -188,6 +191,7 @@ function ArmurerieContent() {
               <AssignWeaponForm 
                 weapons={weapons?.filter(w => w.status === 'Fonctionnel' && (w.type !== 'Munition' || w.quantity > 0)) || []} 
                 agents={agents || []} 
+                missions={missions || []}
                 onSuccess={() => setAssignOpen(false)} 
               />
             </DialogContent>
