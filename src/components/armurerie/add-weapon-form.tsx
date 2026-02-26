@@ -17,7 +17,7 @@ import { logActivity } from '@/lib/activity-logger';
 const weaponSchema = z.object({
   serialNumber: z.string().min(3, 'N° Série requis'),
   model: z.string().min(2, 'Modèle requis'),
-  type: z.enum(['Arme de poing', "Fusil d'assaut", 'Munition', 'Accessoire']),
+  type: z.enum(['Arme de poing', "Fusil d'assaut", 'Munition', 'Accessoire', 'Casque', 'Gillet Par balle']),
   quantity: z.coerce.number().min(0),
 });
 
@@ -68,6 +68,8 @@ export function AddWeaponForm({ onSuccess }: { onSuccess: () => void }) {
                   <SelectItem value="Fusil d'assaut">Fusil d'assaut</SelectItem>
                   <SelectItem value="Munition">Munition</SelectItem>
                   <SelectItem value="Accessoire">Accessoire</SelectItem>
+                  <SelectItem value="Casque">Casque</SelectItem>
+                  <SelectItem value="Gillet Par balle">Gillet Par balle</SelectItem>
                 </SelectContent>
               </Select>
             </FormItem>

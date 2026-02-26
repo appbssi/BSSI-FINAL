@@ -33,7 +33,7 @@ export type Mission = {
   assignedAgentIds: string[];
 };
 
-export type WeaponType = 'Arme de poing' | "Fusil d'assaut" | 'Munition' | 'Accessoire';
+export type WeaponType = 'Arme de poing' | "Fusil d'assaut" | 'Munition' | 'Accessoire' | 'Casque' | 'Gillet Par balle';
 export type WeaponStatus = 'Fonctionnel' | 'En maintenance' | 'Hors service';
 
 export type Weapon = {
