@@ -26,16 +26,21 @@ const anomalySchema = z.object({
 interface ReportAnomalyFormProps {
   vehicles: Vehicle[];
   onSuccess: () => void;
+  initialVehicleId?: string;
 }
 
-export function ReportAnomalyForm({ vehicles, onSuccess }: ReportAnomalyFormProps) {
+export function ReportAnomalyForm({ vehicles, onSuccess, initialVehicleId }: ReportAnomalyFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const { role } = useRole();
   
   const form = useForm<z.infer<typeof anomalySchema>>({
     resolver: zodResolver(anomalySchema),
-    defaultValues: { vehicleId: '', description: '', severity: 'Moyenne' },
+    defaultValues: { 
+      vehicleId: initialVehicleId || '', 
+      description: '', 
+      severity: 'Moyenne' 
+    },
   });
 
   const onSubmit = async (values: z.infer<typeof anomalySchema>) => {
@@ -71,7 +76,7 @@ export function ReportAnomalyForm({ vehicles, onSuccess }: ReportAnomalyFormProp
         <FormField control={form.control} name="vehicleId" render={({ field }) => (
           <FormItem>
             <FormLabel>Véhicule concerné</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
               <FormControl><SelectTrigger><SelectValue placeholder="Choisir un véhicule" /></SelectTrigger></FormControl>
               <SelectContent>
                 {vehicles.map(v => (
@@ -99,15 +104,15 @@ export function ReportAnomalyForm({ vehicles, onSuccess }: ReportAnomalyFormProp
 
         <FormField control={form.control} name="description" render={({ field }) => (
           <FormItem>
-            <FormLabel>Description du problème</FormLabel>
-            <FormControl><Textarea placeholder="Décrivez l'anomalie constatée..." {...field} /></FormControl>
+            <FormLabel>Détails de l'anomalie ou de l'entretien</FormLabel>
+            <FormControl><Textarea placeholder="Décrivez l'anomalie ou les travaux effectués..." {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
 
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Signaler l'anomalie
+          Enregistrer le signalement
         </Button>
       </form>
     </Form>

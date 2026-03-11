@@ -61,6 +61,7 @@ function LogistiqueContent() {
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isReportOpen, setReportOpen] = useState(false);
+  const [preselectedVehicleId, setPreselectedVehicleId] = useState<string | undefined>(undefined);
 
   const vehiclesQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'vehicles') : null), [firestore]);
   const anomaliesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'vehicleAnomalies'), orderBy('date', 'desc')) : null), [firestore]);
@@ -119,19 +120,9 @@ function LogistiqueContent() {
     }
   };
 
-  const handleMaintenanceDone = async (vehicle: Vehicle) => {
-    if (!firestore) return;
-    try {
-      const nextMileage = vehicle.mileage + 5000; // Par défaut +5000 KM
-      await updateDoc(doc(firestore, 'vehicles', vehicle.id), { 
-        status: 'Opérationnel',
-        lastMaintenanceDate: Timestamp.now(),
-        nextMaintenanceMileage: nextMileage
-      });
-      toast({ title: 'Maintenance enregistrée', description: `Prochain entretien à ${nextMileage} KM` });
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Erreur' });
-    }
+  const handleOpenMaintenanceForm = (vehicleId: string) => {
+    setPreselectedVehicleId(vehicleId);
+    setReportOpen(true);
   };
 
   const handleDeleteVehicle = async () => {
@@ -168,7 +159,10 @@ function LogistiqueContent() {
               <AddVehicleForm onSuccess={() => setAddVehicleOpen(false)} />
             </DialogContent>
           </Dialog>
-          <Dialog open={isReportOpen} onOpenChange={setReportOpen}>
+          <Dialog open={isReportOpen} onOpenChange={(open) => {
+            setReportOpen(open);
+            if (!open) setPreselectedVehicleId(undefined);
+          }}>
             <DialogTrigger asChild>
               <Button variant="destructive">
                 <AlertCircle className="mr-2 h-4 w-4" /> Signaler Anomalie
@@ -176,7 +170,11 @@ function LogistiqueContent() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Signaler un incident logistique</DialogTitle></DialogHeader>
-              <ReportAnomalyForm vehicles={vehicles || []} onSuccess={() => setReportOpen(false)} />
+              <ReportAnomalyForm 
+                vehicles={vehicles || []} 
+                onSuccess={() => setReportOpen(false)} 
+                initialVehicleId={preselectedVehicleId}
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -242,7 +240,7 @@ function LogistiqueContent() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => handleMaintenanceDone(v)} title="Marquer comme entretenu">
+                            <Button variant="ghost" size="sm" onClick={() => handleOpenMaintenanceForm(v.id)} title="Consigner entretien / anomalie">
                               <Wrench className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="sm" onClick={() => setEditingVehicle(v)} title="Modifier les informations">
