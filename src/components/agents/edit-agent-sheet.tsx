@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef } from 'react';
@@ -168,7 +167,7 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
       </DialogHeader>
 
       <div className="flex flex-col items-center gap-4 py-4">
-        <div className="relative group">
+        <div className="relative">
           <div 
             className="h-24 w-24 rounded-full border-2 border-dashed flex items-center justify-center bg-muted overflow-hidden cursor-pointer hover:bg-muted/80 transition-colors"
             onClick={() => fileInputRef.current?.click()}
@@ -185,7 +184,7 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
           {photo && (
             <button 
               type="button"
-              className="absolute -top-1 -right-1 bg-destructive text-white rounded-full p-1.5 shadow-lg hover:bg-destructive/90 transition-all z-10 scale-100 hover:scale-110"
+              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1.5 shadow-xl hover:bg-destructive/90 transition-all z-[50]"
               onClick={(e) => {
                 e.stopPropagation();
                 setPhoto(null);
