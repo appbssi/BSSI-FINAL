@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -71,8 +70,17 @@ function FinanceContent() {
   const expensesByCategory = useMemo(() => {
     if (!expenses) return [];
     const categories: Record<string, number> = {};
+    const keyMap: Record<string, string> = {
+      'Opérationnel': 'operational',
+      'Matériel': 'material',
+      'Transport': 'transport',
+      'Logistique': 'logistics',
+      'Autre': 'other'
+    };
+
     expenses.filter(e => e.status === 'Validé').forEach(e => {
-      categories[e.category] = (categories[e.category] || 0) + e.amount;
+      const key = keyMap[e.category] || 'other';
+      categories[key] = (categories[key] || 0) + e.amount;
     });
     return Object.entries(categories).map(([name, value]) => ({ name, value }));
   }, [expenses]);
@@ -210,6 +218,7 @@ function FinanceContent() {
                     outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
+                    nameKey="name"
                   >
                     {expensesByCategory.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
