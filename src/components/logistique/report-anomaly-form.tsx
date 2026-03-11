@@ -50,6 +50,7 @@ export function ReportAnomalyForm({ vehicles, onSuccess, initialVehicleId }: Rep
     
     try {
       const selectedVehicle = vehicles.find(v => v.id === values.vehicleId);
+      const hasFinanceRequest = values.estimatedAmount && values.estimatedAmount > 0;
       
       // 1. Enregistrer l'anomalie logistique
       const anomalyData = { 
@@ -59,9 +60,10 @@ export function ReportAnomalyForm({ vehicles, onSuccess, initialVehicleId }: Rep
         date: Timestamp.now(),
         isResolved: false,
         reportedBy: role || 'Utilisateur',
+        ...(hasFinanceRequest ? { financeStatus: 'En attente' } : {})
       };
       
-      await addDoc(collection(firestore, 'vehicleAnomalies'), anomalyData);
+      const anomalyRef = await addDoc(collection(firestore, 'vehicleAnomalies'), anomalyData);
       
       // 2. Mettre à jour le statut du véhicule si critique
       if (values.severity === 'Critique') {
@@ -70,7 +72,7 @@ export function ReportAnomalyForm({ vehicles, onSuccess, initialVehicleId }: Rep
       }
 
       // 3. Si un montant est saisi, créer une dépense en attente dans le volet Finances
-      if (values.estimatedAmount && values.estimatedAmount > 0) {
+      if (hasFinanceRequest) {
         const expenseData = {
           description: `RÉPARATION : ${selectedVehicle?.plateNumber} - ${values.description}`,
           amount: values.estimatedAmount,
@@ -78,6 +80,7 @@ export function ReportAnomalyForm({ vehicles, onSuccess, initialVehicleId }: Rep
           date: Timestamp.now(),
           status: 'En attente',
           missionId: null,
+          anomalyId: anomalyRef.id,
         };
         await addDoc(collection(firestore, 'expenses'), expenseData);
         logActivity(firestore, `Demande de fonds (En attente) : ${values.estimatedAmount} FCFA pour ${selectedVehicle?.plateNumber}`, 'Logistique', '/finance');
@@ -87,7 +90,7 @@ export function ReportAnomalyForm({ vehicles, onSuccess, initialVehicleId }: Rep
       
       toast({ 
         title: 'Signalement enregistré', 
-        description: values.estimatedAmount && values.estimatedAmount > 0 
+        description: hasFinanceRequest 
           ? "L'anomalie a été créée et une demande de fonds a été envoyée aux finances." 
           : "L'anomalie a été enregistrée avec succès." 
       });

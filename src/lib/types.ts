@@ -84,6 +84,7 @@ export type VehicleAnomaly = {
   date: Timestamp;
   isResolved: boolean;
   reportedBy: string;
+  financeStatus?: 'En attente' | 'Validé' | 'Refusé';
 };
 
 export type Gathering = {
@@ -134,6 +135,7 @@ export type Expense = {
   date: Timestamp;
   status: ExpenseStatus;
   missionId?: string | null;
+  anomalyId?: string | null;
 };
 
 export type Allocation = {

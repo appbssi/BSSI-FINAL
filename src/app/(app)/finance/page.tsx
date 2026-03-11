@@ -80,7 +80,14 @@ function FinanceContent() {
   const handleUpdateExpenseStatus = async (expense: Expense, newStatus: 'Validé' | 'Refusé') => {
     if (!firestore) return;
     try {
+      // 1. Mettre à jour la dépense
       await updateDoc(doc(firestore, 'expenses', expense.id), { status: newStatus });
+      
+      // 2. Si liée à une anomalie logistique, mettre à jour l'anomalie
+      if (expense.anomalyId) {
+        await updateDoc(doc(firestore, 'vehicleAnomalies', expense.anomalyId), { financeStatus: newStatus });
+      }
+
       toast({ 
         title: `Dépense ${newStatus}`, 
         description: `La dépense pour "${expense.description}" a été ${newStatus.toLowerCase()}.` 
@@ -95,11 +102,11 @@ function FinanceContent() {
 
   const chartConfig = {
     value: { label: "Montant (FCFA)" },
-    "Opérationnel": { label: "Opérationnel", color: COLORS[0] },
-    "Matériel": { label: "Matériel", color: COLORS[1] },
-    "Transport": { label: "Transport", color: COLORS[2] },
-    "Logistique": { label: "Logistique", color: COLORS[3] },
-    "Autre": { label: "Autre", color: COLORS[4] },
+    operational: { label: "Opérationnel", color: COLORS[0] },
+    material: { label: "Matériel", color: COLORS[1] },
+    transport: { label: "Transport", color: COLORS[2] },
+    logistics: { label: "Logistique", color: COLORS[3] },
+    other: { label: "Autre", color: COLORS[4] },
   };
 
   const hasError = !!(expensesError || allocationsError);
