@@ -33,70 +33,40 @@
       },
       "required": ["name", "location", "startDate", "endDate", "status", "assignedAgentIds"]
     },
-    "Expense": {
+    "Vehicle": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Expense",
+      "title": "Vehicle",
       "type": "object",
       "properties": {
-        "description": { "type": "string" },
-        "amount": { "type": "number" },
-        "category": { "type": "string", "enum": ["Opérationnel", "Matériel", "Transport", "Logistique", "Autre"] },
-        "date": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["Validé", "En attente", "Refusé"] },
-        "missionId": { "type": ["string", "null"] }
-      },
-      "required": ["description", "amount", "category", "date", "status"]
-    },
-    "Weapon": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Weapon",
-      "type": "object",
-      "properties": {
-        "serialNumber": { "type": "string" },
+        "plateNumber": { "type": "string" },
         "model": { "type": "string" },
-        "type": { "type": "string", "enum": ["Arme de poing", "Fusil d'assaut", "Munition", "Accessoire", "Casque", "Gilets par balle"] },
-        "status": { "type": "string", "enum": ["Fonctionnel", "En maintenance", "Hors service"] },
-        "quantity": { "type": "number" },
-        "lastMaintenanceDate": { "type": "string", "format": "date-time" }
+        "type": { "type": "string", "enum": ["Pick-up", "4x4", "Moto", "Camion", "Berline"] },
+        "status": { "type": "string", "enum": ["Opérationnel", "En panne", "En maintenance"] },
+        "mileage": { "type": "number" },
+        "lastMaintenanceDate": { "type": "string", "format": "date-time" },
+        "nextMaintenanceMileage": { "type": "number" }
       },
-      "required": ["serialNumber", "model", "type", "status"]
+      "required": ["plateNumber", "model", "type", "status"]
     },
-    "WeaponAssignment": {
+    "VehicleAnomaly": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "WeaponAssignment",
+      "title": "VehicleAnomaly",
       "type": "object",
       "properties": {
-        "weaponId": { "type": "string" },
-        "agentId": { "type": "string" },
-        "assignedAt": { "type": "string", "format": "date-time" },
-        "returnedAt": { "type": ["string", "null"], "format": "date-time" },
-        "notes": { "type": "string" }
+        "vehicleId": { "type": "string" },
+        "description": { "type": "string" },
+        "severity": { "type": "string", "enum": ["Faible", "Moyenne", "Critique"] },
+        "date": { "type": "string", "format": "date-time" },
+        "isResolved": { "type": "boolean" },
+        "reportedBy": { "type": "string", "description": "System or User Name" }
       },
-      "required": ["weaponId", "agentId", "assignedAt"]
-    },
-    "Detainee": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Detainee",
-      "type": "object",
-      "description": "Représente une personne en Garde À Vue.",
-      "properties": {
-        "lastName": { "type": "string" },
-        "firstName": { "type": "string" },
-        "birthDate": { "type": "string", "format": "date-time" },
-        "photo": { "type": "string", "description": "Data URI de la photo d'identité" },
-        "entryTime": { "type": "string", "format": "date-time" },
-        "arrestLocation": { "type": "string" },
-        "arrestReason": { "type": "string" }
-      },
-      "required": ["lastName", "firstName", "birthDate", "entryTime", "arrestLocation", "arrestReason"]
+      "required": ["vehicleId", "description", "severity", "date"]
     }
   },
   "firestore": {
     "/agents/{agentId}": { "schema": { "$ref": "#/entities/Agent" } },
     "/missions/{missionId}": { "schema": { "$ref": "#/entities/Mission" } },
-    "/expenses/{expenseId}": { "schema": { "$ref": "#/entities/Expense" } },
-    "/weapons/{weaponId}": { "schema": { "$ref": "#/entities/Weapon" } },
-    "/weaponAssignments/{assignmentId}": { "schema": { "$ref": "#/entities/WeaponAssignment" } },
-    "/detainees/{detaineeId}": { "schema": { "$ref": "#/entities/Detainee" } }
+    "/vehicles/{vehicleId}": { "schema": { "$ref": "#/entities/Vehicle" } },
+    "/vehicleAnomalies/{anomalyId}": { "schema": { "$ref": "#/entities/VehicleAnomaly" } }
   }
 }

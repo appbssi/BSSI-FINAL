@@ -59,6 +59,32 @@ export type WeaponAssignment = {
   munitionLotId?: string | null;
 };
 
+export type VehicleType = 'Pick-up' | '4x4' | 'Moto' | 'Camion' | 'Berline';
+export type VehicleStatus = 'Opérationnel' | 'En panne' | 'En maintenance';
+
+export type Vehicle = {
+  id: string;
+  plateNumber: string;
+  model: string;
+  type: VehicleType;
+  status: VehicleStatus;
+  mileage: number;
+  lastMaintenanceDate?: Timestamp;
+  nextMaintenanceMileage?: number;
+};
+
+export type AnomalySeverity = 'Faible' | 'Moyenne' | 'Critique';
+
+export type VehicleAnomaly = {
+  id: string;
+  vehicleId: string;
+  description: string;
+  severity: AnomalySeverity;
+  date: Timestamp;
+  isResolved: boolean;
+  reportedBy: string;
+};
+
 export type Gathering = {
   id: string;
   name: string;
@@ -92,7 +118,7 @@ export type ActivityLog = {
     id: string;
     description: string;
     timestamp: Timestamp;
-    type: 'Agent' | 'Mission' | 'Rassemblement' | 'Visiteur' | 'Général' | 'GAV' | 'Armurerie';
+    type: 'Agent' | 'Mission' | 'Rassemblement' | 'Visiteur' | 'Général' | 'GAV' | 'Armurerie' | 'Logistique';
     link?: string;
 }
 
