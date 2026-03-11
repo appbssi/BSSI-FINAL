@@ -144,9 +144,9 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
       )}
 
       <div className="flex flex-col items-center gap-4">
-        <div className="relative">
+        <div className="relative p-2">
           <div 
-            className="h-32 w-32 rounded-lg border-2 border-dashed flex items-center justify-center bg-muted overflow-hidden cursor-pointer hover:bg-muted/80 transition-colors"
+            className="h-32 w-32 rounded-lg border-2 border-dashed flex items-center justify-center bg-muted overflow-hidden cursor-pointer hover:bg-muted/80 transition-colors relative"
             onClick={() => fileInputRef.current?.click()}
             title="Cliquez pour importer une photo"
           >
@@ -162,7 +162,7 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
           {photo && (
             <button 
               type="button"
-              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1.5 shadow-xl hover:bg-destructive/90 transition-all z-[50]"
+              className="absolute top-0 right-0 bg-destructive text-destructive-foreground rounded-full p-1.5 shadow-xl hover:bg-destructive/90 transition-all z-[100] border-2 border-background"
               onClick={(e) => {
                 e.stopPropagation();
                 setPhoto(null);
