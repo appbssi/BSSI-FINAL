@@ -95,11 +95,11 @@ function FinanceContent() {
 
   const chartConfig = {
     value: { label: "Montant (FCFA)" },
-    Opérationnel: { label: "Opérationnel", color: COLORS[0] },
-    Matériel: { label: "Matériel", color: COLORS[1] },
-    Transport: { label: "Transport", color: COLORS[2] },
-    Logistique: { label: "Logistique", color: COLORS[3] },
-    Autre: { label: "Autre", color: COLORS[4] },
+    "Opérationnel": { label: "Opérationnel", color: COLORS[0] },
+    "Matériel": { label: "Matériel", color: COLORS[1] },
+    "Transport": { label: "Transport", color: COLORS[2] },
+    "Logistique": { label: "Logistique", color: COLORS[3] },
+    "Autre": { label: "Autre", color: COLORS[4] },
   };
 
   const hasError = !!(expensesError || allocationsError);
