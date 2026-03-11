@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 import { logActivity } from '@/lib/activity-logger';
@@ -22,7 +22,7 @@ const weaponSchema = z.object({
 }).refine((data) => {
   // Le numéro de série est requis pour les armes et accessoires, mais pas pour les consommables/protection
   if (!['Munition', 'Casque', 'Gilets par balle'].includes(data.type)) {
-    return !!data.serialNumber && data.serialNumber.length >= 3;
+    return !!data.serialNumber && data.serialNumber.trim().length >= 3;
   }
   return true;
 }, {
@@ -55,25 +55,44 @@ export function AddWeaponForm({ onSuccess }: { onSuccess: () => void }) {
     
     // Si le numéro de série est masqué (lots), on génère un identifiant de lot interne
     const finalSerialNumber = showSerialNumber 
-      ? (values.serialNumber || '') 
+      ? (values.serialNumber || '').trim() 
       : `LOT-${values.type.toUpperCase().replace(/ /g, '_')}-${Math.floor(Math.random() * 10000)}`;
 
-    // Si c'est une arme unique, la quantité est forcément 1
-    const finalQuantity = isUniqueSerialized ? 1 : values.quantity;
-
-    const weaponData = { 
-      ...values,
-      serialNumber: finalSerialNumber,
-      quantity: finalQuantity,
-      status: 'Fonctionnel',
-    };
-    
     try {
+      // Vérification de l'unicité du numéro de série
+      const weaponsRef = collection(firestore, 'weapons');
+      const q = query(weaponsRef, where("serialNumber", "==", finalSerialNumber));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        form.setError('serialNumber', {
+          type: 'manual',
+          message: 'Ce numéro de série existe déjà dans l\'inventaire.',
+        });
+        toast({
+          variant: 'destructive',
+          title: 'Doublon détecté',
+          description: `Un équipement possède déjà le numéro de série : ${finalSerialNumber}`,
+        });
+        return;
+      }
+
+      // Si c'est une arme unique, la quantité est forcément 1
+      const finalQuantity = isUniqueSerialized ? 1 : values.quantity;
+
+      const weaponData = { 
+        ...values,
+        serialNumber: finalSerialNumber,
+        quantity: finalQuantity,
+        status: 'Fonctionnel',
+      };
+      
       await addDoc(collection(firestore, 'weapons'), weaponData);
       logActivity(firestore, `Nouvel équipement ajouté : ${values.model} (${finalSerialNumber})`, 'Armurerie', '/armurerie');
       toast({ title: 'Équipement enregistré' });
       onSuccess();
     } catch (error) {
+      console.error('Error adding weapon:', error);
       toast({ variant: 'destructive', title: 'Erreur', description: "Impossible d'enregistrer l'équipement." });
     }
   };
