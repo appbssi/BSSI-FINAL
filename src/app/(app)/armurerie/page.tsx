@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -288,6 +287,7 @@ function ArmurerieContent() {
               <AssignWeaponForm 
                 weapons={weapons?.filter(w => w.status === 'Fonctionnel' && (w.type !== 'Munition' || w.quantity > 0)) || []} 
                 agents={agents || []} 
+                assignments={assignments || []}
                 missions={missions || []}
                 onSuccess={() => setAssignOpen(false)} 
               />

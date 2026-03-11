@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -12,9 +11,9 @@ import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, Timestamp, doc, updateDoc, increment } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { Loader2, Search, Info, AlertCircle } from 'lucide-react';
-import type { Weapon, Agent, Mission } from '@/lib/types';
+import type { Weapon, Agent, Mission, WeaponAssignment } from '@/lib/types';
 import { logActivity } from '@/lib/activity-logger';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { getDisplayStatus } from '@/lib/missions';
 import { Label } from '@/components/ui/label';
 
@@ -30,11 +29,12 @@ const assignSchema = z.object({
 interface AssignWeaponFormProps {
   weapons: Weapon[];
   agents: Agent[];
+  assignments: WeaponAssignment[];
   missions: Mission[];
   onSuccess: () => void;
 }
 
-export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: AssignWeaponFormProps) {
+export function AssignWeaponForm({ weapons, agents, assignments, missions, onSuccess }: AssignWeaponFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const [selectedMissionId, setSelectedMissionId] = useState<string>('all');
@@ -80,12 +80,18 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
   }, [missions]);
 
   const filteredAgents = useMemo(() => {
-    let list = agents;
+    // 1. Identifier les agents qui ont déjà du matériel non retourné
+    const armedAgentIds = new Set(
+      assignments.filter(a => !a.returnedAt).map(a => a.agentId)
+    );
+
+    // 2. Filtrer la liste de base pour exclure les agents déjà armés
+    let list = agents.filter(a => !armedAgentIds.has(a.id));
     
     if (selectedMissionId !== 'all') {
       const mission = activeMissions.find(m => m.id === selectedMissionId);
       if (mission) {
-        list = agents.filter(a => mission.assignedAgentIds.includes(a.id));
+        list = list.filter(a => mission.assignedAgentIds.includes(a.id));
       }
     }
 
@@ -97,7 +103,7 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
     }
 
     return list.sort((a, b) => a.fullName.localeCompare(b.fullName));
-  }, [agents, selectedMissionId, activeMissions, agentSearch]);
+  }, [agents, assignments, selectedMissionId, activeMissions, agentSearch]);
 
   const onSubmit = async (values: z.infer<typeof assignSchema>) => {
     if (!firestore || isStockInsufficient) return;
@@ -124,7 +130,7 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
       // 1. Créer l'attribution
       await addDoc(collection(firestore, 'weaponAssignments'), assignmentData);
       
-      // 2. Déduire du stock
+      // 2. Déduire du stock si c'est des munitions
       if (lotId && values.ammunitionCount > 0) {
         const lotRef = doc(firestore, 'weapons', lotId);
         await updateDoc(lotRef, {
@@ -179,7 +185,7 @@ export function AssignWeaponForm({ weapons, agents, missions, onSuccess }: Assig
                     <SelectItem key={a.id} value={a.id}>{a.fullName} ({a.rank})</SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="none" disabled>Aucun agent trouvé</SelectItem>
+                  <SelectItem value="none" disabled>Aucun agent disponible (déjà armé ou inexistant)</SelectItem>
                 )}
               </SelectContent>
             </Select>
