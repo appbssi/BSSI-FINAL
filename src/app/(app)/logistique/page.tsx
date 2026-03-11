@@ -18,18 +18,31 @@ import {
   History, 
   CheckCircle2, 
   Wrench,
-  Loader2
+  Loader2,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy, doc, updateDoc, Timestamp, addDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, Timestamp, addDoc, deleteDoc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import type { Vehicle, VehicleAnomaly } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AddVehicleForm } from '@/components/logistique/add-vehicle-form';
+import { EditVehicleForm } from '@/components/logistique/edit-vehicle-form';
 import { ReportAnomalyForm } from '@/components/logistique/report-anomaly-form';
 import { logActivity } from '@/lib/activity-logger';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function LogistiquePage() {
   return (
@@ -44,6 +57,9 @@ function LogistiqueContent() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddVehicleOpen, setAddVehicleOpen] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isReportOpen, setReportOpen] = useState(false);
 
   const vehiclesQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'vehicles') : null), [firestore]);
@@ -115,6 +131,21 @@ function LogistiqueContent() {
       toast({ title: 'Maintenance enregistrée', description: `Prochain entretien à ${nextMileage} KM` });
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erreur' });
+    }
+  };
+
+  const handleDeleteVehicle = async () => {
+    if (!firestore || !vehicleToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteDoc(doc(firestore, 'vehicles', vehicleToDelete.id));
+      logActivity(firestore, `Véhicule supprimé : ${vehicleToDelete.plateNumber}`, 'Logistique', '/logistique');
+      toast({ title: 'Véhicule supprimé' });
+      setVehicleToDelete(null);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de supprimer le véhicule." });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -210,9 +241,17 @@ function LogistiqueContent() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" onClick={() => handleMaintenanceDone(v)}>
-                            <Wrench className="h-4 w-4 mr-2" /> Entretien fait
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => handleMaintenanceDone(v)} title="Marquer comme entretenu">
+                              <Wrench className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setEditingVehicle(v)} title="Modifier les informations">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => setVehicleToDelete(v)} title="Supprimer le véhicule">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -301,6 +340,35 @@ function LogistiqueContent() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {editingVehicle && (
+        <Dialog open={!!editingVehicle} onOpenChange={(open) => !open && setEditingVehicle(null)}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Modifier le véhicule</DialogTitle></DialogHeader>
+            <EditVehicleForm vehicle={editingVehicle} onSuccess={() => setEditingVehicle(null)} />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {vehicleToDelete && (
+        <AlertDialog open={!!vehicleToDelete} onOpenChange={(open) => !open && setVehicleToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+              <AlertDialogDescription>
+                Êtes-vous sûr de vouloir supprimer définitivement le véhicule <span className="font-semibold">{vehicleToDelete.plateNumber} ({vehicleToDelete.model})</span> ?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteVehicle} className="bg-destructive hover:bg-destructive/90" disabled={isDeleting}>
+                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Supprimer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
