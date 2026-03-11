@@ -31,6 +31,7 @@ export type Mission = {
   endTime?: string;
   status: MissionStatus;
   assignedAgentIds: string[];
+  vehicleId?: string;
 };
 
 export type WeaponType = 'Arme de poing' | "Fusil d'assaut" | 'Munition' | 'Accessoire' | 'Casque' | 'Gilets par balle';

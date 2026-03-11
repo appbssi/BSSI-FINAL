@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import type { Agent, Mission, Availability } from '@/lib/types';
+import type { Agent, Mission, Availability, Vehicle } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -23,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { CalendarIcon, Loader2, Check, Search } from 'lucide-react';
+import { CalendarIcon, Loader2, Check, Search, Truck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
@@ -38,6 +38,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
 import { getAgentAvailability } from '@/lib/agents';
 import { logActivity } from '@/lib/activity-logger';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 const missionSchema = z.object({
@@ -52,6 +53,7 @@ const missionSchema = z.object({
   startTime: z.string().optional(),
   endTime: z.string().optional(),
   assignedAgentIds: z.array(z.string()).min(1, "Vous devez assigner au moins un agent."),
+  vehicleId: z.string().optional(),
 }).refine(data => data.endDate >= data.startDate, {
   message: "La date de fin ne peut pas être antérieure à la date de début.",
   path: ["endDate"],
@@ -96,6 +98,7 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
       startTime: mission.startTime || '08:00',
       endTime: mission.endTime || '17:00',
       assignedAgentIds: mission.assignedAgentIds || [],
+      vehicleId: mission.vehicleId || 'none',
     },
   });
   
@@ -103,13 +106,20 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
 
   const agentsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'agents') : null, [firestore]);
   const missionsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'missions') : null, [firestore]);
+  const vehiclesQuery = useMemoFirebase(() => firestore ? collection(firestore, 'vehicles') : null, [firestore]);
   
   const { data: allAgents, isLoading: agentsLoading } = useCollection<Agent>(agentsQuery);
   const { data: allMissions, isLoading: missionsLoading } = useCollection<Mission>(missionsQuery);
+  const { data: allVehicles, isLoading: vehiclesLoading } = useCollection<Vehicle>(vehiclesQuery);
   
   const startDate = form.watch('startDate');
   const endDate = form.watch('endDate');
   const isSingleDayMission = startDate && endDate && isSameDay(startDate, endDate);
+
+  const operationalVehicles = useMemo(() => {
+    if (!allVehicles) return [];
+    return allVehicles.filter(v => v.status === 'Opérationnel' || v.id === mission.vehicleId);
+  }, [allVehicles, mission.vehicleId]);
 
    useEffect(() => {
     if (!isSingleDayMission) {
@@ -126,6 +136,7 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
       startTime: mission.startTime || '08:00',
       endTime: mission.endTime || '17:00',
       assignedAgentIds: mission.assignedAgentIds || [],
+      vehicleId: mission.vehicleId || 'none',
     });
   }, [mission, form, isOpen]);
 
@@ -142,6 +153,7 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
         startDate: Timestamp.fromDate(data.startDate),
         endDate: Timestamp.fromDate(data.endDate),
         assignedAgentIds: data.assignedAgentIds,
+        vehicleId: data.vehicleId === 'none' ? null : data.vehicleId,
     };
 
     if (isSingleDayMission) {
@@ -363,6 +375,34 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
                     />
                 </div>
             )}
+
+            <FormField
+              control={form.control}
+              name="vehicleId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Truck className="h-4 w-4" /> Véhicule de transport
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Changer le véhicule (optionnel)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">Aucun véhicule assigné</SelectItem>
+                      {operationalVehicles.map(v => (
+                        <SelectItem key={v.id} value={v.id}>
+                          {v.plateNumber} - {v.model} ({v.type})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <FormField
               control={form.control}
@@ -375,6 +415,7 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
                     <Input
                       className="pl-10"
                       placeholder="Rechercher un agent..."
+                      setAgentSearch
                       value={agentSearch}
                       onChange={(e) => setAgentSearch(e.target.value)}
                     />

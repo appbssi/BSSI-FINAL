@@ -9,10 +9,14 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import type { Agent, Mission, MissionStatus } from '@/lib/types';
-import { Calendar, MapPin, Users, Info } from 'lucide-react';
+import type { Agent, Mission, MissionStatus, Vehicle } from '@/lib/types';
+import { Calendar, MapPin, Users, Info, Truck } from 'lucide-react';
 import { differenceInDays, isSameDay } from 'date-fns';
 import type { MissionWithDisplayStatus } from '@/lib/missions';
+import { useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { useMemo } from 'react';
 
 interface MissionDetailsDialogProps {
   isOpen: boolean;
@@ -22,6 +26,15 @@ interface MissionDetailsDialogProps {
 }
 
 export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: MissionDetailsDialogProps) {
+  const firestore = useFirestore();
+  const vehiclesQuery = useMemoFirebase(() => firestore ? collection(firestore, 'vehicles') : null, [firestore]);
+  const { data: vehicles } = useCollection<Vehicle>(vehiclesQuery);
+
+  const assignedVehicle = useMemo(() => {
+    if (!vehicles || !mission.vehicleId) return null;
+    return vehicles.find(v => v.id === mission.vehicleId);
+  }, [vehicles, mission.vehicleId]);
+
   const startDate = mission.startDate.toDate();
   const endDate = mission.endDate.toDate();
   const isSingleDay = isSameDay(startDate, endDate);
@@ -74,6 +87,16 @@ export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: 
                         <Badge variant={getBadgeVariant(displayStatus)}>{displayStatus}</Badge>
                     </div>
                 </div>
+                {assignedVehicle && (
+                  <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg border border-primary/10">
+                    <Truck className="h-5 w-5 mt-1 text-primary" />
+                    <div>
+                        <h3 className="font-semibold text-primary">Véhicule assigné</h3>
+                        <p className="text-sm font-medium">{assignedVehicle.plateNumber}</p>
+                        <p className="text-xs text-muted-foreground">{assignedVehicle.model} ({assignedVehicle.type})</p>
+                    </div>
+                  </div>
+                )}
             </div>
              <div className="space-y-2">
                 <div className="flex items-center gap-3">
