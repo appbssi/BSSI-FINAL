@@ -22,6 +22,7 @@ export async function sendMissionCreationWebhook(missionData: MissionWebhookData
     title: missionData.name,
     description: description,
     agents: missionData.agents,
+    instructions: missionData.instructions || "Aucune consigne spécifique.",
     created_at: new Date().toISOString(),
   };
 

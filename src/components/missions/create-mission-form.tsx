@@ -14,7 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { CalendarIcon, Loader2, Check, Search, Truck } from 'lucide-react';
+import { CalendarIcon, Loader2, Check, Search, Truck, ClipboardList } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
@@ -33,6 +33,7 @@ import { getAgentAvailability } from '@/lib/agents';
 import { logActivity } from '@/lib/activity-logger';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { sendMissionCreationWebhook } from '@/lib/webhooks';
+import { Textarea } from '@/components/ui/textarea';
 
 const missionSchema = z.object({
   name: z.string().min(3, 'Le nom de la mission est requis'),
@@ -47,6 +48,7 @@ const missionSchema = z.object({
   endTime: z.string().optional(),
   assignedAgentIds: z.array(z.string()).min(1, "Vous devez assigner au moins un agent."),
   vehicleId: z.string().optional(),
+  instructions: z.string().optional(),
 }).refine(data => data.endDate >= data.startDate, {
   message: "La date de fin ne peut pas être antérieure à la date de début.",
   path: ["endDate"],
@@ -87,6 +89,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
       endTime: '17:00',
       assignedAgentIds: [],
       vehicleId: 'none',
+      instructions: '',
     },
   });
   
@@ -131,6 +134,7 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
         assignedAgentIds: data.assignedAgentIds,
         status: 'Planification',
         vehicleId: data.vehicleId === 'none' ? undefined : data.vehicleId,
+        instructions: data.instructions,
     };
 
     if (isSingleDayMission) {
@@ -402,6 +406,26 @@ export function CreateMissionForm({ onMissionCreated }: { onMissionCreated?: () 
                               ))}
                             </SelectContent>
                           </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="instructions"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <ClipboardList className="h-4 w-4" /> Ordres / Consignes
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Transmettre des ordres ou consignes spécifiques aux agents..." 
+                              className="resize-none"
+                              {...field} 
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}

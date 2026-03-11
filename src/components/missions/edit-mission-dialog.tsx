@@ -23,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { CalendarIcon, Loader2, Check, Search, Truck } from 'lucide-react';
+import { CalendarIcon, Loader2, Check, Search, Truck, ClipboardList } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
@@ -39,6 +39,7 @@ import { Badge } from '../ui/badge';
 import { getAgentAvailability } from '@/lib/agents';
 import { logActivity } from '@/lib/activity-logger';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 
 const missionSchema = z.object({
@@ -54,6 +55,7 @@ const missionSchema = z.object({
   endTime: z.string().optional(),
   assignedAgentIds: z.array(z.string()).min(1, "Vous devez assigner au moins un agent."),
   vehicleId: z.string().optional(),
+  instructions: z.string().optional(),
 }).refine(data => data.endDate >= data.startDate, {
   message: "La date de fin ne peut pas être antérieure à la date de début.",
   path: ["endDate"],
@@ -99,6 +101,7 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
       endTime: mission.endTime || '17:00',
       assignedAgentIds: mission.assignedAgentIds || [],
       vehicleId: mission.vehicleId || 'none',
+      instructions: mission.instructions || '',
     },
   });
   
@@ -137,6 +140,7 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
       endTime: mission.endTime || '17:00',
       assignedAgentIds: mission.assignedAgentIds || [],
       vehicleId: mission.vehicleId || 'none',
+      instructions: mission.instructions || '',
     });
   }, [mission, form, isOpen]);
 
@@ -154,6 +158,7 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
         endDate: Timestamp.fromDate(data.endDate),
         assignedAgentIds: data.assignedAgentIds,
         vehicleId: data.vehicleId === 'none' ? null : data.vehicleId,
+        instructions: data.instructions,
     };
 
     if (isSingleDayMission) {
@@ -403,6 +408,26 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="instructions"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4" /> Ordres / Consignes
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Mettre à jour les ordres ou consignes..." 
+                      className="resize-none"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <FormField
               control={form.control}
@@ -415,7 +440,6 @@ export function EditMissionDialog({ mission, isOpen, onOpenChange }: EditMission
                     <Input
                       className="pl-10"
                       placeholder="Rechercher un agent..."
-                      setAgentSearch
                       value={agentSearch}
                       onChange={(e) => setAgentSearch(e.target.value)}
                     />

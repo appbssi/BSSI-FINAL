@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import type { Agent, Mission, MissionStatus, Vehicle } from '@/lib/types';
-import { Calendar, MapPin, Users, Info, Truck } from 'lucide-react';
+import { Calendar, MapPin, Users, Info, Truck, ClipboardList } from 'lucide-react';
 import { differenceInDays, isSameDay } from 'date-fns';
 import type { MissionWithDisplayStatus } from '@/lib/missions';
 import { useFirestore, useMemoFirebase } from '@/firebase';
@@ -98,26 +98,40 @@ export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: 
                   </div>
                 )}
             </div>
-             <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                     <Users className="h-5 w-5 text-muted-foreground" />
-                     <h3 className="font-semibold">Agents Assignés ({agents.length})</h3>
+             <div className="space-y-4">
+                <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                         <Users className="h-5 w-5 text-muted-foreground" />
+                         <h3 className="font-semibold">Agents Assignés ({agents.length})</h3>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto rounded-md border p-2 space-y-2">
+                        {agents.length > 0 ? (
+                            agents.map(agent => (
+                                <div key={agent.id} className="text-sm p-2 bg-muted/50 rounded-md">
+                                    <p className="font-medium">{agent.fullName}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {agent.rank}
+                                        {agent.section === 'Officier' && ` - ${agent.section}`}
+                                    </p>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-sm text-center text-muted-foreground py-4">Aucun agent assigné.</p>
+                        )}
+                    </div>
                 </div>
-                <div className="max-h-48 overflow-y-auto rounded-md border p-2 space-y-2">
-                    {agents.length > 0 ? (
-                        agents.map(agent => (
-                            <div key={agent.id} className="text-sm p-2 bg-muted/50 rounded-md">
-                                <p className="font-medium">{agent.fullName}</p>
-                                <p className="text-xs text-muted-foreground">
-                                    {agent.rank}
-                                    {agent.section === 'Officier' && ` - ${agent.section}`}
-                                </p>
-                            </div>
-                        ))
-                    ) : (
-                        <p className="text-sm text-center text-muted-foreground py-4">Aucun agent assigné.</p>
-                    )}
-                </div>
+
+                {mission.instructions && (
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                             <ClipboardList className="h-5 w-5 text-primary" />
+                             <h3 className="font-semibold">Ordres / Consignes</h3>
+                        </div>
+                        <div className="p-3 bg-primary/5 rounded-md border border-primary/10 text-sm whitespace-pre-wrap italic">
+                            {mission.instructions}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
       </DialogContent>

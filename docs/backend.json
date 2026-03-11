@@ -29,7 +29,8 @@
         "startDate": { "type": "string", "format": "date-time" },
         "endDate": { "type": "string", "format": "date-time" },
         "status": { "type": "string", "enum": ["Planification", "En cours", "Terminée", "Annulée"] },
-        "assignedAgentIds": { "type": "array", "items": { "type": "string" } }
+        "assignedAgentIds": { "type": "array", "items": { "type": "string" } },
+        "instructions": { "type": "string", "description": "Ordres ou consignes spécifiques pour la mission" }
       },
       "required": ["name", "location", "startDate", "endDate", "status", "assignedAgentIds"]
     },
