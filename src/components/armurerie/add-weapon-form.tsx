@@ -40,19 +40,31 @@ export function AddWeaponForm({ onSuccess }: { onSuccess: () => void }) {
   });
 
   const selectedType = form.watch('type');
-  const showSerialNumber = !['Munition', 'Casque', 'Gilets par balle'].includes(selectedType);
+  
+  // Types qui nécessitent un numéro de série unique (une seule unité par enregistrement)
+  const isUniqueSerialized = ['Arme de poing', "Fusil d'assaut"].includes(selectedType);
+  
+  // Types qui ne nécessitent pas de numéro de série (lots / vrac)
+  const isBulkType = ['Munition', 'Casque', 'Gilets par balle'].includes(selectedType);
+  
+  const showSerialNumber = !isBulkType;
+  const showQuantityField = !isUniqueSerialized;
 
   const onSubmit = async (values: z.infer<typeof weaponSchema>) => {
     if (!firestore) return;
     
-    // Si le numéro de série est masqué, on génère un identifiant de lot interne
+    // Si le numéro de série est masqué (lots), on génère un identifiant de lot interne
     const finalSerialNumber = showSerialNumber 
       ? (values.serialNumber || '') 
       : `LOT-${values.type.toUpperCase().replace(/ /g, '_')}-${Math.floor(Math.random() * 10000)}`;
 
+    // Si c'est une arme unique, la quantité est forcément 1
+    const finalQuantity = isUniqueSerialized ? 1 : values.quantity;
+
     const weaponData = { 
       ...values,
       serialNumber: finalSerialNumber,
+      quantity: finalQuantity,
       status: 'Fonctionnel',
     };
     
@@ -104,13 +116,15 @@ export function AddWeaponForm({ onSuccess }: { onSuccess: () => void }) {
           </FormItem>
         )} />
         
-        <FormField control={form.control} name="quantity" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Quantité {showSerialNumber ? 'initiale' : 'en stock'}</FormLabel>
-            <FormControl><Input type="number" {...field} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
+        {showQuantityField && (
+          <FormField control={form.control} name="quantity" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Quantité en stock</FormLabel>
+              <FormControl><Input type="number" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+        )}
 
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
