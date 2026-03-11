@@ -1,7 +1,9 @@
+
 'use client';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { UserNav } from './user-nav';
 import { RecentActivitiesDialog } from '../dashboard/recent-activities-dialog';
+import { ChatSheet } from '../chat/chat-sheet';
 import { Button } from '../ui/button';
 import { useRole } from '@/hooks/use-role';
 import { useMemo } from 'react';
@@ -30,6 +32,7 @@ export function Header() {
         {displayRole && (
             <span className="text-sm font-semibold text-foreground">{displayRole}</span>
         )}
+        <ChatSheet />
         <RecentActivitiesDialog />
         <UserNav />
       </div>

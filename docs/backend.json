@@ -30,7 +30,7 @@
         "endDate": { "type": "string", "format": "date-time" },
         "status": { "type": "string", "enum": ["Planification", "En cours", "Terminée", "Annulée"] },
         "assignedAgentIds": { "type": "array", "items": { "type": "string" } },
-        "instructions": { "type": "string", "description": "Ordres ou consignes spécifiques pour la mission" }
+        "vehicleId": { "type": "string" }
       },
       "required": ["name", "location", "startDate", "endDate", "status", "assignedAgentIds"]
     },
@@ -62,12 +62,25 @@
         "reportedBy": { "type": "string", "description": "System or User Name" }
       },
       "required": ["vehicleId", "description", "severity", "date"]
+    },
+    "ChatMessage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ChatMessage",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "senderName", "text", "timestamp"]
     }
   },
   "firestore": {
     "/agents/{agentId}": { "schema": { "$ref": "#/entities/Agent" } },
     "/missions/{missionId}": { "schema": { "$ref": "#/entities/Mission" } },
     "/vehicles/{vehicleId}": { "schema": { "$ref": "#/entities/Vehicle" } },
-    "/vehicleAnomalies/{anomalyId}": { "schema": { "$ref": "#/entities/VehicleAnomaly" } }
+    "/vehicleAnomalies/{anomalyId}": { "schema": { "$ref": "#/entities/VehicleAnomaly" } },
+    "/messages/{messageId}": { "schema": { "$ref": "#/entities/ChatMessage" } }
   }
 }

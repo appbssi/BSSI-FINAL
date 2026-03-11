@@ -143,3 +143,11 @@ export type Allocation = {
   purpose: string;
   date: Timestamp;
 };
+
+export type ChatMessage = {
+  id: string;
+  senderId: string;
+  senderName: string;
+  text: string;
+  timestamp: Timestamp;
+};
