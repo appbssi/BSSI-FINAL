@@ -144,17 +144,6 @@ function DashboardContent() {
               </CardContent>
             </Card>
           </Link>
-          <Link href="/agents?availability=En%20mission">
-            <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Agents en Mission</CardTitle>
-                <Shield className="h-5 w-5 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.onMission}</div>
-              </CardContent>
-            </Card>
-          </Link>
           <Link href="/agents?availability=Disponible">
             <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -163,6 +152,17 @@ function DashboardContent() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.available}</div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/agents?availability=En%20mission">
+            <Card className="rounded-2xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl border-2 border-transparent hover:border-primary cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Agents en Mission</CardTitle>
+                <Shield className="h-5 w-5 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.onMission}</div>
               </CardContent>
             </Card>
           </Link>
