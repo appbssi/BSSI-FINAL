@@ -13,7 +13,7 @@ import { useFirestore } from '@/firebase';
 import { Loader2, Search, Info, AlertCircle } from 'lucide-react';
 import type { Weapon, Agent, Mission, WeaponAssignment } from '@/lib/types';
 import { logActivity } from '@/lib/activity-logger';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { getDisplayStatus } from '@/lib/missions';
 import { Label } from '@/components/ui/label';
 
@@ -48,6 +48,7 @@ export function AssignWeaponForm({ weapons, agents, assignments, missions, onSuc
   const selectedWeaponId = form.watch('weaponId');
   const ammunitionCount = form.watch('ammunitionCount');
   const selectedMunitionLotId = form.watch('munitionLotId');
+  const magazineCount = form.watch('magazineCount');
   
   const selectedWeapon = useMemo(() => 
     weapons.find(w => w.id === selectedWeaponId), 
@@ -78,6 +79,13 @@ export function AssignWeaponForm({ weapons, agents, assignments, missions, onSuc
       return status === 'Planification' || status === 'En cours';
     });
   }, [missions]);
+
+  // Si le nombre de chargeurs est 0, on remet les munitions à 0
+  useEffect(() => {
+    if (Number(magazineCount) <= 0) {
+      form.setValue('ammunitionCount', 0);
+    }
+  }, [magazineCount, form]);
 
   const filteredAgents = useMemo(() => {
     // 1. Identifier les agents qui ont déjà du matériel non retourné
@@ -234,7 +242,7 @@ export function AssignWeaponForm({ weapons, agents, assignments, missions, onSuc
           <FormField control={form.control} name="magazineCount" render={({ field }) => (
             <FormItem>
               <FormLabel>Nbre de chargeurs</FormLabel>
-              <FormControl><Input type="number" {...field} /></FormControl>
+              <FormControl><Input type="number" {...field} min={0} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />
@@ -246,9 +254,13 @@ export function AssignWeaponForm({ weapons, agents, assignments, missions, onSuc
                   type="number" 
                   {...field} 
                   className={isStockInsufficient ? "border-destructive text-destructive" : ""}
+                  disabled={Number(magazineCount) <= 0}
+                  placeholder={Number(magazineCount) <= 0 ? "Chargeur requis" : ""}
                 />
               </FormControl>
-              {activeMunitionLot ? (
+              {Number(magazineCount) <= 0 ? (
+                <p className="text-[10px] text-orange-600 font-medium mt-1">Vous devez saisir au moins 1 chargeur pour autoriser les munitions.</p>
+              ) : activeMunitionLot ? (
                 <div className="mt-1">
                   <p className={`flex items-center gap-1 text-[10px] ${isStockInsufficient ? "text-destructive font-bold animate-pulse" : "text-primary"}`}>
                     {isStockInsufficient ? <AlertCircle className="h-3 w-3" /> : <Info className="h-3 w-3" />}
