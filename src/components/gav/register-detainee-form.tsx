@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef } from 'react';
@@ -144,30 +145,33 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
       )}
 
       <div className="flex flex-col items-center gap-4">
-        <div 
-          className="relative h-32 w-32 rounded-lg border-2 border-dashed flex items-center justify-center bg-muted overflow-hidden cursor-pointer hover:bg-muted/80 transition-colors"
-          onClick={() => fileInputRef.current?.click()}
-          title="Cliquez pour importer une photo"
-        >
-          {photo ? (
-            <>
+        <div className="relative group">
+          <div 
+            className="h-32 w-32 rounded-lg border-2 border-dashed flex items-center justify-center bg-muted overflow-hidden cursor-pointer hover:bg-muted/80 transition-colors"
+            onClick={() => fileInputRef.current?.click()}
+            title="Cliquez pour importer une photo"
+          >
+            {photo ? (
               <Image src={photo} alt="Detainee photo" fill className="object-cover" />
-              <button 
-                type="button"
-                className="absolute top-1 right-1 bg-background/80 rounded-full p-1 shadow-sm hover:bg-destructive hover:text-white transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPhoto(null);
-                }}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </>
-          ) : (
-            <div className="flex flex-col items-center text-muted-foreground text-center p-2">
-              <User className="h-8 w-8 mb-1" />
-              <span className="text-[10px]">Importer une photo</span>
-            </div>
+            ) : (
+              <div className="flex flex-col items-center text-muted-foreground text-center p-2">
+                <User className="h-8 w-8 mb-1" />
+                <span className="text-[10px]">Importer une photo</span>
+              </div>
+            )}
+          </div>
+          {photo && (
+            <button 
+              type="button"
+              className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1.5 shadow-lg hover:bg-destructive/90 transition-all z-10 scale-100 hover:scale-110"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPhoto(null);
+              }}
+              title="Retirer l'image"
+            >
+              <X className="h-4 w-4" />
+            </button>
           )}
         </div>
 

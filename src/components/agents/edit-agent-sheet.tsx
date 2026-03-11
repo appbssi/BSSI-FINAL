@@ -168,29 +168,32 @@ export function EditAgentSheet({ agent, onAgentEdited, availability }: EditAgent
       </DialogHeader>
 
       <div className="flex flex-col items-center gap-4 py-4">
-        <div 
-          className="relative h-24 w-24 rounded-full border-2 border-dashed flex items-center justify-center bg-muted overflow-hidden cursor-pointer hover:bg-muted/80 transition-colors"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          {photo ? (
-            <>
+        <div className="relative group">
+          <div 
+            className="h-24 w-24 rounded-full border-2 border-dashed flex items-center justify-center bg-muted overflow-hidden cursor-pointer hover:bg-muted/80 transition-colors"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {photo ? (
               <Image src={photo} alt="Agent photo" fill className="object-cover" />
-              <button 
-                type="button"
-                className="absolute top-0 right-0 bg-background/80 rounded-full p-1 shadow-sm hover:bg-destructive hover:text-white transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPhoto(null);
-                }}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </>
-          ) : (
-            <div className="flex flex-col items-center text-muted-foreground text-center p-2">
-              <User className="h-6 w-6 mb-1" />
-              <span className="text-[8px]">Photo d'identité</span>
-            </div>
+            ) : (
+              <div className="flex flex-col items-center text-muted-foreground text-center p-2">
+                <User className="h-6 w-6 mb-1" />
+                <span className="text-[8px]">Photo d'identité</span>
+              </div>
+            )}
+          </div>
+          {photo && (
+            <button 
+              type="button"
+              className="absolute -top-1 -right-1 bg-destructive text-white rounded-full p-1.5 shadow-lg hover:bg-destructive/90 transition-all z-10 scale-100 hover:scale-110"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPhoto(null);
+              }}
+              title="Retirer l'image"
+            >
+              <X className="h-4 w-4" />
+            </button>
           )}
         </div>
         <input 
