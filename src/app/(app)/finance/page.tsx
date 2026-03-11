@@ -8,9 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, CreditCard, TrendingUp, Users, Wallet, AlertCircle, RefreshCw } from 'lucide-react';
+import { PlusCircle, CreditCard, TrendingUp, Users, Wallet, AlertCircle, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import type { Expense, Allocation, Agent, Mission } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -19,6 +19,8 @@ import { AddAllocationForm } from '@/components/finance/add-allocation-form';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Cell, Pie, PieChart } from 'recharts';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
+import { logActivity } from '@/lib/activity-logger';
 
 export default function FinancePage() {
   return (
@@ -30,6 +32,7 @@ export default function FinancePage() {
 
 function FinanceContent() {
   const firestore = useFirestore();
+  const { toast } = useToast();
   const [isExpenseDialogOpen, setExpenseDialogOpen] = useState(false);
   const [isAllocationDialogOpen, setAllocationDialogOpen] = useState(false);
 
@@ -60,7 +63,7 @@ function FinanceContent() {
   }, [missions]);
 
   const stats = useMemo(() => {
-    const totalExpenses = expenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
+    const totalExpenses = expenses?.filter(e => e.status === 'Validé').reduce((sum, e) => sum + e.amount, 0) || 0;
     const totalAllocations = allocations?.reduce((sum, a) => sum + a.amount, 0) || 0;
     return { totalExpenses, totalAllocations };
   }, [expenses, allocations]);
@@ -68,11 +71,25 @@ function FinanceContent() {
   const expensesByCategory = useMemo(() => {
     if (!expenses) return [];
     const categories: Record<string, number> = {};
-    expenses.forEach(e => {
+    expenses.filter(e => e.status === 'Validé').forEach(e => {
       categories[e.category] = (categories[e.category] || 0) + e.amount;
     });
     return Object.entries(categories).map(([name, value]) => ({ name, value }));
   }, [expenses]);
+
+  const handleUpdateExpenseStatus = async (expense: Expense, newStatus: 'Validé' | 'Refusé') => {
+    if (!firestore) return;
+    try {
+      await updateDoc(doc(firestore, 'expenses', expense.id), { status: newStatus });
+      toast({ 
+        title: `Dépense ${newStatus}`, 
+        description: `La dépense pour "${expense.description}" a été ${newStatus.toLowerCase()}.` 
+      });
+      logActivity(firestore, `Dépense ${newStatus.toLowerCase()} : ${expense.description}`, 'Général', '/finance');
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de mettre à jour le statut." });
+    }
+  };
 
   const COLORS = ['#f97316', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6'];
 
@@ -141,7 +158,7 @@ function FinanceContent() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card className="rounded-2xl border-none shadow-md bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Dépenses</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Dépenses (Validées)</CardTitle>
             <Wallet className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
@@ -172,7 +189,7 @@ function FinanceContent() {
         <Card className="rounded-2xl border-none shadow-md bg-white">
           <CardHeader>
             <CardTitle>Répartition des Dépenses</CardTitle>
-            <CardDescription>Par catégorie opérationnelle</CardDescription>
+            <CardDescription>Par catégorie opérationnelle (Validées uniquement)</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             {expensesByCategory.length > 0 ? (
@@ -196,7 +213,7 @@ function FinanceContent() {
               </ChartContainer>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
-                {expensesLoading ? "Chargement des données..." : "Pas de données disponibles."}
+                {expensesLoading ? "Chargement des données..." : "Pas de données validées disponibles."}
               </div>
             )}
           </CardContent>
@@ -209,13 +226,16 @@ function FinanceContent() {
           </CardHeader>
           <CardContent className="h-[300px] overflow-auto">
              <div className="space-y-4">
-                {expenses?.slice(0, 5).map(e => (
+                {expenses?.filter(e => e.status !== 'Refusé').slice(0, 5).map(e => (
                   <div key={e.id} className="flex items-center justify-between border-b pb-2">
                     <div>
                       <p className="font-medium text-sm">{e.description}</p>
                       <p className="text-xs text-muted-foreground">{e.date.toDate().toLocaleDateString('fr-FR')}</p>
                     </div>
-                    <p className="font-semibold text-primary text-sm">-{e.amount.toLocaleString('fr-FR')} FCFA</p>
+                    <div className="text-right">
+                      <p className="font-semibold text-primary text-sm">-{e.amount.toLocaleString('fr-FR')} FCFA</p>
+                      <Badge variant="outline" className="text-[10px] h-4">{e.status}</Badge>
+                    </div>
                   </div>
                 ))}
                 {(!expenses || expenses.length === 0) && !expensesLoading && (
@@ -246,11 +266,12 @@ function FinanceContent() {
                     <TableHead>Catégorie</TableHead>
                     <TableHead>Montant</TableHead>
                     <TableHead>Statut</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {expensesLoading ? (
-                    <TableRow><TableCell colSpan={6} className="text-center">Chargement...</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={7} className="text-center">Chargement...</TableCell></TableRow>
                   ) : expenses?.length ? (
                     expenses.map((e) => (
                       <TableRow key={e.id}>
@@ -270,10 +291,32 @@ function FinanceContent() {
                             {e.status}
                           </Badge>
                         </TableCell>
+                        <TableCell className="text-right">
+                          {e.status === 'En attente' && (
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="h-8 text-green-600 border-green-600 hover:bg-green-50"
+                                onClick={() => handleUpdateExpenseStatus(e, 'Validé')}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" /> Valider
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="h-8 text-destructive border-destructive hover:bg-destructive/10"
+                                onClick={() => handleUpdateExpenseStatus(e, 'Refusé')}
+                              >
+                                <XCircle className="h-4 w-4 mr-1" /> Refuser
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
-                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Aucune dépense enregistrée.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">Aucune dépense enregistrée.</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
