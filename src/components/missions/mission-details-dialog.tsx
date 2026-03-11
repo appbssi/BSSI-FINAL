@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import type { Agent, Mission, MissionStatus, Vehicle } from '@/lib/types';
-import { Calendar, MapPin, Users, Info, Truck, ClipboardList } from 'lucide-react';
+import { Calendar, MapPin, Users, Info, Truck } from 'lucide-react';
 import { differenceInDays, isSameDay } from 'date-fns';
 import type { MissionWithDisplayStatus } from '@/lib/missions';
 import { useFirestore, useMemoFirebase } from '@/firebase';
@@ -120,18 +120,6 @@ export function MissionDetailsDialog({ isOpen, onOpenChange, mission, agents }: 
                         )}
                     </div>
                 </div>
-
-                {mission.instructions && (
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                             <ClipboardList className="h-5 w-5 text-primary" />
-                             <h3 className="font-semibold">Ordres / Consignes</h3>
-                        </div>
-                        <div className="p-3 bg-primary/5 rounded-md border border-primary/10 text-sm whitespace-pre-wrap italic">
-                            {mission.instructions}
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
       </DialogContent>
