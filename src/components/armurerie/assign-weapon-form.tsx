@@ -22,7 +22,7 @@ const assignSchema = z.object({
   agentId: z.string().min(1, 'Sélectionnez un agent'),
   ammunitionCount: z.coerce.number().min(0, 'Nombre invalide').default(0),
   magazineCount: z.coerce.number().min(0, 'Nombre invalide').default(0),
-  notes: z.string().optional(),
+  notes: z.string().min(3, "Le motif d'affectation est obligatoire."),
   munitionLotId: z.string().optional(),
 });
 
@@ -175,7 +175,7 @@ export function AssignWeaponForm({ weapons, agents, assignments, missions, onSuc
 
         <FormField control={form.control} name="agentId" render={({ field }) => (
           <FormItem>
-            <FormLabel>Agent</FormLabel>
+            <FormLabel>Agent <span className="text-destructive">*</span></FormLabel>
             <div className="relative mb-2">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input 
@@ -203,7 +203,7 @@ export function AssignWeaponForm({ weapons, agents, assignments, missions, onSuc
 
         <FormField control={form.control} name="weaponId" render={({ field }) => (
           <FormItem>
-            <FormLabel>Équipement / Arme</FormLabel>
+            <FormLabel>Équipement / Arme <span className="text-destructive">*</span></FormLabel>
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl><SelectTrigger><SelectValue placeholder="Choisir le matériel" /></SelectTrigger></FormControl>
               <SelectContent>
@@ -285,7 +285,13 @@ export function AssignWeaponForm({ weapons, agents, assignments, missions, onSuc
         </div>
 
         <FormField control={form.control} name="notes" render={({ field }) => (
-          <FormItem><FormLabel>Notes (facultatif)</FormLabel><FormControl><Input placeholder="Ex: Dotation mission spéciale..." {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+            <FormLabel>Motif d'affectation <span className="text-destructive">*</span></FormLabel>
+            <FormControl>
+              <Input placeholder="Ex: Dotation mission spéciale..." {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         )} />
 
         <Button 

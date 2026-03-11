@@ -28,8 +28,8 @@ const detaineeSchema = z.object({
   lastName: z.string().min(2, 'Le nom est requis (min 2 caractères).'),
   firstName: z.string().min(2, 'Le prénom est requis (min 2 caractères).'),
   birthDate: z.string().min(1, 'La date de naissance est requise.'),
-  arrestLocation: z.string().min(2, "Le lieu d'arrestation est requis."),
-  arrestReason: z.string().min(5, "Le motif d'arrestation est requis (min 5 caractères)."),
+  arrestLocation: z.string().min(2, "Le lieu d'arrestation est obligatoire."),
+  arrestReason: z.string().min(5, "Le motif d'arrestation est obligatoire."),
 });
 
 type DetaineeFormValues = z.infer<typeof detaineeSchema>;
@@ -198,7 +198,7 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nom</FormLabel>
+                  <FormLabel>Nom <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="Ex: KOUASSI" {...field} autoComplete="family-name" />
                   </FormControl>
@@ -211,7 +211,7 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Prénom(s)</FormLabel>
+                  <FormLabel>Prénom(s) <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="Ex: Jean" {...field} autoComplete="given-name" />
                   </FormControl>
@@ -227,7 +227,7 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
               name="birthDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Date de naissance</FormLabel>
+                  <FormLabel>Date de naissance <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>
@@ -240,7 +240,7 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
               name="arrestLocation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Lieu d'arrestation</FormLabel>
+                  <FormLabel>Lieu d'arrestation <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="Ex: Adjamé, Pont Fer" {...field} />
                   </FormControl>
@@ -255,7 +255,7 @@ export function RegisterDetaineeForm({ onSuccess }: RegisterDetaineeFormProps) {
             name="arrestReason"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Motif d'arrestation</FormLabel>
+                <FormLabel>Motif d'arrestation <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Textarea 
                     placeholder="Décrivez les faits reprochés..." 
