@@ -296,7 +296,8 @@ function AgentsContent() {
     };
 
     if (logo) {
-        const img = new Image();
+        // Use window.Image instead of Image to avoid collision with next/image
+        const img = new window.Image();
         img.crossOrigin = 'Anonymous';
         img.onload = () => addContent(img);
         img.onerror = () => {
